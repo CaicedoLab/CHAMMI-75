@@ -1,0 +1,58 @@
+body {
+    overflow: hidden;
+    background-color: #e5e6e4;  
+}
+
+#images{
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin-top: 10px;
+    height: 30%;
+    width: fit-content;
+    padding-right: 15px;
+    margin-left: auto;
+    margin-right: auto;
+    overflow: scroll;
+}
+
+#images > div{
+    display: inline-block;
+}
+
+.sidebar-child{
+    padding-left: 20px;
+}
+
+#image-select{
+    text-align: center;
+    margin-top: 10px;
+}
+
+#study_list {
+    width: 30%;
+    border: solid;
+    overflow: scroll;
+}
+
+#app_layout{
+    display: flex;
+    height: 100vh;
+    margin-bottom: 10px;
+}
+
+#image{
+    display: flex;
+    flex-direction: column;
+}
+
+#display{
+    border: solid;
+    width: 100%;
+}
+
+#figure{
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+}

@@ -1,0 +1,2 @@
+/mnt/cephfs/mir/jcaicedo/morphem/dataset/images/nidr0018/nidr0018-plate_2A-converted.zip
+/mnt/cephfs/mir/jcaicedo/morphem/dataset/images/nidr0018/nidr0018-plate_1A-converted.zip

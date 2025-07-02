@@ -1,0 +1,824 @@
+{
+  "idr0001": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0002": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0003": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0005": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0006": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0007": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0008": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0009": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0010": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0011": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0012": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0013": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0017": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0020": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 5,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0022": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0025": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0028": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0030": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0033": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0035": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0037": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 5,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0056": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0069": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0072": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0080": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0081": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": " top"
+      }
+    }
+  },
+  "idr0086": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0088": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0089": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0093": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0094": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0115": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 100,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0120": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 3,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0123": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0128": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0129": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0130": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0133": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0140": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 8,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "idr0145": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 8,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0001": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0002": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0003": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 12,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0004": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0005": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0006": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0007": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 5,
+        "threshold_type": "%",
+        "direction": "bottom"
+      }
+    }
+  },
+  "nidr0008": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 5,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0009": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      },
+      "nucleus": {
+        "keyword_type": "replace",
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "abs",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0010": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0011": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0012": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0013": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0014": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0015": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0016": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 1,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0017": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0018": {
+    "1A": {
+      "number": {
+        "keyword_type": "number",
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "bottom"
+      },
+      "celegans": {
+        "keyword_type": "replace",
+        "value_type": "live",
+        "threshold": 0,
+        "threshold_type": "%",
+        "direction": "bottom"
+      },
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 100,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    },
+    "2A": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 100,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0019": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "bottom"
+      }
+    }
+  },
+  "nidr0020": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0021": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 100,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0022": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "bottom"
+      }
+    }
+  },
+  "nidr0023": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0024": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 100,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0025": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0026": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 100,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0027": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 10,
+        "threshold_type": "%",
+        "direction": "bottom"
+      }
+    }
+  },
+  "nidr0028": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0029": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 15,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0030": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "live",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0031": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  },
+  "nidr0032": {
+    "all": {
+      "default": {
+        "keyword_type": null,
+        "value_type": "pc",
+        "threshold": 20,
+        "threshold_type": "%",
+        "direction": "top"
+      }
+    }
+  }
+}

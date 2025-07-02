@@ -1,0 +1,118 @@
+body {
+    overflow: hidden;
+    background-color: #e5e6e4;  
+}
+
+#images{
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin-top: 10px;
+    width: fit-content;
+    padding-right: 15px;
+    overflow: scroll;
+    margin-left: 30%;
+}
+
+#int_wrapper{
+
+}
+
+#classical{
+    width: 50px;
+    display: inline-block;
+}
+
+#image_name{
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+}
+
+#seg_in_wrapper{
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 3%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 400px;
+    margin-top: 20px;
+}
+
+#image_list_wrap{
+    overflow: hidden;
+}
+
+#total_ims{
+    display: inline-block;
+}
+
+#total_ims_container>div{
+    width: 65%;
+}
+
+#total_ims_container{
+    display: flex;
+}
+
+#image_inf_container{
+    display: flex;
+    height: 45%;
+    justify-content: space-evenly;
+}
+
+#image_info{
+    margin-left: 3%;
+    margin-top: 10%;
+}
+
+#images > div{
+    display: inline-block;
+    text-align: left;
+}
+
+#images{
+    width: 150px;
+    margin-left: 0;
+    height: 80%;
+    overflow-x: hidden;
+}
+
+.sidebar-child{
+    padding-left: 20px;
+}
+
+#image-select{
+    text-align: center;
+    margin-top: 10px;
+}
+
+#study_list {
+    width: 30%;
+    border: solid;
+    overflow: scroll;
+}
+
+#app_layout{
+    display: flex;
+    height: 100vh;
+    margin-bottom: 10px;
+}
+
+#image{
+    display: flex;
+    flex-direction: column;
+}
+
+#display{
+    border: solid;
+    width: 100%;
+}
+
+#figure{
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+}

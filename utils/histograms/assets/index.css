@@ -1,0 +1,152 @@
+.app-layout {
+    background-color: #e5e6e4;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+}
+
+.app-layout > .graph-container {
+    display: flex;
+}
+
+.app-sidebar {
+    width: 30%;
+    height: 95vh;
+    margin-top: 10px;
+    margin-right: 10px;
+    border-right: solid;
+    overflow-y: auto;
+}  
+
+.sidebar-parent {
+    margin-left: 10px;
+    margin-top: 10px;
+    margin-left: 3px;
+    font-weight: bolder;
+}
+
+body {
+    overflow: hidden;
+    margin: 0px;
+}
+
+.sidebar-child {
+    margin-left: 5%;
+    font-weight: 100;
+}
+
+#testing {
+    user-select: none;
+}
+
+#images-dropdown {
+    margin-top: 10px;
+}
+
+.graph-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* border: solid; */
+    margin-right: 10px;
+    margin-top: 10px;
+    width: 95%;
+    height: 95vh;
+}
+
+.graph-container > .dropdown-wrapper {
+    height: 35%;
+    /* border: solid; */
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: column;
+}
+
+.range-wrapper {
+    margin-left: auto;
+    margin-right: auto;
+    flex-direction: row;
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.range-wrapper > input {
+    width: 75px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#image-dropdown {
+    /* width: 750px; */
+    padding-right: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    overflow-y: auto;
+    height: 75%;
+}
+
+#dataset-plate {
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#image-select {
+    text-align: center;
+}
+
+#heatmap {
+    margin-top: 20px;
+    width: 50%;
+}
+
+#raw-image {
+    margin-top: 20px;
+    width: 50%;
+}
+
+#raw-image .main-svg:first-child{ 
+    background: #e5e6e4 !important;
+    /* background: lightgreen !important;  */ 
+}
+
+#heatmap .main-svg:first-child{ 
+    background: #e5e6e4 !important;
+    /* background: lightgreen !important;  */ 
+}
+
+#graph-wrapper {
+    display: flex;
+    flex-direction: row;
+}
+
+#randomize {
+    margin-right: 10px;
+    margin-left: 1px;
+}
+
+#k-type{
+   width: 7rem;
+   margin-right: 10px;
+   margin-left: 10px;
+}
+
+
+.save {
+    margin-left: 5px;
+    margin-right: 10px;
+}
+
+#is_pc_img {
+    margin-left: 5px;
+}
+
+#background-k-type {
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+.active-div {
+    background-color: #b3b4b2;
+}

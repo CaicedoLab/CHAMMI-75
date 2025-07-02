@@ -1,0 +1,101 @@
+study	config
+hpa0001	er,microtubules,nucleus,protein
+idr0001	cell body,microtubules
+idr0002	sub-nuclear,sub-nuclear
+idr0003	cell body,cytosol,protein
+idr0005	nucleus
+idr0006	nucleus,protein
+idr0007	protein,protein
+idr0008	cytoskeleton,cytoskeleton
+idr0008	cytoskeleton,cytoskeleton,microtubules
+idr0008	cytoskeleton,cytoskeleton,microtubules,nucleus
+idr0008	cytoskeleton,microtubules
+idr0008	cytoskeleton,microtubules,nucleus
+idr0009	cell body,nucleus,protein
+idr0010	nucleus,protein
+idr0011	cell body,protein,protein
+idr0012	cytoskeleton,microtubules,nucleus
+idr0013	sub-nuclear
+idr0017	cytoskeleton,nucleus
+idr0020	cell body,microtubules,nucleus,proliferation
+idr0022	cell body
+idr0025	er,microtubules,nucleus,protein
+idr0025	microtubules,nucleus,protein
+idr0028	cytoskeleton,microtubules,nucleus,protein
+idr0030	cytoskeleton,nucleus,protein,protein
+idr0033	er,golgi,mitochondria,nucleus,rna
+idr0035	cytoskeleton,microtubules,nucleus
+idr0037	assorted,bright-field,membrane,nucleus,proliferation
+idr0037	bright-field,membrane,nucleus,proliferation
+idr0056	centrosomes,cytoskeleton,microtubules,nucleus
+idr0056	centrosomes,microtubules,nucleus,proliferation
+idr0069	microtubules,mitochondria,nucleus
+idr0072	nucleus,protein
+idr0080	er,golgi,mitochondria,nucleus,rna
+idr0081	nucleus,protein
+idr0086	nucleus,protein
+idr0086	nucleus,protein,protein
+idr0086	nucleus,protein,sub-nuclear
+idr0086	protein
+idr0086	protein,sub-nuclear
+idr0086	protein,sub-nuclear,sub-nuclear
+idr0088	cell body,protein,protein
+idr0089	assorted,circadian rhythm,nucleus
+idr0089	assorted,nucleus,protein
+idr0089	circadian rhythm,nucleus
+idr0089	nucleus,protein,sub-nuclear
+idr0089	nucleus,rna,sub-nuclear
+idr0089	nucleus,sub-nuclear,sub-nuclear
+idr0093	assorted,nucleus,proliferation,protein,rna
+idr0093	nucleus,proliferation,protein,rna
+idr0094	cell body
+idr0115	nucleus,sub-nuclear
+idr0120	bright-field,cytoskeleton,nucleus,protein
+idr0120	bright-field,cytoskeleton,nucleus,protein,protein
+idr0120	cytoskeleton,nucleus,protein
+idr0120	cytoskeleton,nucleus,protein,protein
+idr0123	nucleus,sub-nuclear,sub-nuclear,sub-nuclear,sub-nuclear
+idr0123	nucleus,sub-nuclear,sub-nuclear,sub-nuclear,sub-nuclear,sub-nuclear,sub-nuclear
+idr0128	nucleus,protein
+idr0129	nucleus,protein
+idr0130	nucleus,protein
+idr0133	er,golgi,mitochondria,nucleus,rna
+idr0140	cell body,protein
+idr0145	cell body,protein
+jump0001	agp,er,mitochondria,nucleus,rna
+nidr0001	differential interference contrast (DIC)
+nidr0002	b,g,r
+nidr0003	bright-field
+nidr0004	b,g,r
+nidr0005	bright-field
+nidr0006	bright-field,er,nucleus
+nidr0006	bright-field,nucleus,nucleus
+nidr0007	bright-field
+nidr0008	differential interference contrast (DIC)
+nidr0009	cytoskeleton,mitochondria,nucleus
+nidr0009	cytoskeleton,nucleus
+nidr0010	differential interference contrast (DIC)
+nidr0011	dark-field
+nidr0012	assorted
+nidr0013	membrane
+nidr0014	bright-field
+nidr0015	bright-field
+nidr0016	cell body
+nidr0016	nucleus
+nidr0017	phase-contrast
+nidr0018	phase-contrast
+nidr0019	bright-field
+nidr0020	b,g,r
+nidr0021	b,g,r
+nidr0022	b,g,r
+nidr0023	nucleus
+nidr0024	electron microscope
+nidr0025	KTR,nucleus
+nidr0026	b,g,r
+nidr0027	b,g,r
+nidr0028	b,g,r
+nidr0029	cytoskeleton,golgi,membrane,nucleus,rna
+nidr0030	cytoskeleton,er,golgi,mitochondria,nucleus,rna
+nidr0031	cytoskeleton,er,golgi,mitochondria,nucleus,rna
+nidr0032	cytoskeleton,er,golgi,mitochondria,nucleus,rna
+wtc0001	bright-field,cell body,nucleus,protein
