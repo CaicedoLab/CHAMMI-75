@@ -1,0 +1,35 @@
+Original annotation	Grouping 1	Grouping 2	Grouping 3	Grouping dl2	Grouping OpenCell
+Actin filaments	Actin filaments	Actin filaments	Cytoskeleton	Cytoplasm	cytoskeleton
+Aggresome					
+Cell Junctions	Plasma membrane	Plasma membrane	Plasma membrane	Cell membrane	cell_contact
+Centriolar satellite	Centrosome	Centrosome	Cytosol		centrosome
+Centrosome	Centrosome	Centrosome	Cytoskeleton		centrosome
+Cleavage furrow					
+Cytokinetic bridge					
+Cytoplasmic bodies	Cytosol	Cytosol	Cytosol	Cytoplasm	big_aggregates
+Cytosol	Cytosol	Cytosol	Cytosol	Cytoplasm	cytoplasmic
+Endoplasmic reticulum	Endoplasmic reticulum	Endoplasmic reticulum	Endomembrane system	Endoplasmic reticulum	er
+Endosomes	Endosomes	Vesicles	Endomembrane system		vesicles
+Focal adhesion sites	Actin filaments	Actin filaments	Cytoskeleton		focal_adhesions
+Golgi apparatus	Golgi apparatus	Golgi apparatus	Endomembrane system	Golgi apparatus	golgi
+Intermediate filaments	Intermediate filaments	Intermediate filaments	Cytoskeleton	Cytoplasm	cytoskeleton
+Lipid droplets	Lipid droplets	Vesicles	Endomembrane system		vesicles
+Lysosomes	Lysosomes	Vesicles	Endomembrane system		vesicles
+Microtubule ends	Microtubules	Microtubules	Cytoskeleton		cytoskeleton
+Microtubules	Microtubules	Microtubules	Cytoskeleton	Cytoplasm	cytoskeleton
+Midbody					
+Midbody ring					
+Mitochondria	Mitochondria	Mitochondria	Mitochondria	Mitochondrion	mitochondria
+Mitotic chromosome					
+Mitotic spindle					
+Nuclear bodies	Nuclear bodies	Nucleus	Nucleus		nuclear_punctae
+Nuclear membrane	Nuclear membrane	Nuclear membrane	Nucleus	Nucleus	nuclear_membrane
+Nuclear speckles	Nuclear speckles	Nucleus	Nucleus	Nucleus	chromatin
+Nucleoli	Nucleoli	Nucleoli	Nucleoli		nucleolus_gc
+Nucleoli fibrillar center	Nucleoli fibrillar center	Nucleoli	Nucleoli		nucleolus_fc_dfc
+Nucleoli rim	Nucleoli	Nucleoli	Nucleoli		
+Nucleoplasm	Nucleoplasm	Nucleus	Nucleus	Nucleus	nucleoplasm
+Peroxisomes	Peroxisomes	Vesicles	Endomembrane system		vesicles
+Plasma membrane	Plasma membrane	Plasma membrane	Plasma membrane	Cell membrane	membrane
+Rods & Rings					
+Vesicles	Vesicles	Vesicles	Endomembrane system		vesicles
