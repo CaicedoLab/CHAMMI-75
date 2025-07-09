@@ -12,7 +12,7 @@ import seaborn as sns
 import torch
 import umap
 import yaml
-from harmony import harmonize
+#from harmony import harmonize
 from sklearn import decomposition
 from sklearn.metrics import (
     average_precision_score,
@@ -27,12 +27,12 @@ from tqdm import tqdm
 plt.switch_backend("agg")
 import sys
 sys.path.append("../utils")
-from utils.train_mlp import train_mlp, eval_model
+from train_mlp import train_mlp, eval_model
 
 UNIQUE_CATS = np.array(
     [
         cat
-        for cat in pd.read_csv("annotations/location_group_mapping.csv")[
+        for cat in pd.read_csv("annotations/location_group_mapping.tsv", sep='\t')[
             "Original annotation"
         ]
         .unique()
@@ -107,13 +107,13 @@ def get_atlas_name_classes(df):
 
 def get_train_val_test_idx(df, feature_data, unique_cats=UNIQUE_CATS):
     train_antibodies = pd.read_csv(
-        "annotations/splits/train_antibodies.txt", header=None
+        "annotations/train_antibodies.txt", header=None
     )[0].to_list()
     val_antibodies = pd.read_csv(
-        "annotations/splits/valid_antibodies.txt", header=None
+        "annotations/valid_antibodies.txt", header=None
     )[0].to_list()
     test_antibodies = pd.read_csv(
-        "annotations/splits/test_antibodies.txt", header=None
+        "annotations/test_antibodies.txt", header=None
     )[0].to_list()
     train_idxs = df[df["antibody"].isin(train_antibodies)].index.to_list()
     val_idxs = df[df["antibody"].isin(val_antibodies)].index.to_list()
@@ -298,9 +298,11 @@ if __name__ == "__main__":
     shutil.rmtree(save_folder, ignore_errors=True)
     os.makedirs(save_folder, exist_ok=True)
 
-    df, feature_data = torch.load(
+    features = torch.load(
         f"{features_folder}/all_features.pth", map_location="cpu"
     )
+    df = pd.DataFrame(features[0])
+    feature_data = features[1]
     if harmonize_features:
         if not os.path.isfile(f"{features_folder}/all_features_harmonize.pth"):
             vars_use = ["atlas_name"]

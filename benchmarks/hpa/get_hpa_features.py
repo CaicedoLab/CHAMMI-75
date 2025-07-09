@@ -169,19 +169,19 @@ def extract_features_hpa(dataloader: torch.utils.data.Dataset, output_folder: st
     vit_model.eval()
     
     with torch.no_grad():
+        features = np.zeros((len(dataloader.dataset), 1536))  # Initialize empty array for features
         for batch, rows in tqdm(dataloader, desc="Extracting features"):
             images = batch.to(device)
-            batch_feat = []
+            batch_feat = np.zeros((images.shape[0], 1536))
             for c in range(images.shape[1]):
                 # Copy each channel three times
                 single_channel = images[:, c, :, :].unsqueeze(1).float().to(device)
     
                 output = vit_model.forward_features(single_channel)
                 feat_temp = output["x_norm_clstoken"].cpu().detach().numpy()
-                batch_feat.append(feat_temp)
-            print(rows)
-            batch_feat = np.concatenate(batch_feat, axis=1)
-            all_features.append(batch_feat)
+                batch_feat[:, c * 384:(c + 1) * 384] = feat_temp
+            
+            features = features[:len(all_features) + len(batch_feat), :]  # Resize to fit new features
             all_rows.extend(rows)
 
         all_features = np.concatenate(all_features)
@@ -207,14 +207,12 @@ if __name__ == "__main__":
     
     # Load metadata
     df = pd.read_csv(csv_file)
-    print(f"Loaded {len(df)} samples")
-    print(f"Columns: {df.columns.tolist()}")
     
     # Create output directory
     os.makedirs(output_folder, exist_ok=True)
 
     # Initialize dataset and dataloader
-    dataset = UnZippedImageArchive(root_dir=image_folder, transform=v2.Resize(size=(224, 224)))
+    dataset = UnZippedImageArchive(root_dir=image_folder, transform=v2.Resize(size=(224, 224), antialias=True))
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=128, shuffle=False, num_workers=16, collate_fn=custom_collate_fn)
     # Extract features
     df, feature_data = extract_features_hpa(
