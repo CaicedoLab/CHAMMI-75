@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import sys
 from torchvision.transforms import v2
 from accelerate import Accelerator
+from torchvision import transforms
 
 # Initialize accelerator at the top
 accelerator = Accelerator()
@@ -53,28 +54,42 @@ class ViTClass():
 class PerImageNormalize(nn.Module):
     def __init__(self, eps=1e-7):
         super().__init__()
-        self.eps = eps  # Small value to avoid division by zero
+        self.eps = eps
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Normalize each image in the batch independently.
+        Normalize each image independently.
         
         Args:
-            x (torch.Tensor): Input tensor of shape (N, C, H, W)
-                              where N = batch size, C = channels, H = height, W = width.
+            x (torch.Tensor): Input tensor of shape (C, H, W) for single image
+                              or (N, C, H, W) for batch of images
         
         Returns:
             torch.Tensor: Normalized tensor of the same shape.
         """
-        # Compute the mean and standard deviation for each image across all channels, height, and width
-        mean = x.view(x.size(0), -1).mean(dim=1, keepdim=True).view(x.size(0), 1, 1, 1)
-        std = x.view(x.size(0), -1).std(dim=1, keepdim=True).view(x.size(0), 1, 1, 1)
-
-        # Normalize the input tensor
-        normalized_x = (x - mean) / (std + self.eps)
-
-        return normalized_x
-
+        if x.dim() == 3:  # Single image (C, H, W)
+            # Compute mean and std across all pixels and channels
+            mean = x.mean()
+            std = x.std()
+            normalized_x = (x - mean) / (std + self.eps)
+            return normalized_x
+        
+        elif x.dim() == 4:  # Batch of images (N, C, H, W)
+            batch_size = x.shape[0]
+            # Compute mean and std for each image in the batch
+            x_flat = x.view(batch_size, -1)
+            mean = x_flat.mean(dim=1, keepdim=True)
+            std = x_flat.std(dim=1, keepdim=True)
+            
+            # Reshape for broadcasting
+            mean = mean.view(batch_size, 1, 1, 1)
+            std = std.view(batch_size, 1, 1, 1)
+            
+            normalized_x = (x - mean) / (std + self.eps)
+            return normalized_x
+        
+        else:
+            raise ValueError(f"Expected 3D or 4D tensor, got {x.dim()}D tensor with shape {x.shape}")
 
 def custom_collate_fn(batch):
     """Custom collate function to handle None values"""
@@ -254,13 +269,6 @@ def extract_features_hpa(dataloader: torch.utils.data.DataLoader, output_folder:
         # Move to CPU for saving
         all_features_cpu = all_features_gathered.cpu()
         
-        # Flatten the list of rows if needed - not needed with pickle approach
-        # if isinstance(all_rows_gathered[0], list):
-        #     flattened_rows = []
-        #     for row_list in all_rows_gathered:
-        #         flattened_rows.extend(row_list)
-        #     all_rows_gathered = flattened_rows
-        
         # Create output directory
         os.makedirs(output_folder, exist_ok=True)
         
@@ -296,7 +304,10 @@ if __name__ == "__main__":
     # Initialize dataset and dataloader
     dataset = UnZippedImageArchive(
         root_dir=image_folder, 
-        transform=v2.Resize(size=(224, 224), antialias=True)
+        transform=transforms.Compose([
+            PerImageNormalize(),
+            v2.Resize(size=(224, 224), antialias=True)
+        ])
     )
     
     # Create dataloader - accelerator will handle the distribution
@@ -304,7 +315,7 @@ if __name__ == "__main__":
         dataset, 
         batch_size=128, 
         shuffle=False, 
-        num_workers=4,  # Reduce num_workers per GPU since we have multiple GPUs
+        num_workers=10,  # Reduce num_workers per GPU since we have multiple GPUs
         collate_fn=custom_collate_fn,
         pin_memory=True
     )
