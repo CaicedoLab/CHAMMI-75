@@ -1,3 +1,63 @@
+import torch
+import torch.nn as nn
+
+class minmax_normalize(nn.Module):
+    def __init__(self, eps=1e-8):
+        super().__init__()
+        self.eps = eps
+        # DINO normalization constants
+        self.register_buffer('dino_mean', torch.tensor([0.1450534, 0.11360057, 0.1231717, 0.14919987]))
+        self.register_buffer('dino_std', torch.tensor([0.18122554, 0.14004277, 0.18840286, 0.17790672]))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Apply global minmax normalization, clipping, and DINO normalization to each image independently.
+        Now uses GLOBAL normalization (across all channels and spatial dimensions) per image,
+        matching the behavior of preprocess_input_dino.
+        
+        Args:
+            x (torch.Tensor): Input tensor of shape (C, H, W) for single image
+                              or (N, C, H, W) for batch of images
+        
+        Returns:
+            torch.Tensor: Normalized tensor of the same shape.
+        """
+        
+        if x.dim() == 3:  # Single image (C, H, W)
+            # Global minmax normalization across all channels and spatial dimensions
+            img_min = x.amin()  # Scalar - global minimum
+            img_max = x.amax()  # Scalar - global maximum
+            x_normalized = (x - img_min) / (img_max - img_min + self.eps)
+            
+            # Clip to [0, 1]
+            x_clipped = torch.clamp(x_normalized, 0, 1)
+            
+            # DINO normalization
+            dino_mean = self.dino_mean.view(-1, 1, 1)  # (C, 1, 1)
+            dino_std = self.dino_std.view(-1, 1, 1)    # (C, 1, 1)
+            x_dino = (x_clipped - dino_mean) / dino_std
+            
+        elif x.dim() == 4:  # Batch of images (N, C, H, W)
+            # Global minmax normalization per image (across channels and spatial dims)
+            # Compute min and max per image globally
+            img_min = x.amin(dim=(1, 2, 3), keepdim=True)  # (N, 1, 1, 1) - global per image
+            img_max = x.amax(dim=(1, 2, 3), keepdim=True)  # (N, 1, 1, 1) - global per image
+            x_normalized = (x - img_min) / (img_max - img_min + self.eps)
+            
+            # Clip to [0, 1]
+            x_clipped = torch.clamp(x_normalized, 0, 1)
+            
+            # DINO normalization
+            dino_mean = self.dino_mean.view(1, -1, 1, 1)  # (1, C, 1, 1)
+            dino_std = self.dino_std.view(1, -1, 1, 1)    # (1, C, 1, 1)
+            x_dino = (x_clipped - dino_mean) / dino_std
+            
+        else:
+            raise ValueError(f"Expected 3D or 4D tensor, got {x.dim()}D tensor with shape {x.shape}")
+        
+        return x_clipped
+
+
 import os
 import pandas as pd
 import torch
@@ -18,7 +78,16 @@ from torchvision import transforms
 accelerator = Accelerator()
 
 sys.path.append("../morphem")
-from vision_transformer import vit_small
+from vision_transformer import vit_small, vit_base
+
+
+def get_subcell_model(config):
+    model = ViTPoolModel(config["args"]["vit_model"], config["args"]["pool_model"])
+    state_dict = torch.load(config["weight_path"], map_location="cpu")
+
+    msg = model.load_state_dict(state_dict)
+    print(msg)
+    return model
 
 
 '''
@@ -31,7 +100,7 @@ class ViTClass():
         # Create model with in_chans=1 to match training setup
         self.model = vit_small()
         remove_prefixes = ["module.backbone.", "module.", "module.head."]
-
+        # /scr/vidit/Models/Dino_Small_75ds_Guided/checkpoint.pth
         # Load model weights
         student_model = torch.load("/scr/vidit/Models/Dino_Small_75ds_Guided/checkpoint.pth", map_location=device)['student']
         # Remove unwanted prefixes
@@ -45,7 +114,6 @@ class ViTClass():
                 cleaned_state_dict[new_key] = v  # Keep only valid keys
         self.model.load_state_dict(cleaned_state_dict, strict=False)
         self.model.eval()
-        self.model.to(self.device)
 
     def get_model(self):
         return self.model
@@ -184,7 +252,6 @@ class UnZippedImageArchive(Dataset):
 def extract_features_hpa(dataloader: torch.utils.data.DataLoader, output_folder: str):
     """Extract features from HPA single-cell crops using multi-GPU"""
 
-    # Initialize model on accelerator device
     vit_instance = ViTClass(accelerator.device) 
     vit_model = vit_instance.get_model()
     vit_model.eval()
@@ -195,6 +262,7 @@ def extract_features_hpa(dataloader: torch.utils.data.DataLoader, output_folder:
     all_features = []
     all_rows = []
     
+
     with torch.no_grad():
         for batch_data in tqdm(dataloader, desc=f"Extracting features on GPU {accelerator.local_process_index}", disable=not accelerator.is_local_main_process):
             if batch_data[0] is None:  # Skip None batches
@@ -247,10 +315,8 @@ def extract_features_hpa(dataloader: torch.utils.data.DataLoader, output_folder:
         with open(local_save_path, 'wb') as f:
             pickle.dump(all_rows, f)
     
-    # Wait for all processes to save their data
     accelerator.wait_for_everyone()
     
-    # Main process collects all the temporary files
     if accelerator.is_main_process:
         all_rows_gathered = []
         for i in range(accelerator.num_processes):
@@ -259,68 +325,54 @@ def extract_features_hpa(dataloader: torch.utils.data.DataLoader, output_folder:
                 with open(temp_file, 'rb') as f:
                     process_rows = pickle.load(f)
                     all_rows_gathered.extend(process_rows)
-                # Clean up temp file
                 os.remove(temp_file)
     else:
         all_rows_gathered = None
     
-    # Save only on main process
     if accelerator.is_main_process:
-        # Move to CPU for saving
         all_features_cpu = all_features_gathered.cpu()
-        
-        # Create output directory
         os.makedirs(output_folder, exist_ok=True)
-        
-        # Save in format expected by train_classification.py
         torch.save((all_rows_gathered, all_features_cpu), f"{output_folder}/all_features.pth")
         print(f"Saved {len(all_rows_gathered)} samples with {all_features_cpu.shape[1]} features")
-        
-        # Also save as numpy for convenience
         np.save(f"{output_folder}/features.npy", all_features_cpu.numpy())
-        
-        # Convert rows to DataFrame and save
         df = pd.DataFrame(all_rows_gathered)
         df.to_csv(f"{output_folder}/metadata.csv", index=False)
         print(f"Saved metadata with shape: {df.shape}")
     
-    # Wait for all processes to complete
     accelerator.wait_for_everyone()
-    
     return all_rows_gathered if accelerator.is_main_process else None, \
            all_features_cpu if accelerator.is_main_process else None
 
 
+# 3. In main section - CRITICAL: Reduce batch size
 if __name__ == "__main__":
-    # Configuration
-    csv_file = "/scr/data/cell_crops/metadata.csv"  # Your DataFrame with the columns you showed
+    csv_file = "/scr/data/cell_crops/metadata.csv"
     image_folder = "/scr/data/cell_crops"
     output_folder = "/scr/data/HPA_features"
     
-    # Print process info
     print(f"Process {accelerator.process_index} of {accelerator.num_processes} started")
     print(f"Using device: {accelerator.device}")
     
-    # Initialize dataset and dataloader
     dataset = UnZippedImageArchive(
         root_dir=image_folder, 
         transform=transforms.Compose([
+            #v2.CenterCrop(size=(640, 640)),
+            minmax_normalize(),
             PerImageNormalize(),
             v2.Resize(size=(224, 224), antialias=True)
         ])
     )
     
-    # Create dataloader - accelerator will handle the distribution
+    # REDUCE BATCH SIZE - this is likely the main issue
     dataloader = torch.utils.data.DataLoader(
         dataset, 
-        batch_size=128, 
+        batch_size=128,  # Keep at 1 or try even smaller if still OOM
         shuffle=False, 
-        num_workers=10,  # Reduce num_workers per GPU since we have multiple GPUs
+        num_workers=10,  # Reduce num_workers to save memory
         collate_fn=custom_collate_fn,
-        pin_memory=True
+        pin_memory=False  # Disable pin_memory to save memory
     )
     
-    # Extract features
     rows, feature_data = extract_features_hpa(
         dataloader=dataloader, 
         output_folder=output_folder

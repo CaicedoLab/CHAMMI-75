@@ -34,21 +34,20 @@ class IterableImageArchive(IterableDataset):
         elif self.config.dataset_size == "small":
             self.metadata_filename = "75ds_small_metadata.csv"
 
-        with zipfile.ZipFile(os.path.join(self.config.data_path, self.metadata_filename), "r") as metadata_zip:
+        with zipfile.ZipFile(self.config.data_path, "r") as metadata_zip:
             metadata = metadata_zip.read(self.metadata_filename).decode("utf-8")
             self.metadata_df = pd.read_csv(StringIO(metadata))
-        self.image_paths = [file for file in self.archive.infolist() 
-                        if not file.is_dir() and file.filename.endswith(self.config.img_type)]
+        self.image_paths = self.metadata_df["storage.path"].tolist()
 
     def return_sample(self, file_list: list):
         try:
             for file_path in file_list:
-                img_bytes = bytearray(self.archive.read(file_path.filename))
+                img_bytes = bytearray(self.archive.read(file_path))
                 torch_buffer = torch.frombuffer(img_bytes, dtype=torch.uint8)
                 image_tensor = decode_image(torch_buffer)
                 image_tensor = image_tensor.to(torch.float16)
 
-                dataset = file_path.filename.split(os.sep)[1]
+                dataset = file_path.split(os.sep)[1]
                 
                 # Dataset configurations using exact sizes provided
                 if dataset == "wtc0001":
@@ -194,7 +193,7 @@ class IterableImageArchive(IterableDataset):
 
                 # Apply guided crops if available
                 if self.guided_crops.crop_size != (-1, -1) and self.config.guided_crops_path:
-                    safetensors_name = file_path.filename[:-4] + ".safetensors"
+                    safetensors_name = file_path[:-4] + ".safetensors"
                     if safetensors_name in self.guided_crops.data_paths:
                         image_tensor = self.guided_crops(image_tensor, safetensors_name)
                     else:
@@ -208,11 +207,11 @@ class IterableImageArchive(IterableDataset):
                 
                 # Yield based on mode
                 if self.config.test:
-                    yield file_path.filename
+                    yield file_path
                 else:
                     yield image_tensor
         except Exception as e:
-            print(f"Error processing {file_path.filename}: {e}")
+            print(f"Error processing {file_path}: {e}")
             import traceback
             traceback.print_exc()
             

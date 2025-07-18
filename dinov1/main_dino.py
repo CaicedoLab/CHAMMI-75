@@ -32,10 +32,7 @@ from torchvision import datasets, transforms
 from torchvision import models as torchvision_models
 from torchvision.transforms.v2 import Transform
 import sys
-sys.path.append('/scr/vidit/FoundationModels/FoundationModels')
-#sys.path.append("../")
-sys.path.append('/scr/vidit/FoundationModels/FoundationModels')
-#sys.path.append("../")
+sys.path.append('../')
 from dataset.dataset import IterableImageArchive
 from dataset import dataset_config
 from dataset.dataset_functions import randomize, split_for_workers, get_proc_split
@@ -215,7 +212,7 @@ def train_dino(args):
     )
 
     config = dataset_config.DatasetConfig(
-                args.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
+                data_path=args.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
                 split_fns=[get_proc_split, randomize, split_for_workers],
                 num_procs = utils.get_world_size(), # maybe works? brother needs to check!
                 proc = torch.distributed.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
@@ -239,7 +236,7 @@ def train_dino(args):
                 )
 
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=11, worker_init_fn=dataset.worker_init_fn, pin_memory=True, persistent_workers=True, prefetch_factor=4)
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=8, worker_init_fn=dataset.worker_init_fn, pin_memory=True)
 
     #save_sample_images(data_loader, output_dir="/scr/vidit/test_images", max_batches=3)
     
