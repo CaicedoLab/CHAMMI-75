@@ -81,15 +81,6 @@ sys.path.append("../morphem")
 from vision_transformer import vit_small, vit_base
 
 
-def get_subcell_model(config):
-    model = ViTPoolModel(config["args"]["vit_model"], config["args"]["pool_model"])
-    state_dict = torch.load(config["weight_path"], map_location="cpu")
-
-    msg = model.load_state_dict(state_dict)
-    print(msg)
-    return model
-
-
 '''
 Class to call DINOv1 model for feature extraction.
 '''
