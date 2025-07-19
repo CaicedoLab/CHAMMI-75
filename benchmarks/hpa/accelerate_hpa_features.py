@@ -219,6 +219,125 @@ class UnZippedImageArchive(Dataset):
         except Exception as e:
             print(f"Error loading image {image_path}: {e}")
             return None, None
+        
+
+def extract_features_alternative(dataloader: torch.utils.data.DataLoader, output_folder: str, model_type: str = 'vit', config_path: str = None):
+    """Alternative approach: Save features from each process separately, then combine"""
+
+    # Initialize model on accelerator device
+    if model_type == 'vit':
+        vit_instance = ViTClass(accelerator.device)
+        vit_model = vit_instance.get_model()
+        vit_model.eval()
+        vit_model, dataloader = accelerator.prepare(vit_model, dataloader)
+    elif model_type == 'subcell':
+        subcell_instance = SubcellClass(accelerator.device, config_path=config_path)
+        subcell_model = subcell_instance.get_model()
+        subcell_model.eval()
+        subcell_model, dataloader = accelerator.prepare(subcell_model, dataloader)
+
+    all_features = []
+    all_rows = []
+    
+    with torch.no_grad():
+        for batch_data in tqdm(dataloader, desc=f"Extracting features on GPU {accelerator.local_process_index}", disable=not accelerator.is_local_main_process):
+            if batch_data[0] is None:
+                continue
+                
+            images, rows = batch_data
+            batch_size = images.shape[0]
+            num_channels = images.shape[1]
+
+            if model_type == 'vit':
+                batch_feat = torch.zeros((batch_size, num_channels * 384), device=accelerator.device)
+                
+                for c in range(num_channels):
+                    single_channel = images[:, c, :, :].unsqueeze(1).float()
+                    
+                    if hasattr(vit_model, 'module'):
+                        output = vit_model.module.forward_features(single_channel)
+                    else:
+                        output = vit_model.forward_features(single_channel)
+                    feat_temp = output["x_norm_clstoken"]
+                    
+                    batch_feat[:, c * 384:(c + 1) * 384] = feat_temp
+                
+                features = batch_feat.cpu()  # Move to CPU immediately
+
+            elif model_type == 'subcell':
+                images = preprocess_input_subcell(images, per_channel=False)
+                with torch.no_grad():
+                    if hasattr(subcell_model, 'module'):
+                        output = subcell_model.module(images)
+                        features = output.feature_vector.cpu()  # Move to CPU immediately
+                    else:
+                        output = subcell_model(images)
+                        features = output.feature_vector.cpu()  # Move to CPU immediately
+                    del images
+            
+            all_features.append(features)
+            all_rows.extend(rows)
+    
+    # Save this process's data to a temporary file
+    if all_features:
+        feature_data = torch.cat(all_features, dim=0)
+    else:
+        if model_type == 'vit':
+            feature_dim = 4 * 384
+        else:
+            feature_dim = 512
+        feature_data = torch.empty((0, feature_dim), dtype=torch.float32)
+    
+    # Save both features and metadata for this process
+    os.makedirs(output_folder, exist_ok=True)
+    process_file = f"{output_folder}/process_{accelerator.process_index}_data.pth"
+    torch.save({
+        'features': feature_data,
+        'metadata': all_rows
+    }, process_file)
+    
+    # Wait for all processes to finish saving
+    accelerator.wait_for_everyone()
+    
+    # Main process combines all files
+    if accelerator.is_main_process:
+        all_features_list = []
+        all_rows_combined = []
+        
+        for i in range(accelerator.num_processes):
+            process_file = f"{output_folder}/process_{i}_data.pth"
+            if os.path.exists(process_file):
+                data = torch.load(process_file, map_location='cpu')
+                if data['features'].shape[0] > 0:  # Only add non-empty tensors
+                    all_features_list.append(data['features'])
+                all_rows_combined.extend(data['metadata'])
+                # Clean up
+                os.remove(process_file)
+        
+        # Combine all features
+        if all_features_list:
+            all_features_combined = torch.cat(all_features_list, dim=0)
+        else:
+            if model_type == 'vit':
+                feature_dim = 4 * 384
+            else:
+                feature_dim = 512
+            all_features_combined = torch.empty((0, feature_dim), dtype=torch.float32)
+        
+        # Save final results
+        torch.save((all_rows_combined, all_features_combined), f"{output_folder}/all_features.pth")
+        print(f"Saved {len(all_rows_combined)} samples with {all_features_combined.shape[1]} features")
+        
+        np.save(f"{output_folder}/features.npy", all_features_combined.numpy())
+        
+        df = pd.DataFrame(all_rows_combined)
+        df.to_csv(f"{output_folder}/metadata.csv", index=False)
+        print(f"Saved metadata with shape: {df.shape}")
+        
+        return all_rows_combined, all_features_combined
+    
+    accelerator.wait_for_everyone()
+    return None, None
 
 def extract_features(dataloader: torch.utils.data.DataLoader, output_folder: str, model_type: str = 'vit', config_path: str = None):
     """Extract features from HPA single-cell crops using multi-GPU"""
@@ -403,7 +522,7 @@ if __name__ == "__main__":
     )
     
     # Extract features
-    rows, feature_data = extract_features(
+    rows, feature_data = extract_features_alternative(
         dataloader=dataloader, 
         output_folder=args.output_folder,
         model_type=args.model,
