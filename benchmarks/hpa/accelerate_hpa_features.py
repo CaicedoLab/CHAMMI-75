@@ -220,7 +220,9 @@ class UnZippedImageArchive(Dataset):
             print(f"Error loading image {image_path}: {e}")
             return None, None
         
-
+'''
+New extraction feature function to collate all the features from the GPUs on CPUs as when using SubCell Model, the gpu goes out of memory from the previous method!
+'''
 def extract_features_alternative(dataloader: torch.utils.data.DataLoader, output_folder: str, model_type: str = 'vit', config_path: str = None):
     """Alternative approach: Save features from each process separately, then combine"""
 
