@@ -28,15 +28,15 @@ class IterableImageArchive(IterableDataset):
         self.metadata_df = None
 
     def load_archive(self):
-        self.archive = zipfile.ZipFile(self.config.data_path, "r")
+        #self.archive = zipfile.ZipFile(self.config.data_path, "r")
         if self.config.dataset_size == "large":
             self.metadata_filename = "75ds_large_metadata.csv"
         elif self.config.dataset_size == "small":
             self.metadata_filename = "75ds_small_metadata.csv"
 
-        with zipfile.ZipFile(os.path.join(self.config.data_path, self.metadata_filename), "r") as metadata_zip:
-            metadata = metadata_zip.read(self.metadata_filename).decode("utf-8")
-            self.metadata_df = pd.read_csv(StringIO(metadata))
+        #with zipfile.ZipFile(os.path.join(self.config.data_path, self.metadata_filename), "r") as metadata_zip:
+            #metadata = metadata_zip.read(self.metadata_filename).decode("utf-8")
+            #self.metadata_df = pd.read_csv(StringIO(metadata))
         self.image_paths = [file for file in self.archive.infolist() 
                         if not file.is_dir() and file.filename.endswith(self.config.img_type)]
 
