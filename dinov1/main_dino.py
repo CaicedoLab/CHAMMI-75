@@ -51,7 +51,7 @@ from vision_transformer import DINOHead
 #os.makedirs("/scratch/cache", exist_ok=True)
 #torch.hub.set_dir("/scratch/cache") 
 
-key = "5cd62073993a6bb2fcd38171138d06dbfce3d3ca"
+key = ""
 wandb.login(key=key)
 
 torchvision_archs = sorted(name for name in torchvision_models.__dict__
