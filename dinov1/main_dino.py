@@ -32,10 +32,7 @@ from torchvision import datasets, transforms
 from torchvision import models as torchvision_models
 from torchvision.transforms.v2 import Transform
 import sys
-sys.path.append('/scr/vidit/FoundationModels/FoundationModels')
-#sys.path.append("../")
-sys.path.append('/scr/vidit/FoundationModels/FoundationModels')
-#sys.path.append("../")
+sys.path.append("../")
 from dataset.dataset import IterableImageArchive
 from dataset import dataset_config
 from dataset.dataset_functions import randomize, split_for_workers, get_proc_split
@@ -220,7 +217,6 @@ def train_dino(args):
                 num_procs = utils.get_world_size(), # maybe works? brother needs to check!
                 proc = torch.distributed.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
                 transform=transform,
-                dataset_size=args.dataset_size,
                 seed=42
         )
     

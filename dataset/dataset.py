@@ -28,11 +28,11 @@ class IterableImageArchive(IterableDataset):
         self.metadata_df = None
 
     def load_archive(self):
-        #self.archive = zipfile.ZipFile(self.config.data_path, "r")
-        if self.config.dataset_size == "large":
-            self.metadata_filename = "75ds_large_metadata.csv"
-        elif self.config.dataset_size == "small":
-            self.metadata_filename = "75ds_small_metadata.csv"
+        self.archive = zipfile.ZipFile(self.config.data_path, "r")
+        #if self.config.dataset_size == "large":
+        #    self.metadata_filename = "75ds_large_metadata.csv"
+        #elif self.config.dataset_size == "small":
+        #    self.metadata_filename = "75ds_small_metadata.csv"
 
         #with zipfile.ZipFile(os.path.join(self.config.data_path, self.metadata_filename), "r") as metadata_zip:
             #metadata = metadata_zip.read(self.metadata_filename).decode("utf-8")
@@ -48,8 +48,11 @@ class IterableImageArchive(IterableDataset):
                 image_tensor = decode_image(torch_buffer)
                 image_tensor = image_tensor.to(torch.float16)
 
-                dataset = file_path.filename.split(os.sep)[1]
                 
+
+
+                '''
+                dataset = file_path.filename.split(os.sep)[1]
                 # Dataset configurations using exact sizes provided
                 if dataset == "wtc0001":
                     baseline = random.choice([(256, 256), (450, 450)])
@@ -201,6 +204,7 @@ class IterableImageArchive(IterableDataset):
                         pass
                 else:
                     pass
+                '''
 
                 # Apply additional transforms if configured
                 if self.config.transform:

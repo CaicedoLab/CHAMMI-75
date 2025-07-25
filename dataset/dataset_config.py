@@ -13,7 +13,7 @@ class DatasetConfig:
     guided_crops_path: str = None
     guided_crops_size: tuple[int, int] = None
     split_fns: list[typing.Union[callable, str]] = field(default_factory=list)
-    dataset_size: str = "small"  # "small" or "large". Used to determine the size of the dataset.
+    #dataset_size: str = "small"  # "small" or "large". Used to determine the size of the dataset.
     num_procs: int = 1
     proc: int = 1
     seed: typing.Union[int, float, str, bytes] = None
