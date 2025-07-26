@@ -20,7 +20,6 @@ import time
 import math
 import json
 from pathlib import Path
-import wandb  # Added wandb import
 import numpy as np
 from PIL import Image
 import torch
@@ -32,10 +31,7 @@ from torchvision import datasets, transforms
 from torchvision import models as torchvision_models
 from torchvision.transforms.v2 import Transform
 import sys
-sys.path.append('/scr/vidit/FoundationModels/FoundationModels')
-#sys.path.append("../")
-sys.path.append('/scr/vidit/FoundationModels/FoundationModels')
-#sys.path.append("../")
+sys.path.append("../")
 from dataset.dataset import IterableImageArchive
 from dataset import dataset_config
 from dataset.dataset_functions import randomize, split_for_workers, get_proc_split
@@ -54,43 +50,9 @@ from vision_transformer import DINOHead
 #os.makedirs("/scratch/cache", exist_ok=True)
 #torch.hub.set_dir("/scratch/cache") 
 
-key = "5cd62073993a6bb2fcd38171138d06dbfce3d3ca"
-wandb.login(key=key)
-
 torchvision_archs = sorted(name for name in torchvision_models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(torchvision_models.__dict__[name]))
-
-def save_sample_images(data_loader, output_dir, max_batches=2):
-    """
-    Iterate over `data_loader` for up to `max_batches` batches,
-    and save each image (or crop) as a .npy array in the specified `output_dir`.
-    """
-    os.makedirs(output_dir, exist_ok=True)
-
-    for batch_idx, batch_data in enumerate(data_loader):
-        # Stop early if we've saved enough batches
-        if batch_idx >= max_batches:
-            break
-
-        # In multi-crop DINO, `batch_data` might be a list of T tensors
-        # e.g. T=2 global + local_crops_number local views
-        if isinstance(batch_data, list):
-            # Each element in batch_data is [batch_size, channels, height, width]
-            for crop_idx, crop_tensor in enumerate(batch_data):
-                for img_idx in range(crop_tensor.size(0)):
-                    # Move to CPU (if on GPU), convert to float32, then to NumPy
-                    img = crop_tensor[img_idx].detach().cpu().float().numpy()
-                    filename = f"batch{batch_idx}_crop{crop_idx}_img{img_idx}.npy"
-                    np.save(os.path.join(output_dir, filename), img)
-        else:
-            # If it's not a list, assume a single tensor [batch_size, C, H, W]
-            for img_idx in range(batch_data.size(0)):
-                img = batch_data[img_idx].detach().cpu().float().numpy()
-                filename = f"batch{batch_idx}_img{img_idx}.npy"
-                np.save(os.path.join(output_dir, filename), img)
-
-    print(f"Saved up to {max_batches} batches of .npy arrays in: {output_dir}")
 
 
 def get_args_parser():
@@ -176,7 +138,7 @@ def get_args_parser():
     parser.add_argument('--output_dir', default=".", type=str, help='Path to save logs and checkpoints.')
     parser.add_argument('--saveckp_freq', default=20, type=int, help='Save checkpoint every x epochs.')
     parser.add_argument('--seed', default=0, type=int, help='Random seed.')
-    parser.add_argument('--num_workers', default=10, type=int, help='Number of data loading workers per GPU.')
+    parser.add_argument('--num_workers', default=7, type=int, help='Number of data loading workers per GPU.')
     parser.add_argument("--dist_url", default="env://", type=str, help="""url used to set up
         distributed training; see https://pytorch.org/docs/stable/distributed.html""")
     parser.add_argument("--local-rank", default=0, type=int, help="Please ignore and do not set this argument.")
@@ -190,6 +152,8 @@ def get_args_parser():
     parser.add_argument('--guided_crops_size', default=(256, 256), type=int, nargs=2,
         help="""Size of the guided crops. Only used if --guided_cropping is True.
         Should be a tuple of two integers (height, width).""")
+    parser.add_argument('--small_list_path', default=None, type=str,
+        help="""Path to the small list of images for the small dataset. Only used if --dataset_size is 'small'.""")
     return parser
 
 
@@ -200,11 +164,6 @@ def train_dino(args):
     print("\n".join("%s: %s" % (k, str(v)) for k, v in sorted(dict(vars(args)).items())))
     cudnn.benchmark = True
 
-
-
-    # Initialize wandb only on the main process
-    if utils.is_main_process():
-        wandb.init(project="Morphem-Foundation-Model", config=vars(args), name="Dino_Small_75ds_Multiscale")
     # ============ preparing data ... ============
 
      # PREV TRANSFORM FROM DINO
@@ -221,6 +180,7 @@ def train_dino(args):
                 proc = torch.distributed.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
                 transform=transform,
                 dataset_size=args.dataset_size,
+                small_list_path = args.small_list_path,
                 seed=42
         )
     
@@ -235,13 +195,12 @@ def train_dino(args):
                 guided_crops_size = args.guided_crops_size,
                 transform=transform,
                 dataset_size=args.dataset_size,
+                small_list_path = args.small_list_path,
                 seed=42
                 )
 
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=11, worker_init_fn=dataset.worker_init_fn, pin_memory=True, persistent_workers=True, prefetch_factor=4)
-
-    #save_sample_images(data_loader, output_dir="/scr/vidit/test_images", max_batches=3)
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=3, worker_init_fn=dataset.worker_init_fn, pin_memory=True, persistent_workers=True, prefetch_factor=4)
     
     print(f"Data loaded: there are {len(data_loader)} images.")
 
@@ -302,9 +261,6 @@ def train_dino(args):
         p.requires_grad = False
     print(f"Student and Teacher are built: they are both {args.arch} network.")
 
-    # Optionally, watch the student network (only in the main process)
-    if utils.is_main_process():
-        wandb.watch(student)
 
     # ============ preparing loss ... ============
     dino_loss = DINOLoss(
@@ -390,8 +346,6 @@ def train_dino(args):
         if utils.is_main_process():
             with (Path(args.output_dir) / "log.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
-            # Log training statistics to wandb
-            wandb.log(log_stats, step=epoch)
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))

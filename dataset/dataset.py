@@ -11,6 +11,7 @@ import os
 import random
 import pandas as pd
 from io import StringIO
+import json
 
 disable_beta_transforms_warning()
 
@@ -22,28 +23,29 @@ class IterableImageArchive(IterableDataset):
         self.archive = None 
         self.image_paths = None 
         self.metadata_filename = None
-        self.file_order = None
         self.guided_crops: GuidedCrop = None
         self.default_transform = None
         self.metadata_df = None
 
     def load_archive(self):
         self.archive = zipfile.ZipFile(self.config.data_path, "r")
-        if self.config.dataset_size == "large":
-            self.metadata_filename = "75ds_large_metadata.csv"
-        elif self.config.dataset_size == "small":
-            self.metadata_filename = "75ds_small_metadata.csv"
-
-        with zipfile.ZipFile(os.path.join(self.config.data_path, self.metadata_filename), "r") as metadata_zip:
-            metadata = metadata_zip.read(self.metadata_filename).decode("utf-8")
-            self.metadata_df = pd.read_csv(StringIO(metadata))
-        self.image_paths = [file for file in self.archive.infolist() 
-                        if not file.is_dir() and file.filename.endswith(self.config.img_type)]
+        if self.config.dataset_size == "small":
+            self.image_paths = json.load(self.config.small_list_path)
+        else:
+            self.image_paths = [file for file in self.archive.infolist() 
+                            if not file.is_dir() and file.filename.endswith(self.config.img_type)]
 
     def return_sample(self, file_list: list):
         try:
             for file_path in file_list:
-                img_bytes = bytearray(self.archive.read(file_path.filename))
+                if self.config.dataset_size == "small":
+                    img_bytes = self.archive.read(file_path)
+                else:
+                    # Read the image bytes from the archive
+                    if isinstance(file_path, str):
+                        img_bytes = self.archive.read(file_path)
+                    else:
+                        img_bytes = self.archive.read(file_path.filename)
                 torch_buffer = torch.frombuffer(img_bytes, dtype=torch.uint8)
                 image_tensor = decode_image(torch_buffer)
                 image_tensor = image_tensor.to(torch.float16)
@@ -55,7 +57,7 @@ class IterableImageArchive(IterableDataset):
                     baseline = random.choice([(256, 256), (450, 450)])
                 elif dataset == "jump0001":
                     baseline = random.choice([(112, 112), (450, 450)])
-                elif dataset == "hpa0001":
+                elif dataset == "hpa0018":
                     baseline = random.choice([(200, 200), (450, 450)])
                 elif dataset == "nidr0031":
                     baseline = random.choice([(128, 128), (250, 250)])
@@ -169,8 +171,6 @@ class IterableImageArchive(IterableDataset):
                     baseline = (-1, -1)  # keep as is
                 elif dataset == "nidr0025":
                     baseline = random.choice([(250, 250), (400, 400)])
-                elif dataset == "nidr0026":
-                    baseline = (-1, -1)  # keep as is
                 elif dataset == "nidr0027":
                     baseline = random.choice([(200, 200), (-1, -1)])
                 elif dataset == "nidr0028":
@@ -179,6 +179,8 @@ class IterableImageArchive(IterableDataset):
                     baseline = (-1, -1)  # keep as is - you didn't specify configuration
                 elif dataset == "nidr0030":
                     baseline = (-1, -1)  # keep as is - you didn't specify configuration
+                elif dataset == "hpa0023":
+                    baseline = random.choice([(256, 256), (512, 512)])
                 else:
                     # Default case for undefined datasets
                     baseline = (-1, -1)
@@ -241,8 +243,6 @@ class IterableImageArchive(IterableDataset):
         worker_data = self.call_splitting_fns(self.image_paths)    
         samples = iter(self.return_sample(worker_data))
 
-        if self.config.test:
-            self.file_order = [file.filename for file in worker_data]
 
         return samples
     
@@ -251,7 +251,10 @@ class IterableImageArchive(IterableDataset):
             archive = zipfile.ZipFile(self.config.data_path, "r")
             image_paths = [file for file in archive.infolist() 
                             if not file.is_dir() and file.filename.endswith(self.config.img_type)] 
-            self.image_paths = image_paths
+            if self.config.dataset_size == "small":
+                image_paths = json.load(self.config.small_list_path)
+            else:
+                self.image_paths = image_paths
 
         if self.config.num_procs > 1:
             return len(get_proc_split(self.image_paths, self.config))
