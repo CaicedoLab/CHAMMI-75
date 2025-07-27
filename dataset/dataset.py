@@ -39,13 +39,9 @@ class IterableImageArchive(IterableDataset):
         try:
             for file_path in file_list:
                 if self.config.dataset_size == "small":
-                    img_bytes = self.archive.read(file_path)
+                    img_bytes = bytearray(self.archive.read(file_path.filename))
                 else:
-                    # Read the image bytes from the archive
-                    if isinstance(file_path, str):
-                        img_bytes = self.archive.read(file_path)
-                    else:
-                        img_bytes = self.archive.read(file_path.filename)
+                    img_bytes = bytearray(self.archive.read(file_path.filename))
                 torch_buffer = torch.frombuffer(img_bytes, dtype=torch.uint8)
                 image_tensor = decode_image(torch_buffer)
                 image_tensor = image_tensor.to(torch.float16)

@@ -1,0 +1,272 @@
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: wandb==0.19.0 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (0.19.0)
+Requirement already satisfied: click!=8.0.0,>=7.1 in /usr/local/lib/python3.10/dist-packages (from wandb==0.19.0) (8.1.7)
+Requirement already satisfied: docker-pycreds>=0.4.0 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from wandb==0.19.0) (0.4.0)
+Requirement already satisfied: gitpython!=3.1.29,>=1.0.0 in /usr/local/lib/python3.10/dist-packages (from wandb==0.19.0) (3.1.43)
+Requirement already satisfied: platformdirs in /usr/local/lib/python3.10/dist-packages (from wandb==0.19.0) (4.3.6)
+Requirement already satisfied: protobuf!=4.21.0,!=5.28.0,<6,>=3.19.0 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from wandb==0.19.0) (4.25.5)
+Requirement already satisfied: psutil>=5.0.0 in /usr/local/lib/python3.10/dist-packages (from wandb==0.19.0) (6.1.1)
+Requirement already satisfied: pydantic<3,>=2.6 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from wandb==0.19.0) (2.10.4)
+Requirement already satisfied: pyyaml in /usr/local/lib/python3.10/dist-packages (from wandb==0.19.0) (6.0.2)
+Requirement already satisfied: requests<3,>=2.0.0 in /usr/local/lib/python3.10/dist-packages (from wandb==0.19.0) (2.32.3)
+Requirement already satisfied: sentry-sdk>=2.0.0 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from wandb==0.19.0) (2.15.0)
+Requirement already satisfied: setproctitle in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from wandb==0.19.0) (1.3.3)
+Requirement already satisfied: setuptools in /usr/lib/python3/dist-packages (from wandb==0.19.0) (59.6.0)
+Requirement already satisfied: typing-extensions<5,>=4.4 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from wandb==0.19.0) (4.12.2)
+Requirement already satisfied: six>=1.4.0 in /usr/local/lib/python3.10/dist-packages (from docker-pycreds>=0.4.0->wandb==0.19.0) (1.17.0)
+Requirement already satisfied: gitdb<5,>=4.0.1 in /usr/local/lib/python3.10/dist-packages (from gitpython!=3.1.29,>=1.0.0->wandb==0.19.0) (4.0.11)
+Requirement already satisfied: annotated-types>=0.6.0 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from pydantic<3,>=2.6->wandb==0.19.0) (0.7.0)
+Requirement already satisfied: pydantic-core==2.27.2 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from pydantic<3,>=2.6->wandb==0.19.0) (2.27.2)
+Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests<3,>=2.0.0->wandb==0.19.0) (3.4.0)
+Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/dist-packages (from requests<3,>=2.0.0->wandb==0.19.0) (3.10)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests<3,>=2.0.0->wandb==0.19.0) (2.2.3)
+Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.10/dist-packages (from requests<3,>=2.0.0->wandb==0.19.0) (2024.12.14)
+Requirement already satisfied: smmap<6,>=3.0.1 in /usr/local/lib/python3.10/dist-packages (from gitdb<5,>=4.0.1->gitpython!=3.1.29,>=1.0.0->wandb==0.19.0) (5.0.1)
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: albumentations in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (1.4.17)
+Requirement already satisfied: numpy>=1.24.4 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from albumentations) (1.26.4)
+Requirement already satisfied: scipy>=1.10.0 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from albumentations) (1.14.1)
+Requirement already satisfied: scikit-image>=0.21.0 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from albumentations) (0.25.0)
+Requirement already satisfied: PyYAML in /usr/local/lib/python3.10/dist-packages (from albumentations) (6.0.2)
+Requirement already satisfied: pydantic>=2.7.0 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from albumentations) (2.10.4)
+Requirement already satisfied: albucore==0.0.17 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from albumentations) (0.0.17)
+Requirement already satisfied: eval-type-backport in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from albumentations) (0.2.0)
+Requirement already satisfied: opencv-python-headless>=4.9.0.80 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from albumentations) (4.10.0.84)
+Requirement already satisfied: annotated-types>=0.6.0 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from pydantic>=2.7.0->albumentations) (0.7.0)
+Requirement already satisfied: pydantic-core==2.27.2 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from pydantic>=2.7.0->albumentations) (2.27.2)
+Requirement already satisfied: typing-extensions>=4.12.2 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from pydantic>=2.7.0->albumentations) (4.12.2)
+Requirement already satisfied: networkx>=3.0 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from scikit-image>=0.21.0->albumentations) (3.4.2)
+Requirement already satisfied: pillow>=10.1 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from scikit-image>=0.21.0->albumentations) (11.0.0)
+Requirement already satisfied: imageio!=2.35.0,>=2.33 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from scikit-image>=0.21.0->albumentations) (2.36.1)
+Requirement already satisfied: tifffile>=2022.8.12 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from scikit-image>=0.21.0->albumentations) (2024.12.12)
+Requirement already satisfied: packaging>=21 in /usr/local/lib/python3.10/dist-packages (from scikit-image>=0.21.0->albumentations) (24.2)
+Requirement already satisfied: lazy-loader>=0.4 in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (from scikit-image>=0.21.0->albumentations) (0.4)
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: munkres in /pfs/lustrep4/users/sanianmv/.local/lib/python3.10/site-packages (1.1.4)
+| distributed init (rank 23): env://| distributed init (rank 17): env://
+
+| distributed init (rank 22): env://| distributed init (rank 19): env://
+| distributed init (rank 16): env://
+
+| distributed init (rank 18): env://
+| distributed init (rank 20): env://
+| distributed init (rank 21): env://
+| distributed init (rank 107): env://| distributed init (rank 111): env://| distributed init (rank 105): env://
+
+
+| distributed init (rank 108): env://
+| distributed init (rank 128): env://| distributed init (rank 133): env://
+
+| distributed init (rank 130): env://
+| distributed init (rank 132): env://
+| distributed init (rank 134): env://
+| distributed init (rank 110): env://
+| distributed init (rank 109): env://
+| distributed init (rank 106): env://
+| distributed init (rank 135): env://
+| distributed init (rank 131): env://
+| distributed init (rank 129): env://
+| distributed init (rank 104): env://
+| distributed init (rank 136): env://
+| distributed init (rank 137): env://
+| distributed init (rank 140): env://
+| distributed init (rank 139): env://
+| distributed init (rank 142): env://
+| distributed init (rank 141): env://
+| distributed init (rank 138): env://
+| distributed init (rank 143): env://
+| distributed init (rank 12): env://
+| distributed init (rank 15): env://
+| distributed init (rank 14): env://
+| distributed init (rank 11): env://
+| distributed init (rank 8): env://| distributed init (rank 9): env://
+
+| distributed init (rank 10): env://
+| distributed init (rank 13): env://
+| distributed init (rank 58): env://
+| distributed init (rank 59): env://
+| distributed init (rank 61): env://
+| distributed init (rank 62): env://
+| distributed init (rank 63): env://
+| distributed init (rank 56): env://
+| distributed init (rank 0): env://
+| distributed init (rank 60): env://
+| distributed init (rank 1): env://
+| distributed init (rank 5): env://
+| distributed init (rank 57): env://
+| distributed init (rank 3): env://
+| distributed init (rank 2): env://
+| distributed init (rank 6): env://
+| distributed init (rank 4): env://
+| distributed init (rank 7): env://
+| distributed init (rank 99): env://| distributed init (rank 102): env://
+
+| distributed init (rank 98): env://
+| distributed init (rank 100): env://| distributed init (rank 96): env://
+
+| distributed init (rank 101): env://
+| distributed init (rank 103): env://| distributed init (rank 97): env://
+
+| distributed init (rank 158): env://| distributed init (rank 154): env://| distributed init (rank 159): env://
+
+
+| distributed init (rank 153): env://
+| distributed init (rank 156): env://
+| distributed init (rank 155): env://
+| distributed init (rank 157): env://
+| distributed init (rank 152): env://
+| distributed init (rank 120): env://| distributed init (rank 125): env://
+
+| distributed init (rank 127): env://
+| distributed init (rank 124): env://| distributed init (rank 123): env://
+| distributed init (rank 126): env://
+| distributed init (rank 122): env://
+
+| distributed init (rank 121): env://
+| distributed init (rank 35): env://
+| distributed init (rank 39): env://
+| distributed init (rank 37): env://
+| distributed init (rank 36): env://
+| distributed init (rank 38): env://
+| distributed init (rank 34): env://
+| distributed init (rank 33): env://
+| distributed init (rank 32): env://
+| distributed init (rank 146): env://| distributed init (rank 145): env://
+
+| distributed init (rank 144): env://
+| distributed init (rank 149): env://
+| distributed init (rank 148): env://
+| distributed init (rank 147): env://
+| distributed init (rank 150): env://
+| distributed init (rank 42): env://
+| distributed init (rank 151): env://
+| distributed init (rank 41): env://
+| distributed init (rank 40): env://
+| distributed init (rank 46): env://
+| distributed init (rank 44): env://
+| distributed init (rank 47): env://
+| distributed init (rank 43): env://
+| distributed init (rank 45): env://
+| distributed init (rank 87): env://
+| distributed init (rank 81): env://| distributed init (rank 84): env://| distributed init (rank 83): env://| distributed init (rank 80): env://
+| distributed init (rank 85): env://
+
+
+
+| distributed init (rank 86): env://
+| distributed init (rank 82): env://
+| distributed init (rank 88): env://| distributed init (rank 94): env://| distributed init (rank 91): env://| distributed init (rank 90): env://
+
+
+
+| distributed init (rank 95): env://
+| distributed init (rank 89): env://
+| distributed init (rank 92): env://
+| distributed init (rank 93): env://
+| distributed init (rank 119): env://| distributed init (rank 118): env://| distributed init (rank 114): env://
+
+
+| distributed init (rank 113): env://
+| distributed init (rank 112): env://| distributed init (rank 116): env://| distributed init (rank 117): env://
+
+
+| distributed init (rank 115): env://
+| distributed init (rank 79): env://| distributed init (rank 75): env://
+
+| distributed init (rank 78): env://
+| distributed init (rank 74): env://
+| distributed init (rank 76): env://
+| distributed init (rank 77): env://
+| distributed init (rank 73): env://
+| distributed init (rank 72): env://
+| distributed init (rank 71): env://| distributed init (rank 70): env://| distributed init (rank 64): env://| distributed init (rank 67): env://
+| distributed init (rank 69): env://
+
+
+| distributed init (rank 65): env://
+
+| distributed init (rank 68): env://| distributed init (rank 66): env://
+
+| distributed init (rank 50): env://
+| distributed init (rank 54): env://
+| distributed init (rank 52): env://
+| distributed init (rank 53): env://| distributed init (rank 48): env://
+
+| distributed init (rank 49): env://
+| distributed init (rank 51): env://
+| distributed init (rank 55): env://
+| distributed init (rank 26): env://| distributed init (rank 25): env://
+
+| distributed init (rank 28): env://| distributed init (rank 24): env://| distributed init (rank 31): env://| distributed init (rank 30): env://| distributed init (rank 29): env://
+
+
+
+
+| distributed init (rank 27): env://
+git:
+  sha: 73295c29ac36fbc0cf8003b0591841877b3b3742, status: has uncommited changes, branch: main
+
+arch: vit_small
+batch_size_per_gpu: 256
+clip_grad: 3.0
+data_path: /scratch/project_462000892/sunny/data/CHAMMI-75_train.zip
+dataset_size: large
+dist_url: env://
+drop_path_rate: 0.1
+epochs: 100
+freeze_last_layer: 1
+global_crops_scale: (0.4, 1.0)
+gpu: 0
+guided_cropping: True
+guided_crops_path: /scratch/project_462000892/sunny/data/CHAMMI-75_guidance.zip
+guided_crops_size: (256, 256)
+local_crops_number: 8
+local_crops_scale: (0.05, 0.4)
+local_rank: 0
+lr: 5e-05
+min_lr: 1e-06
+momentum_teacher: 0.996
+multiscale: True
+norm_last_layer: True
+num_workers: 3
+optimizer: adamw
+out_dim: 65536
+output_dir: dino_result
+patch_size: 16
+rank: 0
+saveckp_freq: 20
+seed: 0
+small_list_path: None
+teacher_temp: 0.04
+use_bn_in_head: False
+use_fp16: True
+warmup_epochs: 10
+warmup_teacher_temp: 0.04
+warmup_teacher_temp_epochs: 0
+weight_decay: 0.04
+weight_decay_end: 0.4
+world_size: 160
+Data loaded: there are 197 images.
+Student and Teacher are built: they are both vit_small network.
+Loss, optimizer and schedulers ready.
+8
+Starting DINO training !
+Epoch: [0/100]  [  0/197]  eta: 12:14:10  loss: 10.561868 (10.561868)  lr: 0.000000 (0.000000)  wd: 0.040000 (0.040000)  time: 223.608444  data: 177.778107  max mem: 42169
+Epoch: [0/100]  [ 10/197]  eta: 1:25:35  loss: 10.736669 (10.733843)  lr: 0.000020 (0.000020)  wd: 0.040000 (0.040000)  time: 27.465143  data: 20.973421  max mem: 42478
+Epoch: [0/100]  [ 20/197]  eta: 0:59:05  loss: 10.867986 (10.810883)  lr: 0.000041 (0.000041)  wd: 0.040000 (0.040000)  time: 9.854925  data: 7.270898  max mem: 42478
+Epoch: [0/100]  [ 30/197]  eta: 0:52:23  loss: 10.884400 (10.826587)  lr: 0.000081 (0.000061)  wd: 0.040001 (0.040001)  time: 14.070636  data: 11.516935  max mem: 42478
+Epoch: [0/100]  [ 40/197]  eta: 0:45:36  loss: 10.826024 (10.820478)  lr: 0.000122 (0.000081)  wd: 0.040002 (0.040001)  time: 14.701639  data: 11.639400  max mem: 42478
+Epoch: [0/100]  [ 50/197]  eta: 0:40:26  loss: 10.779225 (10.807370)  lr: 0.000163 (0.000102)  wd: 0.040004 (0.040002)  time: 12.917885  data: 9.828053  max mem: 42478
+Epoch: [0/100]  [ 60/197]  eta: 0:37:27  loss: 10.731824 (10.792228)  lr: 0.000203 (0.000122)  wd: 0.040006 (0.040003)  time: 14.289432  data: 11.217260  max mem: 42478
+Epoch: [0/100]  [ 70/197]  eta: 0:33:42  loss: 10.681807 (10.775422)  lr: 0.000244 (0.000142)  wd: 0.040008 (0.040004)  time: 14.450938  data: 10.274850  max mem: 42478
+Epoch: [0/100]  [ 80/197]  eta: 0:30:21  loss: 10.659551 (10.759069)  lr: 0.000284 (0.000163)  wd: 0.040011 (0.040005)  time: 13.023546  data: 8.689958  max mem: 42478
+Epoch: [0/100]  [ 90/197]  eta: 0:27:42  loss: 10.644267 (10.747653)  lr: 0.000325 (0.000183)  wd: 0.040015 (0.040006)  time: 14.139662  data: 9.362961  max mem: 42478
+Epoch: [0/100]  [100/197]  eta: 0:24:54  loss: 10.632942 (10.734783)  lr: 0.000366 (0.000203)  wd: 0.040019 (0.040008)  time: 14.741409  data: 8.240193  max mem: 42478
+Epoch: [0/100]  [110/197]  eta: 0:21:58  loss: 10.599222 (10.721242)  lr: 0.000406 (0.000223)  wd: 0.040023 (0.040009)  time: 13.433372  data: 6.925021  max mem: 42478
+Epoch: [0/100]  [120/197]  eta: 0:19:18  loss: 10.567224 (10.707593)  lr: 0.000447 (0.000244)  wd: 0.040028 (0.040011)  time: 13.239102  data: 7.277070  max mem: 42478
+Epoch: [0/100]  [130/197]  eta: 0:16:38  loss: 10.551044 (10.695470)  lr: 0.000488 (0.000264)  wd: 0.040033 (0.040013)  time: 13.478767  data: 7.527503  max mem: 42478
+Epoch: [0/100]  [140/197]  eta: 0:13:55  loss: 10.535625 (10.684062)  lr: 0.000528 (0.000284)  wd: 0.040039 (0.040015)  time: 12.345415  data: 7.072539  max mem: 42478
+Epoch: [0/100]  [150/197]  eta: 0:11:27  loss: 10.514720 (10.671958)  lr: 0.000569 (0.000305)  wd: 0.040045 (0.040017)  time: 12.880625  data: 8.103488  max mem: 42478
+Epoch: [0/100]  [160/197]  eta: 0:08:57  loss: 10.482211 (10.659647)  lr: 0.000609 (0.000325)  wd: 0.040051 (0.040020)  time: 13.596115  data: 7.610390  max mem: 42478
+Epoch: [0/100]  [170/197]  eta: 0:06:27  loss: 10.472602 (10.649518)  lr: 0.000650 (0.000345)  wd: 0.040059 (0.040022)  time: 12.160343  data: 6.078235  max mem: 42478
+Epoch: [0/100]  [180/197]  eta: 0:04:02  loss: 10.540088 (10.649378)  lr: 0.000691 (0.000366)  wd: 0.040066 (0.040025)  time: 12.236524  data: 6.771935  max mem: 42478

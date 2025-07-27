@@ -46,7 +46,7 @@ from torchvision.transforms.functional import to_pil_image
 import utils
 import vision_transformer as vits
 from vision_transformer import DINOHead
-
+from tqdm import tqdm
 #os.makedirs("/scratch/cache", exist_ok=True)
 #torch.hub.set_dir("/scratch/cache") 
 
@@ -200,7 +200,7 @@ def train_dino(args):
                 )
 
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=3, worker_init_fn=dataset.worker_init_fn, pin_memory=True, persistent_workers=True, prefetch_factor=4)
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=args.num_workers, worker_init_fn=dataset.worker_init_fn, pin_memory=True, persistent_workers=True, prefetch_factor=4)
     
     print(f"Data loaded: there are {len(data_loader)} images.")
 
@@ -320,7 +320,7 @@ def train_dino(args):
 
     start_time = time.time()
     print("Starting DINO training !")
-    for epoch in range(start_epoch, args.epochs):
+    for epoch in tqdm(range(start_epoch, args.epochs)):
 
         # ============ training one epoch of DINO ... ============
         train_stats = train_one_epoch(student, teacher, teacher_without_ddp, dino_loss,
@@ -356,7 +356,7 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                     fp16_scaler, args):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Epoch: [{}/{}]'.format(epoch, args.epochs)
-    for it, images in enumerate(metric_logger.log_every(data_loader, 10, header)):
+    for it, images in tqdm(enumerate(metric_logger.log_every(data_loader, 10, header))):
         # update weight decay and learning rate according to their schedule
         it = len(data_loader) * epoch + it  # global training iteration
         if(it == len(lr_schedule)):
@@ -618,7 +618,9 @@ class TensorAugmentationDINO(object):
         )
         self.common_normalization = transforms.Compose([
             v2.RandomResizedCrop(256, scale=(0.9, 1.0), ratio=(0.9, 1.1)),
-            v2.ToImageTensor(),
+            #v2.ToImageTensor(),
+            v2.ToImage(),
+            v2.ToDtype(torch.float32, scale=False),
             SaturationNoiseInjector(low=200, high=255),
             PerImageNormalize()
         ])
