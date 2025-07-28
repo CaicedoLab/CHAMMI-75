@@ -14,10 +14,14 @@
 export RDZV_HOST=$(hostname)
 export RDZV_PORT=29400
 export PYTHONPATH="/pfs/lustrep1/scratch/project_462000892/sunny/code/ICLR_SUB_MAIN/CHAMMI-75:$PYTHONPATH"
-
+export NCCL_TIMEOUT=1800  # Increase timeout from 10min to 30min
+export NCCL_BLOCKING_WAIT=1
+export NCCL_ASYNC_ERROR_HANDLING=1
+export NCCL_DEBUG=INFO
+export TORCH_DISTRIBUTED_DEBUG=DETAIL
 
 module use /appl/local/csc/modulefiles/
-module load pytorch/2.5
+module load pytorch/2.4
 pip install wandb==0.19.0
 pip install albumentations
 pip install munkres
@@ -82,6 +86,6 @@ srun python3 -m torch.distributed.run \
     --rdzv_endpoint="$RDZV_HOST:$RDZV_PORT" \
     dinov1/main_dino.py --arch vit_small \
     --data_path /scratch/project_462000892/sunny/data/CHAMMI-75_train.zip \
-    --output_dir dino_result --lr 0.00005 --batch_size_per_gpu 256 \
+    --output_dir dino_result_1 --lr 0.00005 --batch_size_per_gpu 320 \
     --guided_crops_path /scratch/project_462000892/sunny/data/CHAMMI-75_guidance.zip \
     --multiscale True --dataset_size large --guided_cropping True --num_workers 3

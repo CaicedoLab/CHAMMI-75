@@ -13,7 +13,16 @@ def split_for_workers(data: list, config: DatasetConfig):
     return data[worker_info.id::worker_info.num_workers]
 
 def get_proc_split(data: list, config: DatasetConfig):
-    return data[config.proc::config.num_procs]
+    # Ensure more even distribution across processes
+    # Calculate chunk size and remainder
+    chunk_size = len(data) // config.num_procs
+    remainder = len(data) % config.num_procs
+    
+    # Calculate start and end indices for this process
+    start_idx = config.proc * chunk_size + min(config.proc, remainder)
+    end_idx = start_idx + chunk_size + (1 if config.proc < remainder else 0)
+    
+    return data[start_idx:end_idx]
 
 def randomize(data: list, config: DatasetConfig):
     assert len(data) != 0, "No data was given to randomize"

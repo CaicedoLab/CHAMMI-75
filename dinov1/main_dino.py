@@ -200,9 +200,27 @@ def train_dino(args):
                 )
 
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=args.num_workers, worker_init_fn=dataset.worker_init_fn, pin_memory=True, persistent_workers=True, prefetch_factor=4)
     
-    print(f"Data loaded: there are {len(data_loader)} images.")
+    data_loader = DataLoader(dataset=dataset, 
+                             batch_size=args.batch_size_per_gpu, 
+                             num_workers=args.num_workers, 
+                             worker_init_fn=dataset.worker_init_fn, pin_memory=True,
+                             persistent_workers=True, prefetch_factor=4)
+    '''
+    data_loader = DataLoader(dataset=dataset, 
+                             batch_size=args.batch_size_per_gpu, 
+                             num_workers=args.num_workers, 
+                             worker_init_fn=dataset.worker_init_fn, drop_last=True)
+    '''
+    
+    # Ensure all ranks have consistent data loader lengths
+    if utils.is_dist_avail_and_initialized():
+        dist.barrier()
+        # Debug: print data loader length for each rank
+        print(f"Rank {utils.get_rank()}: Data loader length = {len(data_loader)}")
+        dist.barrier()
+    else:
+        print(f"Data loaded: there are {len(data_loader)} images.")
 
     # ============ building student and teacher networks ... ============
     # we changed the name DeiT-S for ViT-S to avoid confusions
@@ -359,8 +377,8 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
     for it, images in tqdm(enumerate(metric_logger.log_every(data_loader, 10, header))):
         # update weight decay and learning rate according to their schedule
         it = len(data_loader) * epoch + it  # global training iteration
-        if(it == len(lr_schedule)):
-            break
+        # Clamp it to prevent index errors while ensuring all ranks continue
+        it = min(it, len(lr_schedule) - 1)
         for i, param_group in enumerate(optimizer.param_groups):
             param_group["lr"] = lr_schedule[it]
             if i == 0:  # only the first group is regularized
@@ -411,6 +429,11 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
         metric_logger.update(wd=optimizer.param_groups[0]["weight_decay"])
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
+    
+    # Ensure all ranks finish the epoch together
+    if utils.is_dist_avail_and_initialized():
+        dist.barrier()
+    
     print("Averaged stats:", metric_logger)
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 

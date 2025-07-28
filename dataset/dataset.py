@@ -34,7 +34,7 @@ class IterableImageArchive(IterableDataset):
         else:
             self.image_paths = [file for file in self.archive.infolist() 
                             if not file.is_dir() and file.filename.endswith(self.config.img_type)]
-
+            print(f"Loaded {len(self.image_paths)} images")
     def return_sample(self, file_list: list):
         try:
             for file_path in file_list:
