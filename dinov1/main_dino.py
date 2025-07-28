@@ -200,7 +200,7 @@ def train_dino(args):
                 )
 
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=3, worker_init_fn=dataset.worker_init_fn, pin_memory=True, persistent_workers=True, prefetch_factor=4)
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=2, worker_init_fn=dataset.worker_init_fn, drop_last=True)
     
     print(f"Data loaded: there are {len(data_loader)} images.")
 
@@ -617,7 +617,6 @@ class TensorAugmentationDINO(object):
             ]
         )
         self.common_normalization = transforms.Compose([
-            v2.RandomResizedCrop(256, scale=(0.9, 1.0), ratio=(0.9, 1.1)),
             v2.ToImageTensor(),
             SaturationNoiseInjector(low=200, high=255),
             PerImageNormalize()

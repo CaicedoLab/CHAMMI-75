@@ -39,13 +39,9 @@ class IterableImageArchive(IterableDataset):
         try:
             for file_path in file_list:
                 if self.config.dataset_size == "small":
-                    img_bytes = self.archive.read(file_path)
+                    img_bytes = bytearray(self.archive.read(file_path))
                 else:
-                    # Read the image bytes from the archive
-                    if isinstance(file_path, str):
-                        img_bytes = self.archive.read(file_path)
-                    else:
-                        img_bytes = self.archive.read(file_path.filename)
+                    img_bytes = bytearray(self.archive.read(file_path))
                 torch_buffer = torch.frombuffer(img_bytes, dtype=torch.uint8)
                 image_tensor = decode_image(torch_buffer)
                 image_tensor = image_tensor.to(torch.float16)
@@ -197,6 +193,7 @@ class IterableImageArchive(IterableDataset):
                 # Apply guided crops if available
                 if self.guided_crops.crop_size != (-1, -1) and self.config.guided_crops_path:
                     safetensors_name = file_path.filename[:-4] + ".safetensors"
+                    safetensors_name = safetensors_name.replace("CHAMMI-75_train", "CHAMMI-75_guidance")
                     if safetensors_name in self.guided_crops.data_paths:
                         image_tensor = self.guided_crops(image_tensor, safetensors_name)
                     else:

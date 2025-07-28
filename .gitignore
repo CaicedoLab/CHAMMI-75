@@ -170,3 +170,4 @@ cython_debug/
 /dinov1/wandb/
 /mae/wandb/
 /dataset/__pycache__/
+/dinov1/log.txt
