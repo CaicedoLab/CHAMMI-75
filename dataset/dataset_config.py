@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 import typing
 import os
 from torch.utils.data import Dataset
+from typing import Optional
 
 @dataclass
 class DatasetConfig:
@@ -10,8 +11,9 @@ class DatasetConfig:
     Parameters:
     """
     data_path: str
-    guided_crops_path: str = None
-    guided_crops_size: tuple[int, int] = None
+    dataset_config: Optional[str] = None
+    guided_crops_path: Optional[str] = None
+    guided_crops_size: Optional[tuple[int, int]] = None
     split_fns: list[typing.Union[callable, str]] = field(default_factory=list)
     dataset_size: str = "small"  # "small" or "large". Used to determine the size of the dataset.
     num_procs: int = 1
