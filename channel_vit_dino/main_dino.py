@@ -154,6 +154,7 @@ def get_args_parser():
         Should be a tuple of two integers (height, width).""")
     parser.add_argument('--small_list_path', default=None, type=str,
         help="""Path to the small list of images for the small dataset. Only used if --dataset_size is 'small'.""")
+    parser.add_argument('--metadata', default='/mnt/cephfs/mir/jcaicedo/morphem/dataset/sampling/multi_channel_chammi_metadata.csv', type=str)
     return parser
 
 
