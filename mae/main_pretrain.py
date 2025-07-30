@@ -29,13 +29,13 @@ import torchvision.datasets as datasets
 import sys
 from timm.optim import create_optimizer_v2
 from timm.optim.optim_factory import param_groups_weight_decay
-sys.path.append('/scr/vidit/FoundationModels/FoundationModels')
+sys.path.append('../')
 from dataset.dataset import IterableImageArchive
 from dataset import dataset_config
 from dataset.dataset_functions import randomize, split_for_workers, get_proc_split
 from torch.utils.data import DataLoader
 from torchvision.transforms import v2
-sys.path.append('/scr/vidit/FoundationModels/FoundationModels/mae/utils')
+sys.path.append('utils')
 
 import timm
 #assert timm.__version__ == "0.3.2"  # version check
@@ -165,7 +165,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser('MAE pre-training', add_help=False)
     parser.add_argument('--batch_size', default=256, type=int,
                         help='Batch size per GPU (effective batch size is batch_size * accum_iter * # gpus')
-    parser.add_argument('--epochs', default=400, type=int)
+    parser.add_argument('--epochs', default=300, type=int)
     parser.add_argument('--accum_iter', default=1, type=int,
                         help='Accumulate gradient iterations (for increasing the effective batch size under memory constraints)')
 
@@ -231,6 +231,14 @@ def get_args_parser():
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument('--dist_url', default='env://',
                         help='url used to set up distributed training')
+    parser.add_argument('--use_fp32', action='store_true', default=True,
+                        help='Use float32 for images')
+    parser.add_argument('--guided_cropping', default=False, action='store_true',
+                        help='Use guided cropping for training. If true, guided_crops_path and guided_crops_size must be set.')
+    parser.add_argument('--guided_crops_size', default=(256, 256), type=int, nargs=2,
+                        help='Size of the guided crops to use for training. If None, no guided cropping is used.')
+    parser.add_argument('--guided_crops_path', default=None, type=str,)
+    parser.add_argument('--multiscale', default=False, type=bool,)
 
     return parser
 
@@ -250,16 +258,28 @@ def main(args):
 
     cudnn.benchmark = True
 
-    config = dataset_config.DatasetConfig(
-            args.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
-            split_fns=[get_proc_split, randomize, split_for_workers],
-            num_procs = misc.get_world_size(), # maybe works? brother needs to check!
-            proc = misc.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
-            #guided_crops_path = "/scr/vidit/content_filters.zip",
-            #guided_crops_size = (256, 256),
-            transform=TensorAugmentationDINO(),
-            seed=seed
-            )
+    if args.guided_cropping:
+        config = dataset_config.DatasetConfig(
+                args.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
+                split_fns=[get_proc_split, randomize, split_for_workers],
+                num_procs = misc.get_world_size(), # maybe works? brother needs to check!
+                proc = misc.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
+                use_fp32 = args.use_fp32,  # Use float32 for images
+                guided_crops_path = args.guided_crops_path,
+                guided_crops_size = args.guided_crops_size,
+                transform=TensorAugmentationDINO(),
+                seed=seed,
+                )
+    else:
+        config = dataset_config.DatasetConfig(
+                args.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
+                split_fns=[get_proc_split, randomize, split_for_workers],
+                num_procs = misc.get_world_size(), # maybe works? brother needs to check!
+                proc = misc.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
+                use_fp32 = args.use_fp32,  # Use float32 for images
+                transform=TensorAugmentationDINO(),
+                seed=seed,
+                )
     dataset_train = IterableImageArchive(config)
 
 
@@ -276,8 +296,6 @@ def main(args):
         sampler_train = None
 
     print("Sampler_train = %s" % str(sampler_train))
-    if misc.is_main_process():
-        wandb.init(project="Morphem-Foundation-Model", config=vars(args), name="Mae_small_75ds_Baseline")
 
    # if global_rank == 0 and args.log_dir is not None:
         #os.makedirs(args.log_dir, exist_ok=True)
@@ -338,8 +356,6 @@ def main(args):
                 loss_scaler=loss_scaler, epoch=epoch)
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                         'epoch': epoch,}
-        if misc.is_main_process():
-            wandb.log(log_stats, step=epoch)
 
         if args.output_dir and misc.is_main_process():
             with open(os.path.join(args.output_dir, "log.txt"), mode="a", encoding="utf-8") as f:

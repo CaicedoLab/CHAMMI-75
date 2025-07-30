@@ -29,22 +29,20 @@ class IterableImageArchive(IterableDataset):
 
     def load_archive(self):
         self.archive = zipfile.ZipFile(self.config.data_path, "r")
-        if self.config.dataset_size == "small":
-            self.image_paths = json.load(self.config.small_list_path)
-        else:
-            self.image_paths = [file for file in self.archive.infolist() 
-                            if not file.is_dir() and file.filename.endswith(self.config.img_type)]
+        self.image_paths = [file for file in self.archive.infolist() 
+                        if not file.is_dir() and file.filename.endswith(self.config.img_type)]
 
     def return_sample(self, file_list: list):
         try:
             for file_path in file_list:
-                if self.config.dataset_size == "small":
-                    img_bytes = bytearray(self.archive.read(file_path))
-                else:
-                    img_bytes = bytearray(self.archive.read(file_path))
+                img_bytes = bytearray(self.archive.read(file_path.filename))
                 torch_buffer = torch.frombuffer(img_bytes, dtype=torch.uint8)
                 image_tensor = decode_image(torch_buffer)
-                image_tensor = image_tensor.to(torch.float16)
+
+                if self.config.use_fp32:
+                    image_tensor = image_tensor.to(torch.float32)
+                else:
+                    image_tensor = image_tensor.to(torch.float16)
 
                 dataset = file_path.filename.split(os.sep)[1]
                 
@@ -182,16 +180,16 @@ class IterableImageArchive(IterableDataset):
                     baseline = (-1, -1)
 
                 # Apply cropping based on baseline
-                if baseline != (-1, -1):
+                if baseline != (-1, -1) and self.config.guided_crops_path:
                     # Calculate range with proper bounds to avoid randint errors
                     crop_height = random.randint(int(baseline[0] * 0.9), int(baseline[0] * 1.1))
                     crop_width = random.randint(int(baseline[1] * 0.9), int(baseline[1] * 1.1))
                     self.guided_crops.crop_size = (crop_height, crop_width)
-                else:
+                elif self.config.guided_crops_path:
                     self.guided_crops.crop_size = (-1, -1)
 
                 # Apply guided crops if available
-                if self.guided_crops.crop_size != (-1, -1) and self.config.guided_crops_path:
+                if self.config.guided_crops_path and self.guided_crops.crop_size != (-1, -1):
                     safetensors_name = file_path.filename[:-4] + ".safetensors"
                     safetensors_name = safetensors_name.replace("CHAMMI-75_train", "CHAMMI-75_guidance")
                     if safetensors_name in self.guided_crops.data_paths:
@@ -248,10 +246,7 @@ class IterableImageArchive(IterableDataset):
             archive = zipfile.ZipFile(self.config.data_path, "r")
             image_paths = [file for file in archive.infolist() 
                             if not file.is_dir() and file.filename.endswith(self.config.img_type)] 
-            if self.config.dataset_size == "small":
-                image_paths = json.load(self.config.small_list_path)
-            else:
-                self.image_paths = image_paths
+            self.image_paths = image_paths
 
         if self.config.num_procs > 1:
             return len(get_proc_split(self.image_paths, self.config))

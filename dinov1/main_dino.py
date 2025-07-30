@@ -201,7 +201,7 @@ def train_dino(args):
     # Debug data distribution
 
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=6, worker_init_fn=dataset.worker_init_fn, drop_last=True)
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=2, worker_init_fn=dataset.worker_init_fn, drop_last=True)
 
     # Calculate actual batches per epoch once and store it
     batches_per_epoch = len(data_loader)
