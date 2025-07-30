@@ -152,8 +152,6 @@ def get_args_parser():
     parser.add_argument('--guided_crops_size', default=(256, 256), type=int, nargs=2,
         help="""Size of the guided crops. Only used if --guided_cropping is True.
         Should be a tuple of two integers (height, width).""")
-    parser.add_argument('--small_list_path', default=None, type=str,
-        help="""Path to the small list of images for the small dataset. Only used if --dataset_size is 'small'.""")
     return parser
 
 
@@ -180,7 +178,6 @@ def train_dino(args):
                 proc = torch.distributed.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
                 transform=transform,
                 dataset_size=args.dataset_size,
-                small_list_path = args.small_list_path,
                 seed=42
         )
     
@@ -195,13 +192,12 @@ def train_dino(args):
                 guided_crops_size = args.guided_crops_size,
                 transform=transform,
                 dataset_size=args.dataset_size,
-                small_list_path = args.small_list_path,
                 seed=42
                 )
     # Debug data distribution
 
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=2, worker_init_fn=dataset.worker_init_fn, drop_last=True)
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=4, worker_init_fn=dataset.worker_init_fn, drop_last=True, prefetch_factor=2, pin_memory=True)
 
     # Calculate actual batches per epoch once and store it
     batches_per_epoch = len(data_loader)
@@ -323,8 +319,8 @@ def train_dino(args):
     print("Starting DINO training !")
     for epoch in range(start_epoch, args.epochs):
         # Synchronize all processes before starting each epoch
-        if utils.get_world_size() > 1:
-            torch.distributed.barrier()
+        #if utils.get_world_size() > 1:
+        #    torch.distributed.barrier()
         
         print(f"Rank {torch.distributed.get_rank()}: Starting epoch {epoch}")
         sys.stdout.flush()
@@ -335,8 +331,8 @@ def train_dino(args):
             epoch, fp16_scaler, args, batches_per_epoch)
         
         # Synchronize all processes after completing each epoch
-        if utils.get_world_size() > 1:
-            torch.distributed.barrier()
+        #if utils.get_world_size() > 1:
+        #    torch.distributed.barrier()
         
         print(f"Rank {torch.distributed.get_rank()}: Completed epoch {epoch}")
         sys.stdout.flush()
@@ -371,8 +367,8 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
     header = 'Epoch: [{}/{}]'.format(epoch, args.epochs)
     
     # Synchronize all processes at the start of each epoch
-    if utils.get_world_size() > 1:
-        torch.distributed.barrier()
+    #if utils.get_world_size() > 1:
+    #    torch.distributed.barrier()
     
     # Simple metrics tracking
     total_loss = 0.0
@@ -436,14 +432,22 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             current_lr = optimizer.param_groups[0]["lr"]
             current_wd = optimizer.param_groups[0]["weight_decay"]
             avg_loss = total_loss / num_batches
+            elapsed = time.time() - start_time if 'start_time' in locals() else 0
+            it_per_sec = num_batches / elapsed if elapsed > 0 else 0
+            remaining_batches = batches_per_epoch - it - 1
+            eta_sec = remaining_batches / it_per_sec if it_per_sec > 0 else 0
+            eta_str = str(datetime.timedelta(seconds=int(eta_sec)))
             print(f"{header} [{it}/{batches_per_epoch}] "
-                  f"Loss: {loss.item():.4f} (avg: {avg_loss:.4f}) "
-                  f"LR: {current_lr:.6f} WD: {current_wd:.4f}")
+              f"Loss: {loss.item():.4f} (avg: {avg_loss:.4f}) "
+              f"LR: {current_lr:.6f} WD: {current_wd:.4f} "
+              f"ETA: {eta_str}")
             sys.stdout.flush()
+        if it == 0:
+            start_time = time.time()
     
     # Synchronize all processes at the end of each epoch
-    if utils.get_world_size() > 1:
-        torch.distributed.barrier()
+    #if utils.get_world_size() > 1:
+    #    torch.distributed.barrier()
     
     # Calculate final metrics
     if num_batches > 0:

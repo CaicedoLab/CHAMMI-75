@@ -152,27 +152,27 @@ class IterableImageArchive(IterableDataset):
                 elif dataset == "nidr0017":
                     baseline = random.choice([(140, 140), (350, 350)])
                 elif dataset == "nidr0018":
-                    baseline = (-1, -1)  # keep as is
+                    baseline = (-1, -1)  
                 elif dataset == "nidr0019":
                     baseline = random.choice([(240, 240), (350, 350)])
                 elif dataset == "nidr0020":
                     baseline = random.choice([(184, 184), (400, 400)])
                 elif dataset == "nidr0021" or dataset == "nidr0022":
-                    baseline = (-1, -1)  # keep as is
+                    baseline = (-1, -1)  
                 elif dataset == "nidr0023":
                     baseline = random.choice([(184, 184), (400, 400)])
                 elif dataset == "nidr0024":
-                    baseline = (-1, -1)  # keep as is
+                    baseline = (-1, -1)  
                 elif dataset == "nidr0025":
                     baseline = random.choice([(250, 250), (400, 400)])
                 elif dataset == "nidr0027":
                     baseline = random.choice([(200, 200), (-1, -1)])
                 elif dataset == "nidr0028":
-                    baseline = (-1, -1)  # keep as is - you didn't specify configuration
+                    baseline = (-1, -1)  
                 elif dataset == "nidr0029":
-                    baseline = (-1, -1)  # keep as is - you didn't specify configuration
+                    baseline = random.choice([(150, 150), (400, 400)]) 
                 elif dataset == "nidr0030":
-                    baseline = (-1, -1)  # keep as is - you didn't specify configuration
+                    baseline = random.choice([(92, 92), (200, 200)])  
                 elif dataset == "hpa0023":
                     baseline = random.choice([(256, 256), (512, 512)])
                 else:
@@ -191,7 +191,10 @@ class IterableImageArchive(IterableDataset):
                 # Apply guided crops if available
                 if self.config.guided_crops_path and self.guided_crops.crop_size != (-1, -1):
                     safetensors_name = file_path.filename[:-4] + ".safetensors"
-                    safetensors_name = safetensors_name.replace("CHAMMI-75_train", "CHAMMI-75_guidance")
+                    if self.config.dataset_size == "small":
+                        safetensors_name = safetensors_name.replace("CHAMMI-75_small", "CHAMMI-75_small")
+                    else:
+                        safetensors_name = safetensors_name.replace("CHAMMI-75_train", "CHAMMI-75_guidance")
                     if safetensors_name in self.guided_crops.data_paths:
                         image_tensor = self.guided_crops(image_tensor, safetensors_name)
                     else:
