@@ -32,7 +32,7 @@ from torchvision import models as torchvision_models
 from torchvision.transforms.v2 import Transform
 import sys
 sys.path.append("../")
-from dataset.dataset import IterableImageArchive
+from dataset.dataset import ChannelViTDataset
 from dataset import dataset_config
 from dataset.dataset_functions import randomize, split_for_workers, get_proc_split
 from torch.utils.data import DataLoader
@@ -182,7 +182,8 @@ def train_dino(args):
                 transform=transform,
                 dataset_size=args.dataset_size,
                 small_list_path = args.small_list_path,
-                seed=42
+                seed=42,
+                dataset_config=args.metadata
         )
     
     # If guided cropping is enabled, we add the guided crops path and size to the config
@@ -200,8 +201,9 @@ def train_dino(args):
                 seed=42
                 )
 
-    dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=2, worker_init_fn=dataset.worker_init_fn, drop_last=True)
+    dataset = ChannelViTDataset(config)
+    #args.batch_size_per_gpu
+    data_loader = DataLoader(dataset=dataset, batch_size=2, num_workers=1, worker_init_fn=dataset.worker_init_fn, collate_fn=dataset.collate_fn, drop_last=True)
     
     print(f"Data loaded: there are {len(data_loader)} images.")
 
@@ -633,7 +635,7 @@ class TensorAugmentationDINO(object):
 
 
         # first global crop
-        self.global_transfo1 = transforms.Compose([
+        self.global_transfo1 = transforms.Compose([ #224 for global, 96 for local
             v2.RandomResizedCrop(224, scale=global_crops_scale, interpolation=Image.BICUBIC, antialias=True),
             augmentation_pipeline
             #color_jittering,

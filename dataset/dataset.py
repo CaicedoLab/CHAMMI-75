@@ -15,6 +15,7 @@ import json
 import polars as pl
 import math
 import itertools
+from collections import defaultdict
 
 disable_beta_transforms_warning()
 
@@ -139,7 +140,7 @@ OVERRIDES = {'experiment.well':pl.String,
              'geometry.z_slice': pl.String
              }    
 
-class MultiChannelDataset(IterableImageArchive):
+class ChannelViTDataset(IterableImageArchive):
     def __init__(self, config: DatasetConfig) -> None:
         super().__init__(config)
         self.config = config
@@ -165,53 +166,79 @@ class MultiChannelDataset(IterableImageArchive):
             self.image_paths = json.load(self.config.small_list_path)
     
     def return_sample(self, file_list: list):
-        try:
-            for file_group in file_list:
-                ims = [self.read_im(im) for im in file_group]
-                image_tensor = torch.concat(ims, dim=0)
-                
-                dataset = file_group[0].split(os.sep)[1]
-                
-                # baseline = get_crop_size(dataset)
+        for file_group, channel_types in file_list:
+            ims = [self.read_im(im) for im in file_group]
+            image_tensor = torch.concat(ims, dim=0)
+            
+            dataset = file_group[0].split(os.sep)[1]
+            
+            # baseline = get_crop_size(dataset)
 
-                # Apply cropping based on baseline
-                # if baseline != (-1, -1):
-                    # Calculate range with proper bounds to avoid randint errors
-                    # crop_height = random.randint(int(baseline[0] * 0.9), int(baseline[0] * 1.1))
-                    # crop_width = random.randint(int(baseline[1] * 0.9), int(baseline[1] * 1.1))
-                    # self.guided_crops.crop_size = (crop_height, crop_width)
-                # else:
-                #     self.guided_crops.crop_size = (-1, -1)
+            # Apply cropping based on baseline
+            # if baseline != (-1, -1):
+                # Calculate range with proper bounds to avoid randint errors
+                # crop_height = random.randint(int(baseline[0] * 0.9), int(baseline[0] * 1.1))
+                # crop_width = random.randint(int(baseline[1] * 0.9), int(baseline[1] * 1.1))
+                # self.guided_crops.crop_size = (crop_height, crop_width)
+            # else:
+            #     self.guided_crops.crop_size = (-1, -1)
 
-                # # Apply guided crops if available
-                # if self.guided_crops.crop_size != (-1, -1) and self.config.guided_crops_path:
-                #     safetensors_name = file_path.filename[:-4] + ".safetensors"
-                #     safetensors_name = safetensors_name.replace("CHAMMI-75_train", "CHAMMI-75_guidance")
-                #     if safetensors_name in self.guided_crops.data_paths:
-                #         image_tensor = self.guided_crops(image_tensor, safetensors_name)
-                #     else:
-                #         pass
-                # else:
-                #     pass
+            # # Apply guided crops if available
+            # if self.guided_crops.crop_size != (-1, -1) and self.config.guided_crops_path:
+            #     safetensors_name = file_path.filename[:-4] + ".safetensors"
+            #     safetensors_name = safetensors_name.replace("CHAMMI-75_train", "CHAMMI-75_guidance")
+            #     if safetensors_name in self.guided_crops.data_paths:
+            #         image_tensor = self.guided_crops(image_tensor, safetensors_name)
+            #     else:
+            #         pass
+            # else:
+            #     pass
 
-                # Apply additional transforms if configured
-                if self.config.transform:
-                    image_tensor = self.config.transform(image_tensor)
-                
-                # Yield based on mode
-                if self.config.test:
-                    yield file_group[0]
-                else:
-                    yield image_tensor
-        except Exception as e:
-            print(f"Error processing {file_group[0]}: {e}")
-            import traceback
-            traceback.print_exc()
+            # Apply additional transforms if configured
+            if self.config.transform:
+                image_tensor = self.config.transform(image_tensor)
+            
+            if type(image_tensor) == list:
+                channel_types = [tuple(channel_types)]*len(image_tensor)
+                sample = list(zip(image_tensor, channel_types))
+            else:
+                channel_types = tuple(channel_types)
+                sample = image_tensor, channel_types
+            
+            print(len(sample), len(sample[0]), len(sample[1]))
+            # Yield based on mode
+            if self.config.test:
+                yield file_group
+            else:
+                yield sample
 
+    def collate_crops(self, samples: list):
+        collate_dict = defaultdict(list)
+        for image_tensor, channels in samples:
+            collate_dict[channels].append(image_tensor)
+        
+        for channel_types, image_tensor_list in collate_dict.items():
+            if len(image_tensor_list) > 1:
+                collate_dict[channel_types] = torch.stack(image_tensor_list)
+            else:
+                collate_dict[channel_types] = torch.unsqueeze(image_tensor_list[0], 0)
+        return collate_dict
+
+    def collate_fn(self, samples: list):
+        global_crops = []
+        local_crops  = []
+        
+        for sample in samples:
+            global_crops.extend(sample[:2])
+            local_crops.extend(sample[2:])
+        
+        return {'global_minibatches': self.collate_crops(global_crops), 'local_minibatches': self.collate_crops(local_crops)}
+    
     def load_dataset_config(self, config_path):
         proper_path = os.path.abspath(os.path.expanduser(config_path))
         self.dataset_config = pl.read_csv(proper_path, schema_overrides=OVERRIDES)
-        return self.dataset_config.sort('imaging.channel').group_by('imaging.multi_channel_id', maintain_order=True).agg(pl.col('storage.path'))['storage.path'].to_list()
+        aggregated = self.dataset_config.sort('imaging.channel').group_by('imaging.multi_channel_id', maintain_order=True).agg(pl.col('storage.path'), pl.col('imaging.channel_type'))
+        return list(zip(aggregated['storage.path'].to_list(), aggregated['imaging.channel_type'].to_list()))
 
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
@@ -220,7 +247,7 @@ class MultiChannelDataset(IterableImageArchive):
             
         if self.config.guided_crops_path:
             self.default_transform = v2.RandomResizedCrop(size=self.guided_crops.crop_size, antialias=True)  
-        print(self.image_paths[0])
+        
         worker_data = self.call_splitting_fns(self.image_paths)    
         samples = iter(self.return_sample(worker_data))
 
