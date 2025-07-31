@@ -197,7 +197,7 @@ def train_dino(args):
     # Debug data distribution
 
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=4, worker_init_fn=dataset.worker_init_fn, drop_last=True, prefetch_factor=2, pin_memory=True)
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=6, worker_init_fn=dataset.worker_init_fn, drop_last=True, prefetch_factor=2, pin_memory=True, persistent_workers=True)
 
     # Calculate actual batches per epoch once and store it
     batches_per_epoch = len(data_loader)
@@ -319,8 +319,8 @@ def train_dino(args):
     print("Starting DINO training !")
     for epoch in range(start_epoch, args.epochs):
         # Synchronize all processes before starting each epoch
-        #if utils.get_world_size() > 1:
-        #    torch.distributed.barrier()
+        if utils.get_world_size() > 1:
+            torch.distributed.barrier()
         
         print(f"Rank {torch.distributed.get_rank()}: Starting epoch {epoch}")
         sys.stdout.flush()
@@ -331,8 +331,8 @@ def train_dino(args):
             epoch, fp16_scaler, args, batches_per_epoch)
         
         # Synchronize all processes after completing each epoch
-        #if utils.get_world_size() > 1:
-        #    torch.distributed.barrier()
+        if utils.get_world_size() > 1:
+            torch.distributed.barrier()
         
         print(f"Rank {torch.distributed.get_rank()}: Completed epoch {epoch}")
         sys.stdout.flush()
@@ -367,8 +367,8 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
     header = 'Epoch: [{}/{}]'.format(epoch, args.epochs)
     
     # Synchronize all processes at the start of each epoch
-    #if utils.get_world_size() > 1:
-    #    torch.distributed.barrier()
+    if utils.get_world_size() > 1:
+        torch.distributed.barrier()
     
     # Simple metrics tracking
     total_loss = 0.0
@@ -446,8 +446,8 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             start_time = time.time()
     
     # Synchronize all processes at the end of each epoch
-    #if utils.get_world_size() > 1:
-    #    torch.distributed.barrier()
+    if utils.get_world_size() > 1:
+        torch.distributed.barrier()
     
     # Calculate final metrics
     if num_batches > 0:
