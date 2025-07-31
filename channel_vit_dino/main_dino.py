@@ -203,7 +203,7 @@ def train_dino(args):
 
     dataset = ChannelViTDataset(config)
     #args.batch_size_per_gpu
-    data_loader = DataLoader(dataset=dataset, batch_size=2, num_workers=1, worker_init_fn=dataset.worker_init_fn, collate_fn=dataset.collate_fn, drop_last=True)
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=args.num_workers, worker_init_fn=dataset.worker_init_fn, collate_fn=dataset.collate_fn, drop_last=True)
     
     print(f"Data loaded: there are {len(data_loader)} images.")
 
@@ -215,8 +215,9 @@ def train_dino(args):
         student = vits.__dict__[args.arch](
             patch_size=args.patch_size,
             drop_path_rate=args.drop_path_rate,  # stochastic depth
+            in_chans = dataset.num_channels # dataset generates this live from the data itself. 
         )
-        teacher = vits.__dict__[args.arch](patch_size=args.patch_size)
+        teacher = vits.__dict__[args.arch](patch_size=args.patch_size, in_chans = dataset.num_channels)
         embed_dim = student.embed_dim
     # if the network is a XCiT
     elif args.arch in torch.hub.list("facebookresearch/xcit:main"):
@@ -264,7 +265,12 @@ def train_dino(args):
         p.requires_grad = False
     print(f"Student and Teacher are built: they are both {args.arch} network.")
 
+    channel_map = {}
+    for idx, channel in enumerate(dataset.channels):
+        channel_map[channel] = idx
 
+    print(f"Channel VIT channel map initialized. We have {len(channel_map.keys())} different channels in the dataset.")
+        
     # ============ preparing loss ... ============
     dino_loss = DINOLoss(
         args.out_dim,
@@ -306,8 +312,6 @@ def train_dino(args):
                                                args.epochs, len(data_loader))
     print(f"Loss, optimizer and schedulers ready.")
 
-    print(args.local_crops_number)
-
     # ============ optionally resume training ... ============
     to_restore = {"epoch": 0}
     utils.restart_from_checkpoint(
@@ -327,7 +331,7 @@ def train_dino(args):
 
         # ============ training one epoch of DINO ... ============
         train_stats = train_one_epoch(student, teacher, teacher_without_ddp, dino_loss,
-            data_loader, optimizer, lr_schedule, wd_schedule, momentum_schedule,
+            data_loader, optimizer, channel_map, lr_schedule, wd_schedule, momentum_schedule,
             epoch, fp16_scaler, args)
 
         # ============ writing logs ... ============
@@ -355,11 +359,11 @@ def train_dino(args):
 
 
 def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loader,
-                    optimizer, lr_schedule, wd_schedule, momentum_schedule,epoch,
+                    optimizer, channel_map, lr_schedule, wd_schedule, momentum_schedule,epoch,
                     fp16_scaler, args):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Epoch: [{}/{}]'.format(epoch, args.epochs)
-    for it, images in enumerate(metric_logger.log_every(data_loader, 10, header)):
+    for it, batch in enumerate(metric_logger.log_every(data_loader, 10, header)):
         # update weight decay and learning rate according to their schedule
         it = len(data_loader) * epoch + it  # global training iteration
         if(it == len(lr_schedule)):
@@ -369,13 +373,39 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             if i == 0:  # only the first group is regularized
                 param_group["weight_decay"] = wd_schedule[it]
 
-        # move images to gpu
-        images = [im.cuda(non_blocking=True) for im in images]
-        # teacher and student forward passes + compute dino loss
-        with torch.cuda.amp.autocast(fp16_scaler is not None):
-            teacher_output = teacher(images[:2])  # only the 2 global views pass through the teacher
-            student_output = student(images)
-            loss = dino_loss(student_output, teacher_output, epoch)
+        teacher_outputs = []
+        student_global_outputs = []
+        student_local_outputs = []
+        global_minibatches = batch['global_minibatches']
+        local_minibatches = batch['local_minibatches']
+        
+        for channels in global_minibatches.keys():
+            global_minibatch = global_minibatches[channels].cuda(non_blocking=True)
+            local_minibatch  = local_minibatches[channels].cuda(non_blocking=True)
+            extra_tokens = {
+                    "channels": [channel_map[chan] for chan in channels]
+            }
+
+            with torch.cuda.amp.autocast(fp16_scaler is not None):    
+                teacher_output = teacher(global_minibatch, extra_tokens=extra_tokens)
+                teacher_outputs.append(teacher_output)
+                
+                student_global_output = student(global_minibatch, extra_tokens=extra_tokens)
+                student_local_output  = student(local_minibatch, extra_tokens=extra_tokens)
+                student_global_outputs.append(student_global_output)
+                student_local_outputs.append(student_local_output)
+            
+        combined_student_output = [*student_global_outputs, *student_local_outputs]
+        student_combined_out, teacher_combined_out = torch.cat(combined_student_output, dim=0), torch.cat(teacher_outputs, dim=0)
+        loss = dino_loss(student_combined_out, teacher_combined_out, epoch)
+        
+        # # move images to gpu
+        # images = [im.cuda(non_blocking=True) for im in images]
+        # # teacher and student forward passes + compute dino loss
+        # with torch.cuda.amp.autocast(fp16_scaler is not None):
+        #     teacher_output = teacher(images[:2])  # only the 2 global views pass through the teacher
+        #     student_output = student(images)
+        #     loss = dino_loss(student_output, teacher_output, epoch)
 
         if not math.isfinite(loss.item()):
             print("Loss is {}, stopping training".format(loss.item()), force=True)

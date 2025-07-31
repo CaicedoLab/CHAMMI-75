@@ -144,6 +144,8 @@ class ChannelViTDataset(IterableImageArchive):
     def __init__(self, config: DatasetConfig) -> None:
         super().__init__(config)
         self.config = config
+        self.num_channels = None # This gets set later, but it's the total unique channels. Channel vit will need this to init its models.
+        self.channels = None # this is the set of all the unique channel types.
         
         if self.config.dataset_config:
             config_path: str = self.config.dataset_config 
@@ -205,13 +207,15 @@ class ChannelViTDataset(IterableImageArchive):
                 channel_types = tuple(channel_types)
                 sample = image_tensor, channel_types
             
-            print(len(sample), len(sample[0]), len(sample[1]))
             # Yield based on mode
             if self.config.test:
                 yield file_group
             else:
                 yield sample
 
+
+    # TODO: REDO this to be cleaner about the ordering if I want to make the main loop easier. 
+    # Do if the loss is not optimizing because this is probably the issue.
     def collate_crops(self, samples: list):
         collate_dict = defaultdict(list)
         for image_tensor, channels in samples:
@@ -232,11 +236,15 @@ class ChannelViTDataset(IterableImageArchive):
             global_crops.extend(sample[:2])
             local_crops.extend(sample[2:])
         
-        return {'global_minibatches': self.collate_crops(global_crops), 'local_minibatches': self.collate_crops(local_crops)}
+        collate_dict = {'global_minibatches': self.collate_crops(global_crops), 'local_minibatches': self.collate_crops(local_crops)}
+        # print(collate_dict["global_minibatches"].keys())
+        return collate_dict 
     
     def load_dataset_config(self, config_path):
         proper_path = os.path.abspath(os.path.expanduser(config_path))
         self.dataset_config = pl.read_csv(proper_path, schema_overrides=OVERRIDES)
+        self.channels = self.dataset_config['imaging.channel_type'].unique().to_list()
+        self.num_channels = len(self.channels)
         aggregated = self.dataset_config.sort('imaging.channel').group_by('imaging.multi_channel_id', maintain_order=True).agg(pl.col('storage.path'), pl.col('imaging.channel_type'))
         return list(zip(aggregated['storage.path'].to_list(), aggregated['imaging.channel_type'].to_list()))
 

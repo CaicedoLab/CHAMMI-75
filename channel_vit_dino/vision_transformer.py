@@ -53,7 +53,7 @@ class PatchEmbedPerChannel(nn.Module):
 
     def forward(self, x, extra_tokens={}):
         # assume all images in the same batch has the same input channels
-        cur_channels = extra_tokens["channels"][0]
+        cur_channels = extra_tokens["channels"] #[0] removed a slice here. Not sure why they had this.
 
         B, Cin, H, W = x.shape
         # Note: The current number of channels (Cin) can be smaller or equal to in_chans
@@ -62,6 +62,8 @@ class PatchEmbedPerChannel(nn.Module):
         x = self.proj(x.unsqueeze(1))  # B Cout Cin H W
 
         # channel specific offsets
+        # print(cur_channels)
+        # print(self.channel_embed[:, :, cur_channels, :, :].shape, x.shape)
         x += self.channel_embed[:, :, cur_channels, :, :]  # B Cout Cin H W
 
         # preparing the output sequence
