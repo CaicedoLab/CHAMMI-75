@@ -210,6 +210,10 @@ def get_args_parser():
     parser.add_argument('--seed', default=0, type=int)
     parser.add_argument('--resume', default='',
                         help='resume from checkpoint')
+    parser.add_argument('--auto_resume', action='store_true',
+                        help='automatically resume from the latest checkpoint in output_dir')
+    parser.add_argument('--no_auto_resume', action='store_false', dest='auto_resume')
+    parser.set_defaults(auto_resume=True)
 
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='start epoch')
@@ -233,12 +237,17 @@ def get_args_parser():
                         help='url used to set up distributed training')
     parser.add_argument('--use_fp32', action='store_true', default=True,
                         help='Use float32 for images')
-    parser.add_argument('--guided_cropping', default=False, action='store_true',
+    parser.add_argument('--guided_cropping', default=False, type=bool,
                         help='Use guided cropping for training. If true, guided_crops_path and guided_crops_size must be set.')
     parser.add_argument('--guided_crops_size', default=(256, 256), type=int, nargs=2,
                         help='Size of the guided crops to use for training. If None, no guided cropping is used.')
     parser.add_argument('--guided_crops_path', default=None, type=str,)
     parser.add_argument('--multiscale', default=False, type=bool,)
+    parser.add_argument('--dataset_size', default="small", type=str, choices=["small", "large"],)
+    parser.add_argument('--save_freq', default=20, type=int,
+                        help='frequency of saving checkpoints (in epochs)')
+    parser.add_argument('--keep_checkpoints', default=5, type=int,
+                        help='number of recent checkpoints to keep (0 to keep all)')
 
     return parser
 
@@ -268,6 +277,7 @@ def main(args):
                 guided_crops_path = args.guided_crops_path,
                 guided_crops_size = args.guided_crops_size,
                 transform=TensorAugmentationDINO(),
+                dataset_size=args.dataset_size,
                 seed=seed,
                 )
     else:
@@ -278,6 +288,7 @@ def main(args):
                 proc = misc.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
                 use_fp32 = args.use_fp32,  # Use float32 for images
                 transform=TensorAugmentationDINO(),
+                dataset_size=args.dataset_size,
                 seed=seed,
                 )
     dataset_train = IterableImageArchive(config)
@@ -336,7 +347,20 @@ def main(args):
     optimizer    = torch.optim.AdamW(param_groups, lr=args.lr, betas=(0.9, 0.95))
     loss_scaler = NativeScaler()
 
+    # Check for existing checkpoints in output directory and auto-resume from latest
+    if args.output_dir and not args.resume and args.auto_resume:
+        latest_checkpoint = misc.find_latest_checkpoint(args.output_dir)
+        if latest_checkpoint:
+            args.resume = latest_checkpoint
+            print(f"Found existing checkpoint: {latest_checkpoint}. Auto-resuming from it.")
+
     misc.load_model(args=args, model_without_ddp=model_without_ddp, optimizer=optimizer, loss_scaler=loss_scaler)
+
+    print(f"Checkpoint settings:")
+    print(f"  - Auto-resume: {args.auto_resume}")
+    print(f"  - Save frequency: every {args.save_freq} epochs")
+    print(f"  - Keep checkpoints: {args.keep_checkpoints if args.keep_checkpoints > 0 else 'all'}")
+    print(f"  - Output directory: {args.output_dir}")
 
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
@@ -350,7 +374,7 @@ def main(args):
             optimizer, device, epoch, loss_scaler, 
             args=args
         )
-        if args.output_dir and (epoch % 20 == 0 or epoch + 1 == args.epochs):
+        if args.output_dir and (epoch % args.save_freq == 0 or epoch + 1 == args.epochs):
             misc.save_model(
                 args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer,
                 loss_scaler=loss_scaler, epoch=epoch)
