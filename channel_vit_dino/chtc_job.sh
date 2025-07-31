@@ -18,9 +18,9 @@ transfer_input_files = execute_job.sh, /home/jgpeters3/CHAMMI-75, /hdd/jcaicedo/
 
 requirements = (Machine == "jcaicedogpu0002.chtc.wisc.edu")
 request_cpus = 8
-request_memory = 32GB
-request_disk =  32GB
-request_gpus = 1
+request_memory = 400GB
+request_disk =  100GB
+request_gpus = 8
 queue 1
 
 # run this file with condor_submit wandb_key=$WANDB_API_KEY chtc_job.sh
