@@ -34,6 +34,10 @@ class IterableImageArchive(IterableDataset):
         else:
             self.image_paths = [file for file in self.archive.infolist() 
                             if not file.is_dir() and file.filename.endswith(self.config.img_type)]
+        
+        # Remove the problematic image file from the list
+        self.image_paths = [img for img in self.image_paths 
+                           if img.filename != "CHAMMI-75_train/nidr0028/nidr0028-plate_5A-converted/S4_Z3_IC_Sec2_tolu_11_G.png"]
 
     def return_sample(self, file_list: list):
         try:
@@ -211,7 +215,7 @@ class IterableImageArchive(IterableDataset):
                 else:
                     yield image_tensor
         except Exception as e:
-            print(f"Error processing {file_path.filename}: {e}")
+            print(f"Error processing {file_path.filename}: {e}", force=True)
             import traceback
             traceback.print_exc()
             
@@ -252,6 +256,10 @@ class IterableImageArchive(IterableDataset):
                 image_paths = json.load(self.config.small_list_path)
             else:
                 self.image_paths = image_paths
+            
+            # Remove the problematic image file from the list
+            self.image_paths = [img for img in self.image_paths 
+                               if img.filename != "CHAMMI-75_train/nidr0028/nidr0028-plate_5A-converted/S4_Z3_IC_Sec2_tolu_11_G.png"]
 
         if self.config.num_procs > 1:
             return len(get_proc_split(self.image_paths, self.config))

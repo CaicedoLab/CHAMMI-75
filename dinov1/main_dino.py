@@ -201,7 +201,7 @@ def train_dino(args):
     # Debug data distribution
 
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=6, worker_init_fn=dataset.worker_init_fn, drop_last=True)
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=args.num_workers, worker_init_fn=dataset.worker_init_fn, drop_last=True)
 
     # Calculate actual batches per epoch once and store it
     batches_per_epoch = len(data_loader)
@@ -286,6 +286,9 @@ def train_dino(args):
         optimizer = utils.LARS(params_groups)  # to use with convnet and large batches
     # for mixed precision training
     fp16_scaler = None
+
+    print(args.use_fp16)
+    print(args.use_fp16)       
     if args.use_fp16:
         fp16_scaler = torch.cuda.amp.GradScaler()
 
@@ -603,7 +606,7 @@ class PerImageNormalize(nn.Module):
             )
 
         # Now we can pass x through our InstanceNorm2d layer
-        return self.instance_norm(x).to(torch.float16)
+        return self.instance_norm(x)
     
 
 class SaturationNoiseInjector(nn.Module):
@@ -672,7 +675,9 @@ class TensorAugmentationDINO(object):
             ]
         )
         self.common_normalization = transforms.Compose([
-            v2.ToImageTensor(),
+            #v2.ToImageTensor(),
+            v2.ToImage(),
+            v2.ToDtype(torch.float32, scale=False),
             SaturationNoiseInjector(low=200, high=255),
             PerImageNormalize()
         ])
