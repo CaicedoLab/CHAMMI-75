@@ -17,4 +17,4 @@ COPY pixi.toml pixi.lock ./
 
 RUN CONDA_OVERRIDE_CUDA="11.7.1" pixi install --locked
 
-RUN pixi shell-hook --shell bash -e score > /etc/profile.d/pixi.sh
+RUN pixi shell-hook --shell bash  > /etc/profile.d/pixi.sh
