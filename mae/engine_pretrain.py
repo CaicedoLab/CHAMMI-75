@@ -11,7 +11,7 @@
 import math
 import sys
 from typing import Iterable
-
+from tqdm import tqdm
 import torch
 
 import util.misc as misc
@@ -36,7 +36,7 @@ def train_one_epoch(model: torch.nn.Module,
     if log_writer is not None:
         print('log_dir: {}'.format(log_writer.log_dir))
 
-    for data_iter_step, samples in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+    for data_iter_step, samples in tqdm(enumerate(metric_logger.log_every(data_loader, print_freq, header))):
 
         # we use a per iteration (instead of per epoch) lr scheduler
         if data_iter_step % accum_iter == 0:

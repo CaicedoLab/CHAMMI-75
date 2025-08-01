@@ -40,170 +40,180 @@ class IterableImageArchive(IterableDataset):
                            if img.filename != "CHAMMI-75_train/nidr0028/nidr0028-plate_5A-converted/S4_Z3_IC_Sec2_tolu_11_G.png"]
 
     def return_sample(self, file_list: list):
-        try:
-            for file_path in file_list:
-                if self.config.dataset_size == "small":
-                    img_bytes = bytearray(self.archive.read(file_path))
-                else:
-                    img_bytes = bytearray(self.archive.read(file_path))
+        for file_path in file_list:
+            img_bytes = bytearray(self.archive.read(file_path.filename))
+            try:
                 torch_buffer = torch.frombuffer(img_bytes, dtype=torch.uint8)
                 image_tensor = decode_image(torch_buffer)
-                image_tensor = image_tensor.to(torch.float16)
 
-                dataset = file_path.filename.split(os.sep)[1]
-                
-                # Dataset configurations using exact sizes provided
-                if dataset == "wtc0001":
-                    baseline = random.choice([(256, 256), (450, 450)])
-                elif dataset == "jump0001":
-                    baseline = random.choice([(112, 112), (450, 450)])
-                elif dataset == "hpa0018":
-                    baseline = random.choice([(200, 200), (450, 450)])
-                elif dataset == "nidr0031":
-                    baseline = random.choice([(128, 128), (250, 250)])
-                elif dataset == "nidr0032":
-                    baseline = random.choice([(92, 92), (350, 350)])
-                elif dataset == "idr0002":
-                    baseline = random.choice([(114, 114), (350, 350)])
-                elif dataset == "idr0088":
-                    baseline = random.choice([(114, 114), (350, 350)])
-                elif dataset == "idr0086" or dataset == "idr0089":
-                    baseline = (-1, -1)  # keep as is
-                elif dataset == "idr0008":
-                    baseline = random.choice([(224, 224), (512, 512)])  # already defined
-                elif dataset == "idr0001":
-                    baseline = random.choice([(145, 145), (350, 350)])
-                elif dataset == "idr0003":
-                    baseline = random.choice([(72, 72), (140, 140)])
-                elif dataset == "idr0006":
-                    baseline = random.choice([(150, 150), (300, 300)])
-                elif dataset == "idr0005":
-                    baseline = random.choice([(150, 150), (300, 300)])
-                elif dataset == "idr0009":
-                    baseline = random.choice([(150, 150), (450, 450)])
-                elif dataset == "idr0010":
-                    baseline = random.choice([(128, 128), (300, 300)])
-                elif dataset == "idr0011":
-                    baseline = random.choice([(72, 72), (200, 200)])
-                elif dataset == "idr0012":
-                    baseline = random.choice([(128, 128), (200, 200)])
-                elif dataset == "idr0013":
-                    baseline = random.choice([(48, 48), (200, 200)])
-                elif dataset == "idr0017":
-                    baseline = random.choice([(56, 56), (300, 300)])
-                elif dataset == "idr0020":
-                    baseline = random.choice([(70, 70), (200, 200)])
-                elif dataset == "idr0022":
-                    baseline = random.choice([(120, 120), (600, 600)])
-                elif dataset == "idr0028":
-                    baseline = random.choice([(200, 200), (500, 500)])
-                elif dataset == "idr0030":
-                    baseline = random.choice([(150, 150), (300, 300)])
-                elif dataset == "idr0033":
-                    baseline = random.choice([(150, 150), (350, 350)])
-                elif dataset == "idr0035":
-                    baseline = random.choice([(200, 200), (400, 400)])
-                elif dataset == "idr0037":
-                    baseline = random.choice([(100, 100), (400, 400)])
-                elif dataset == "idr0056":
-                    baseline = random.choice([(75, 75), (300, 300)])
-                elif dataset == "idr0069":
-                    baseline = random.choice([(100, 100), (300, 300)])
-                elif dataset == "idr0080":
-                    baseline = random.choice([(200, 200), (400, 400)])
-                elif dataset == "idr0093":
-                    baseline = random.choice([(100, 100), (400, 400)])
-                elif dataset == "idr0094":
-                    baseline = random.choice([(50, 50), (150, 150)])
-                elif dataset == "idr0120":
-                    baseline = random.choice([(200, 200), (600, 600)])
-                elif dataset == "idr0123":
-                    baseline = random.choice([(200, 200), (400, 400)])
-                elif dataset == "idr0128":
-                    baseline = random.choice([(50, 50), (300, 300)])
-                elif dataset == "idr0130":
-                    baseline = random.choice([(20, 20), (150, 150)])
-                elif dataset == "idr0133":
-                    baseline = random.choice([(200, 200), (400, 400)])
-                elif dataset == "idr0140":
-                    baseline = random.choice([(50, 50), (200, 200)])
-                elif dataset == "idr0145":
-                    baseline = random.choice([(100, 100), (300, 300)])
-                elif dataset == "nidr0001":
-                    baseline = random.choice([(300, 300), (500, 500)])
-                elif dataset == "nidr0003":
-                    baseline = (-1, -1)  # keep as is
-                elif dataset == "nidr0004":
-                    baseline = random.choice([(600, 600), (-1, -1)])
-                elif dataset == "nidr0005":
-                    baseline = (-1, -1)  # keep as is
-                elif dataset == "nidr0006":
-                    baseline = random.choice([(128, 128), (300, 300)])
-                elif dataset == "nidr0008":
-                    baseline = random.choice([(84, 84), (400, 400)])
-                elif dataset == "nidr0010":
-                    baseline = random.choice([(64, 64), (250, 250)])
-                elif dataset == "nidr0011":
-                    baseline = random.choice([(140, 140), (450, 450)])
-                elif dataset == "nidr0012":
-                    baseline = random.choice([(45, 45), (400, 400)])
-                elif dataset == "nidr0013":
-                    baseline = random.choice([(92, 92), (350, 350)])
-                elif dataset == "nidr0014":
-                    baseline = random.choice([(140, 140), (350, 350)])
-                elif dataset == "nidr0015":
-                    baseline = random.choice([(140, 140), (350, 350)])
-                elif dataset == "nidr0016":
-                    baseline = random.choice([(140, 140), (250, 250)])
-                elif dataset == "nidr0017":
-                    baseline = random.choice([(140, 140), (350, 350)])
-                elif dataset == "nidr0018":
-                    baseline = (-1, -1)  # keep as is
-                elif dataset == "nidr0019":
-                    baseline = random.choice([(240, 240), (350, 350)])
-                elif dataset == "nidr0020":
-                    baseline = random.choice([(184, 184), (400, 400)])
-                elif dataset == "nidr0021" or dataset == "nidr0022":
-                    baseline = (-1, -1)  # keep as is
-                elif dataset == "nidr0023":
-                    baseline = random.choice([(184, 184), (400, 400)])
-                elif dataset == "nidr0024":
-                    baseline = (-1, -1)  # keep as is
-                elif dataset == "nidr0025":
-                    baseline = random.choice([(250, 250), (400, 400)])
-                elif dataset == "nidr0027":
-                    baseline = random.choice([(200, 200), (-1, -1)])
-                elif dataset == "nidr0028":
-                    baseline = (-1, -1)  # keep as is - you didn't specify configuration
-                elif dataset == "nidr0029":
-                    baseline = (-1, -1)  # keep as is - you didn't specify configuration
-                elif dataset == "nidr0030":
-                    baseline = (-1, -1)  # keep as is - you didn't specify configuration
-                elif dataset == "hpa0023":
-                    baseline = random.choice([(256, 256), (512, 512)])
+                if self.config.use_fp32:
+                    image_tensor = image_tensor.to(torch.float32)
                 else:
-                    # Default case for undefined datasets
-                    baseline = (-1, -1)
+                    image_tensor = image_tensor.to(torch.float16)
+            except Exception as e:
+                # Log the error to a text file
+                with open("corrupted_files.txt", "a") as f:
+                    f.write(f"Error decoding image {file_path.filename}: {e}\n")
+                print(f"Error decoding image {file_path.filename}: {e}")
+                continue
 
-                # Apply cropping based on baseline
-                if baseline != (-1, -1):
-                    # Calculate range with proper bounds to avoid randint errors
-                    crop_height = random.randint(int(baseline[0] * 0.9), int(baseline[0] * 1.1))
-                    crop_width = random.randint(int(baseline[1] * 0.9), int(baseline[1] * 1.1))
-                    self.guided_crops.crop_size = (crop_height, crop_width)
+            dataset = file_path.filename.split(os.sep)[1]
+            
+            # Dataset configurations using exact sizes provided
+            if dataset == "wtc0001":
+                baseline = random.choice([(256, 256), (450, 450)])
+            elif dataset == "jump0001":
+                baseline = random.choice([(112, 112), (450, 450)])
+            elif dataset == "hpa0018":
+                baseline = random.choice([(200, 200), (450, 450)])
+            elif dataset == "nidr0031":
+                baseline = random.choice([(128, 128), (250, 250)])
+            elif dataset == "nidr0032":
+                baseline = random.choice([(92, 92), (350, 350)])
+            elif dataset == "idr0002":
+                baseline = random.choice([(114, 114), (350, 350)])
+            elif dataset == "idr0088":
+                baseline = random.choice([(114, 114), (350, 350)])
+            elif dataset == "idr0086" or dataset == "idr0089":
+                baseline = (-1, -1)  # keep as is
+            elif dataset == "idr0008":
+                baseline = random.choice([(224, 224), (512, 512)])  # already defined
+            elif dataset == "idr0001":
+                baseline = random.choice([(145, 145), (350, 350)])
+            elif dataset == "idr0003":
+                baseline = random.choice([(72, 72), (140, 140)])
+            elif dataset == "idr0006":
+                baseline = random.choice([(150, 150), (300, 300)])
+            elif dataset == "idr0005":
+                baseline = random.choice([(150, 150), (300, 300)])
+            elif dataset == "idr0009":
+                baseline = random.choice([(150, 150), (450, 450)])
+            elif dataset == "idr0010":
+                baseline = random.choice([(128, 128), (300, 300)])
+            elif dataset == "idr0011":
+                baseline = random.choice([(72, 72), (200, 200)])
+            elif dataset == "idr0012":
+                baseline = random.choice([(128, 128), (200, 200)])
+            elif dataset == "idr0013":
+                baseline = random.choice([(48, 48), (200, 200)])
+            elif dataset == "idr0017":
+                baseline = random.choice([(56, 56), (300, 300)])
+            elif dataset == "idr0020":
+                baseline = random.choice([(70, 70), (200, 200)])
+            elif dataset == "idr0022":
+                baseline = random.choice([(120, 120), (600, 600)])
+            elif dataset == "idr0028":
+                baseline = random.choice([(200, 200), (500, 500)])
+            elif dataset == "idr0030":
+                baseline = random.choice([(150, 150), (300, 300)])
+            elif dataset == "idr0033":
+                baseline = random.choice([(150, 150), (350, 350)])
+            elif dataset == "idr0035":
+                baseline = random.choice([(200, 200), (400, 400)])
+            elif dataset == "idr0037":
+                baseline = random.choice([(100, 100), (400, 400)])
+            elif dataset == "idr0056":
+                baseline = random.choice([(75, 75), (300, 300)])
+            elif dataset == "idr0069":
+                baseline = random.choice([(100, 100), (300, 300)])
+            elif dataset == "idr0080":
+                baseline = random.choice([(200, 200), (400, 400)])
+            elif dataset == "idr0093":
+                baseline = random.choice([(100, 100), (400, 400)])
+            elif dataset == "idr0094":
+                baseline = random.choice([(50, 50), (150, 150)])
+            elif dataset == "idr0120":
+                baseline = random.choice([(200, 200), (600, 600)])
+            elif dataset == "idr0123":
+                baseline = random.choice([(200, 200), (400, 400)])
+            elif dataset == "idr0128":
+                baseline = random.choice([(50, 50), (300, 300)])
+            elif dataset == "idr0130":
+                baseline = random.choice([(20, 20), (150, 150)])
+            elif dataset == "idr0133":
+                baseline = random.choice([(200, 200), (400, 400)])
+            elif dataset == "idr0140":
+                baseline = random.choice([(50, 50), (200, 200)])
+            elif dataset == "idr0145":
+                baseline = random.choice([(100, 100), (300, 300)])
+            elif dataset == "nidr0001":
+                baseline = random.choice([(300, 300), (500, 500)])
+            elif dataset == "nidr0003":
+                baseline = (-1, -1)  # keep as is
+            elif dataset == "nidr0004":
+                baseline = random.choice([(600, 600), (-1, -1)])
+            elif dataset == "nidr0005":
+                baseline = (-1, -1)  # keep as is
+            elif dataset == "nidr0006":
+                baseline = random.choice([(128, 128), (300, 300)])
+            elif dataset == "nidr0008":
+                baseline = random.choice([(84, 84), (400, 400)])
+            elif dataset == "nidr0010":
+                baseline = random.choice([(64, 64), (250, 250)])
+            elif dataset == "nidr0011":
+                baseline = random.choice([(140, 140), (450, 450)])
+            elif dataset == "nidr0012":
+                baseline = random.choice([(45, 45), (400, 400)])
+            elif dataset == "nidr0013":
+                baseline = random.choice([(92, 92), (350, 350)])
+            elif dataset == "nidr0014":
+                baseline = random.choice([(140, 140), (350, 350)])
+            elif dataset == "nidr0015":
+                baseline = random.choice([(140, 140), (350, 350)])
+            elif dataset == "nidr0016":
+                baseline = random.choice([(140, 140), (250, 250)])
+            elif dataset == "nidr0017":
+                baseline = random.choice([(140, 140), (350, 350)])
+            elif dataset == "nidr0018":
+                baseline = (-1, -1)  
+            elif dataset == "nidr0019":
+                baseline = random.choice([(240, 240), (350, 350)])
+            elif dataset == "nidr0020":
+                baseline = random.choice([(184, 184), (400, 400)])
+            elif dataset == "nidr0021" or dataset == "nidr0022":
+                baseline = (-1, -1)  
+            elif dataset == "nidr0023":
+                baseline = random.choice([(184, 184), (400, 400)])
+            elif dataset == "nidr0024":
+                baseline = (-1, -1)  
+            elif dataset == "nidr0025":
+                baseline = random.choice([(250, 250), (400, 400)])
+            elif dataset == "nidr0027":
+                baseline = random.choice([(200, 200), (-1, -1)])
+            elif dataset == "nidr0028":
+                baseline = (-1, -1)  
+            elif dataset == "nidr0029":
+                baseline = random.choice([(150, 150), (400, 400)]) 
+            elif dataset == "nidr0030":
+                baseline = random.choice([(92, 92), (200, 200)])  
+            elif dataset == "hpa0023":
+                baseline = random.choice([(256, 256), (512, 512)])
+            else:
+                # Default case for undefined datasets
+                baseline = (-1, -1)
+
+            # Apply cropping based on baseline
+            if baseline != (-1, -1) and self.config.guided_crops_path:
+                # Calculate range with proper bounds to avoid randint errors
+                crop_height = random.randint(int(baseline[0] * 0.9), int(baseline[0] * 1.1))
+                crop_width = random.randint(int(baseline[1] * 0.9), int(baseline[1] * 1.1))
+                self.guided_crops.crop_size = (crop_height, crop_width)
+            elif self.config.guided_crops_path:
+                self.guided_crops.crop_size = (-1, -1)
+
+            # Apply guided crops if available
+            if self.config.guided_crops_path and self.guided_crops.crop_size != (-1, -1):
+                safetensors_name = file_path.filename[:-4] + ".safetensors"
+                if self.config.dataset_size == "small":
+                    safetensors_name = safetensors_name.replace("CHAMMI-75_small", "CHAMMI-75_guidance")
                 else:
-                    self.guided_crops.crop_size = (-1, -1)
-
-                # Apply guided crops if available
-                if self.guided_crops.crop_size != (-1, -1) and self.config.guided_crops_path:
-                    safetensors_name = file_path.filename[:-4] + ".safetensors"
                     safetensors_name = safetensors_name.replace("CHAMMI-75_train", "CHAMMI-75_guidance")
-                    if safetensors_name in self.guided_crops.data_paths:
-                        image_tensor = self.guided_crops(image_tensor, safetensors_name)
-                    else:
-                        pass
+                if safetensors_name in self.guided_crops.data_paths:
+                    image_tensor = self.guided_crops(image_tensor, safetensors_name)
                 else:
                     pass
+            else:
+                pass
 
                 # Apply additional transforms if configured
                 if self.config.transform:
