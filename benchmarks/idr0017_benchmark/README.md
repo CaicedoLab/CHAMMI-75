@@ -12,4 +12,7 @@ Determines how the replicates data is fused. Early fusion combines the replicate
 
 
 #### Entry point for the library: idr0017_benchmark.py
+```
+python idr0017_benchmark.py
+```
 #### Configure the benchmark test: config.yaml
