@@ -372,6 +372,8 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
         with torch.cuda.amp.autocast(fp16_scaler is not None):
             teacher_output = teacher(images[:2])  # only the 2 global views pass through the teacher
             student_output = student(images)
+            print("Student output shape:", student_output.shape)
+            print("Teacher output shape:", teacher_output.shape)
             loss = dino_loss(student_output, teacher_output, epoch)
 
         if not math.isfinite(loss.item()):
