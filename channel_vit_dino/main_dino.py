@@ -266,8 +266,7 @@ def train_dino(args):
     print(f"Student and Teacher are built: they are both {args.arch} network.")
 
     channel_map = {}
-    sorted_channels = sorted(dataset.channels)
-    for idx, channel in enumerate(sorted_channels):
+    for idx, channel in enumerate(dataset.channels):
         channel_map[channel] = idx
 
     print(f"Channel VIT channel map initialized. We have {len(channel_map.keys())} different channels in the dataset.")

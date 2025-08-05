@@ -631,9 +631,6 @@ class MultiCropWrapper(nn.Module):
         return self.head(output)
 
 
-
-
-
 def get_params_groups(model):
     regularized = []
     not_regularized = []
