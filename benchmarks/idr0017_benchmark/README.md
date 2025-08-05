@@ -11,7 +11,7 @@ Performs statistical analysis (effect size) for each cell line in the study and 
 Determines how the replicates data is fused. Early fusion combines the replicates initially and then performs the statistical analysis. Late fusion perform analysis at replicate level and then combines the score at replicate level.
 
 
-#### Entry point for the library: idr0017_benchmark.py
+#### Entry point for the framework: idr0017_benchmark.py
 ```
 python idr0017_benchmark.py
 ```
