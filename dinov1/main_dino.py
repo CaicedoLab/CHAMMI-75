@@ -152,6 +152,8 @@ def get_args_parser():
     parser.add_argument('--guided_crops_size', default=(256, 256), type=int, nargs=2,
         help="""Size of the guided crops. Only used if --guided_cropping is True.
         Should be a tuple of two integers (height, width).""")
+    parser.add_argument('--small_list_path', default=None, type=str,
+        help="""Path to the small list of images for the small dataset. Only used if --dataset_size is 'small'.""")
     return parser
 
 
@@ -178,6 +180,7 @@ def train_dino(args):
                 proc = torch.distributed.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
                 transform=transform,
                 dataset_size=args.dataset_size,
+                small_list_path = args.small_list_path,
                 seed=42
         )
     
@@ -192,16 +195,14 @@ def train_dino(args):
                 guided_crops_size = args.guided_crops_size,
                 transform=transform,
                 dataset_size=args.dataset_size,
+                small_list_path = args.small_list_path,
                 seed=42
                 )
-    # Debug data distribution
 
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=6, worker_init_fn=dataset.worker_init_fn, drop_last=True, prefetch_factor=2, pin_memory=True, persistent_workers=True)
-
-    # Calculate actual batches per epoch once and store it
-    batches_per_epoch = len(data_loader)
-    print(f"Data loaded: there are {batches_per_epoch} batches per epoch.")
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=2, worker_init_fn=dataset.worker_init_fn, drop_last=True)
+    
+    print(f"Data loaded: there are {len(data_loader)} images.")
 
     # ============ building student and teacher networks ... ============
     # we changed the name DeiT-S for ViT-S to avoid confusions
@@ -289,18 +290,20 @@ def train_dino(args):
     lr_schedule = utils.cosine_scheduler(
         args.lr * (args.batch_size_per_gpu * utils.get_world_size()) / 256.,  # linear scaling rule
         args.min_lr,
-        args.epochs, batches_per_epoch,
+        args.epochs, len(data_loader),
         warmup_epochs=args.warmup_epochs,
     )
     wd_schedule = utils.cosine_scheduler(
         args.weight_decay,
         args.weight_decay_end,
-        args.epochs, batches_per_epoch,
+        args.epochs, len(data_loader),
     )
     # momentum parameter is increased to 1. during training with a cosine schedule
     momentum_schedule = utils.cosine_scheduler(args.momentum_teacher, 1,
-                                               args.epochs, batches_per_epoch)
+                                               args.epochs, len(data_loader))
     print(f"Loss, optimizer and schedulers ready.")
+
+    print(args.local_crops_number)
 
     # ============ optionally resume training ... ============
     to_restore = {"epoch": 0}
@@ -318,24 +321,11 @@ def train_dino(args):
     start_time = time.time()
     print("Starting DINO training !")
     for epoch in range(start_epoch, args.epochs):
-        # Synchronize all processes before starting each epoch
-        if utils.get_world_size() > 1:
-            torch.distributed.barrier()
-        
-        print(f"Rank {torch.distributed.get_rank()}: Starting epoch {epoch}")
-        sys.stdout.flush()
 
         # ============ training one epoch of DINO ... ============
         train_stats = train_one_epoch(student, teacher, teacher_without_ddp, dino_loss,
             data_loader, optimizer, lr_schedule, wd_schedule, momentum_schedule,
-            epoch, fp16_scaler, args, batches_per_epoch)
-        
-        # Synchronize all processes after completing each epoch
-        if utils.get_world_size() > 1:
-            torch.distributed.barrier()
-        
-        print(f"Rank {torch.distributed.get_rank()}: Completed epoch {epoch}")
-        sys.stdout.flush()
+            epoch, fp16_scaler, args)
 
         # ============ writing logs ... ============
         save_dict = {
@@ -363,27 +353,18 @@ def train_dino(args):
 
 def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loader,
                     optimizer, lr_schedule, wd_schedule, momentum_schedule,epoch,
-                    fp16_scaler, args, batches_per_epoch):
+                    fp16_scaler, args):
+    metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Epoch: [{}/{}]'.format(epoch, args.epochs)
-    
-    # Synchronize all processes at the start of each epoch
-    if utils.get_world_size() > 1:
-        torch.distributed.barrier()
-    
-    # Simple metrics tracking
-    total_loss = 0.0
-    num_batches = 0
-    
-    for it, images in enumerate(data_loader):
+    for it, images in enumerate(metric_logger.log_every(data_loader, 10, header)):
         # update weight decay and learning rate according to their schedule
-        global_it = batches_per_epoch * epoch + it  # global training iteration
-        if(global_it >= len(lr_schedule)):
-            print(f"Rank {torch.distributed.get_rank()}: Breaking due to lr_schedule limit at iteration {global_it}")
+        it = len(data_loader) * epoch + it  # global training iteration
+        if(it == len(lr_schedule)):
             break
         for i, param_group in enumerate(optimizer.param_groups):
-            param_group["lr"] = lr_schedule[global_it]
+            param_group["lr"] = lr_schedule[it]
             if i == 0:  # only the first group is regularized
-                param_group["weight_decay"] = wd_schedule[global_it]
+                param_group["weight_decay"] = wd_schedule[it]
 
         # move images to gpu
         images = [im.cuda(non_blocking=True) for im in images]
@@ -392,11 +373,11 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             teacher_output = teacher(images[:2])  # only the 2 global views pass through the teacher
             student_output = student(images)
             loss = dino_loss(student_output, teacher_output, epoch)
-        if utils.is_main_process():
-            if not math.isfinite(loss.item()):
-                print("Loss is {}, stopping training".format(loss.item()), force=True)
-                sys.exit(1)
-            
+
+        if not math.isfinite(loss.item()):
+            print("Loss is {}, stopping training".format(loss.item()), force=True)
+            sys.exit(1)
+
         # student update
         optimizer.zero_grad()
         param_norms = None
@@ -416,62 +397,22 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                                               args.freeze_last_layer)
             fp16_scaler.step(optimizer)
             fp16_scaler.update()
+
         # EMA update for the teacher
         with torch.no_grad():
-            m = momentum_schedule[global_it]  # momentum parameter
+            m = momentum_schedule[it]  # momentum parameter
             for param_q, param_k in zip(student.module.parameters(), teacher_without_ddp.parameters()):
                 param_k.data.mul_(m).add_((1 - m) * param_q.detach().data)
 
         # logging
         torch.cuda.synchronize()
-        total_loss += loss.item()
-        num_batches += 1
-        
-        # Print progress every 10 iterations
-        if it % 10 == 0:
-            current_lr = optimizer.param_groups[0]["lr"]
-            current_wd = optimizer.param_groups[0]["weight_decay"]
-            avg_loss = total_loss / num_batches
-            elapsed = time.time() - start_time if 'start_time' in locals() else 0
-            it_per_sec = num_batches / elapsed if elapsed > 0 else 0
-            remaining_batches = batches_per_epoch - it - 1
-            eta_sec = remaining_batches / it_per_sec if it_per_sec > 0 else 0
-            eta_str = str(datetime.timedelta(seconds=int(eta_sec)))
-            print(f"{header} [{it}/{batches_per_epoch}] "
-              f"Loss: {loss.item():.4f} (avg: {avg_loss:.4f}) "
-              f"LR: {current_lr:.6f} WD: {current_wd:.4f} "
-              f"ETA: {eta_str}")
-            sys.stdout.flush()
-        if it == 0:
-            start_time = time.time()
-    
-    # Synchronize all processes at the end of each epoch
-    if utils.get_world_size() > 1:
-        torch.distributed.barrier()
-    
-    # Calculate final metrics
-    if num_batches > 0:
-        avg_loss = total_loss / num_batches
-        final_lr = optimizer.param_groups[0]["lr"]
-        final_wd = optimizer.param_groups[0]["weight_decay"]
-        
-        # For distributed training, we need to gather stats from all processes
-        if utils.get_world_size() > 1:
-            # Convert to tensor for all_reduce
-            loss_tensor = torch.tensor(avg_loss, device='cuda')
-            torch.distributed.all_reduce(loss_tensor, op=torch.distributed.ReduceOp.SUM)
-            avg_loss = (loss_tensor / utils.get_world_size()).item()
-        
-        print(f"Epoch [{epoch}] completed - Average Loss: {avg_loss:.4f}, "
-              f"Final LR: {final_lr:.6f}, Final WD: {final_wd:.4f}")
-        
-        return {
-            'loss': avg_loss,
-            'lr': final_lr,
-            'wd': final_wd
-        }
-    else:
-        return {'loss': 0.0, 'lr': 0.0, 'wd': 0.0}
+        metric_logger.update(loss=loss.item())
+        metric_logger.update(lr=optimizer.param_groups[0]["lr"])
+        metric_logger.update(wd=optimizer.param_groups[0]["weight_decay"])
+    # gather the stats from all processes
+    metric_logger.synchronize_between_processes()
+    print("Averaged stats:", metric_logger)
+    return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
 
 class DINOLoss(nn.Module):
