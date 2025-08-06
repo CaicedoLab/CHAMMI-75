@@ -46,7 +46,6 @@ from torchvision.transforms.functional import to_pil_image
 import utils
 import vision_transformer as vits
 from vision_transformer import DINOHead
-
 #os.makedirs("/scratch/cache", exist_ok=True)
 #torch.hub.set_dir("/scratch/cache") 
 
@@ -373,10 +372,7 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             if i == 0:  # only the first group is regularized
                 param_group["weight_decay"] = wd_schedule[it]
         
-        
-        teacher_outputs = []
-        student_global_outputs = []
-        student_local_outputs = []
+        loss = 0.0
         for channels, minibatch in batch.items():
             extra_tokens = {
                     "channels": [channel_map[chan] for chan in channels]
@@ -386,18 +382,13 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                 global_crops = minibatch['global_crops'].cuda(non_blocking=True)
                 local_crops = minibatch['local_crops'].cuda(non_blocking=True)
                 teacher_output = teacher(global_crops, extra_tokens=extra_tokens)
-                teacher_outputs.append(teacher_output)
                 
-                student_global_output = student(global_crops, extra_tokens=extra_tokens)
-                student_local_output  = student(local_crops, extra_tokens=extra_tokens)
-                student_global_outputs.append(student_global_output)
-                student_local_outputs.append(student_local_output)
-        
-               
-        combined_student_output = [*student_global_outputs, *student_local_outputs]
-        student_combined_out, teacher_combined_out = torch.cat(combined_student_output, dim=0), torch.cat(teacher_outputs, dim=0)
-        loss = dino_loss(student_combined_out, teacher_combined_out, epoch)
+                student_output = student([global_crops, local_crops], extra_tokens=extra_tokens)        
+
+            loss += dino_loss(student_output, teacher_output, epoch)
             
+            
+        loss = loss / len(batch)
         if not math.isfinite(loss.item()):
             print("Loss is {}, stopping training".format(loss.item()), force=True)
             sys.exit(1)
