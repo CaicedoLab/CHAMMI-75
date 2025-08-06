@@ -372,41 +372,32 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             param_group["lr"] = lr_schedule[it]
             if i == 0:  # only the first group is regularized
                 param_group["weight_decay"] = wd_schedule[it]
-
+        
+        
         teacher_outputs = []
         student_global_outputs = []
         student_local_outputs = []
-        global_minibatches = batch['global_minibatches']
-        local_minibatches = batch['local_minibatches']
-        
-        for channels in global_minibatches.keys():
-            global_minibatch = global_minibatches[channels].cuda(non_blocking=True)
-            local_minibatch  = local_minibatches[channels].cuda(non_blocking=True)
+        for channels, minibatch in batch.items():
             extra_tokens = {
                     "channels": [channel_map[chan] for chan in channels]
             }
 
-            with torch.cuda.amp.autocast(fp16_scaler is not None):    
-                teacher_output = teacher(global_minibatch, extra_tokens=extra_tokens)
+            with torch.cuda.amp.autocast(fp16_scaler is not None):
+                global_crops = minibatch['global_crops'].cuda(non_blocking=True)
+                local_crops = minibatch['local_crops'].cuda(non_blocking=True)
+                teacher_output = teacher(global_crops, extra_tokens=extra_tokens)
                 teacher_outputs.append(teacher_output)
                 
-                student_global_output = student(global_minibatch, extra_tokens=extra_tokens)
-                student_local_output  = student(local_minibatch, extra_tokens=extra_tokens)
+                student_global_output = student(global_crops, extra_tokens=extra_tokens)
+                student_local_output  = student(local_crops, extra_tokens=extra_tokens)
                 student_global_outputs.append(student_global_output)
                 student_local_outputs.append(student_local_output)
-            
+        
+               
         combined_student_output = [*student_global_outputs, *student_local_outputs]
         student_combined_out, teacher_combined_out = torch.cat(combined_student_output, dim=0), torch.cat(teacher_outputs, dim=0)
         loss = dino_loss(student_combined_out, teacher_combined_out, epoch)
-        
-        # # move images to gpu
-        # images = [im.cuda(non_blocking=True) for im in images]
-        # # teacher and student forward passes + compute dino loss
-        # with torch.cuda.amp.autocast(fp16_scaler is not None):
-        #     teacher_output = teacher(images[:2])  # only the 2 global views pass through the teacher
-        #     student_output = student(images)
-        #     loss = dino_loss(student_output, teacher_output, epoch)
-
+            
         if not math.isfinite(loss.item()):
             print("Loss is {}, stopping training".format(loss.item()), force=True)
             sys.exit(1)
