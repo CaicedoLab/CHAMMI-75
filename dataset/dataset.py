@@ -212,37 +212,32 @@ class ChannelViTDataset(IterableImageArchive):
                 yield file_group
             else:
                 yield sample
-
-
-    # TODO: REDO this to be cleaner about the ordering if I want to make the main loop easier. 
-    # Do if the loss is not optimizing because this is probably the issue.
-    def collate_crops(self, samples: list):
-        collate_dict = defaultdict(list)
-        for image_tensor, channels in samples:
-            collate_dict[channels].append(image_tensor)
-        
-        for channel_types, image_tensor_list in collate_dict.items():
-            if len(image_tensor_list) > 1:
-                collate_dict[channel_types] = torch.stack(image_tensor_list)
-            else:
-                collate_dict[channel_types] = torch.unsqueeze(image_tensor_list[0], 0)
-        return collate_dict
-
-    def collate_fn(self, samples: list):
-        global_crops = []
-        local_crops  = []
-        
+    
+    def collate_fn(self, samples: list):        
+        collate_list = []
         for sample in samples:
-            global_crops.extend(sample[:2])
-            local_crops.extend(sample[2:])
+            collate_list.append({
+                "global_crops": [image for image, chans in sample[:2]],
+                "local_crops": [image for image, chans in sample[2:]],
+                "channels": sample[0][1]
+            })
         
-        collate_dict = {'global_minibatches': self.collate_crops(global_crops), 'local_minibatches': self.collate_crops(local_crops)}
-        # print(collate_dict["global_minibatches"].keys())
-        return collate_dict 
+        minibatches = defaultdict(list)
+        [minibatches[sample['channels']].append(sample) for sample in collate_list]
+        
+        for channel_config, minibatch in minibatches.items():
+            minibatches[channel_config] = {
+                'global_crops': torch.cat([torch.stack(sample['global_crops']) for sample in minibatch]),
+                'local_crops': torch.cat([torch.stack(sample['local_crops']) for sample in minibatch]),
+                'channels': channel_config
+            }
+        
+        return minibatches 
     
     def load_dataset_config(self, config_path):
         proper_path = os.path.abspath(os.path.expanduser(config_path))
         self.dataset_config = pl.read_csv(proper_path, schema_overrides=OVERRIDES)
+        # self.dataset_config = self.dataset_config.filter(pl.col('imaging.channel_type').str.contains('allen'))
         self.channels = self.dataset_config['imaging.channel_type'].unique().to_list()
         self.num_channels = len(self.channels)
         aggregated = self.dataset_config.sort('imaging.channel').group_by('imaging.multi_channel_id', maintain_order=True).agg(pl.col('storage.path'), pl.col('imaging.channel_type'))
