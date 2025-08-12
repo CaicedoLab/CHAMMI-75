@@ -1,18 +1,32 @@
 ## IDR0017 Benchmark
 
-This benchmarking is based on the paper "A chemical–genetic interaction map of small
-molecules using high-throughput imaging in
-cancer cells". The framework performs statistical analysis on the extracted feature embeddings of idr0017 and calculate scores for different cell lines present in the study. 
+This repository provides a benchmarking framework based on the study:  
+**_A chemical–genetic interaction map of small molecules using high-throughput imaging in cancer cells_**.  
 
-### ROC Test: 
-Performs statistical analysis (effect size) for each cell line in the study and ranks all the compounds based on the effect size. ROC scores are used to check how well the model embeddings are able to rank HITs above Non-HITs.
+The framework performs statistical analysis on extracted feature embeddings from the **idr0017** dataset and computes scores for various cell lines included in the study.
 
-### Fusion Type:
-Determines how the replicates data is fused. Early fusion combines the replicates initially and then performs the statistical analysis. Late fusion perform analysis at replicate level and then combines the score at replicate level.
+---
 
+### **ROC Test**
+The ROC test evaluates the ability of model embeddings to distinguish **HITs** from **Non-HITs**.
 
-#### Entry point for the framework: idr0017_benchmark.py
-```
+**Workflow:**
+1. For each cell line, compute statistical effect sizes for all compounds.
+2. Rank compounds based on their effect sizes.
+3. Calculate ROC scores to measure how well HITs are prioritized above Non-HITs.
+
+---
+
+### **Fusion Types**
+Fusion type determines how replicate data is aggregated before or after statistical analysis:
+
+- **Early Fusion** – Replicates are merged **before** performing statistical analysis.  
+- **Late Fusion** – Statistical analysis is run **per replicate**, and scores are then combined.
+
+---
+
+### **How to Run**
+
+**Entry point:**  
+```bash
 python idr0017_benchmark.py
-```
-#### Configure the benchmark test: config.yaml
