@@ -146,11 +146,10 @@ class TensorAugmentationDINO(object):
             ]
         )
         self.common_normalization = transforms.Compose([
-            v2.RandomResizedCrop(256, scale=(0.9, 1.0), ratio=(0.9, 1.1), antialias=True),
+            v2.RandomResizedCrop(224, scale=(0.9, 1.0), ratio=(0.9, 1.1), antialias=True),
             v2.ToImageTensor(),
             SaturationNoiseInjector(low=200, high=255),
             PerImageNormalize(),
-            v2.RandomResizedCrop(224, scale=(0.6, 1.0), interpolation=Image.BICUBIC, antialias=True),
             flips
         ])
 
@@ -319,6 +318,7 @@ def main(args):
         num_workers=args.num_workers,
         pin_memory=args.pin_mem,
         drop_last=True,
+        persistent_workers=True,
         worker_init_fn=dataset_train.worker_init_fn
     )
     
