@@ -107,7 +107,7 @@ def train_dino(cfg: DINOV1Config):
 
     dataset = ChannelViTDataset(config)
     #args.batch_size_per_gpu
-    data_loader = DataLoader(dataset=dataset, batch_size=cfg.optim.batch_size_per_gpu, num_workers=cfg.optim.num_workers, worker_init_fn=dataset.worker_init_fn, collate_fn=dataset.collate_fn, drop_last=True)
+    data_loader = DataLoader(dataset=dataset, batch_size=cfg.optim.batch_size_per_gpu, num_workers=cfg.train.num_workers, worker_init_fn=dataset.worker_init_fn, collate_fn=dataset.collate_fn, drop_last=True)
     
     print(f"Data loaded: there are {len(data_loader)} images.")
     # ============ building student and teacher networks ... ============
@@ -198,7 +198,7 @@ def train_dino(cfg: DINOV1Config):
         cfg.optim.epochs, len(data_loader),
     )
     # momentum parameter is increased to 1. during training with a cosine schedule
-    momentum_schedule = utils.cosine_scheduler(cfg.optim.momentum_teacher, 1,
+    momentum_schedule = utils.cosine_scheduler(cfg.model.momentum_teacher, 1,
                                                cfg.optim.epochs, len(data_loader))
     print(f"Loss, optimizer and schedulers ready.")
 
