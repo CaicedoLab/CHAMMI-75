@@ -42,7 +42,6 @@ from config import DINOV1Config
 
 import torch
 import torchvision.transforms.v2.functional as func
-import safetensors
 from torchvision.transforms.functional import to_pil_image
 
 import utils
