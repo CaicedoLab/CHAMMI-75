@@ -29,7 +29,7 @@ import torchvision.datasets as datasets
 import sys
 from timm.optim import create_optimizer_v2
 from timm.optim.optim_factory import param_groups_weight_decay
-sys.path.append('../')
+sys.path.append('../../')
 from dataset.dataset import IterableImageArchive
 from dataset import dataset_config
 from dataset.dataset_functions import randomize, split_for_workers, get_proc_split
