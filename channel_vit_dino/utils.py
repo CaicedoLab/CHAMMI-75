@@ -34,6 +34,7 @@ from PIL import ImageFilter, ImageOps
 import warnings
 import argparse
 
+from config import DINOV1Config
 
 class GaussianBlur(object):
     """
@@ -466,39 +467,41 @@ def setup_for_distributed(is_master):
     __builtin__.print = print
 
 
-def init_distributed_mode(args):
+def init_distributed_mode(cfg: DINOV1Config):
     # launched with torch.distributed.launch
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
-        args.rank = int(os.environ["RANK"])
-        args.world_size = int(os.environ['WORLD_SIZE'])
-        args.gpu = int(os.environ['LOCAL_RANK'])
+        cfg.train.rank = int(os.environ["RANK"])
+        cfg.train.world_size = int(os.environ['WORLD_SIZE'])
+        cfg.train.gpu = int(os.environ['LOCAL_RANK'])
+    else:
+        assert ValueError("I commented out python and submitit submissions. Uncomment and fix if you want to use those.")
     # launched with submitit on a slurm cluster
-    elif 'SLURM_PROCID' in os.environ:
-        args.rank = int(os.environ['SLURM_PROCID'])
-        args.gpu = args.rank % torch.cuda.device_count()
+    # elif 'SLURM_PROCID' in os.environ:
+    #     args.rank = int(os.environ['SLURM_PROCID'])
+    #     args.gpu = args.rank % torch.cuda.device_count()
     # launched naively with `python main_dino.py`
     # we manually add MASTER_ADDR and MASTER_PORT to env variables
-    elif torch.cuda.is_available():
-        print('Will run the code on one GPU.')
-        args.rank, args.gpu, args.world_size = 0, 0, 1
-        os.environ['MASTER_ADDR'] = '127.0.0.1'
-        os.environ['MASTER_PORT'] = '29500'
-    else:
-        print('Does not support training without GPU.')
-        sys.exit(1)
+    # elif torch.cuda.is_available():
+    #     print('Will run the code on one GPU.')
+    #     args.rank, args.gpu, args.world_size = 0, 0, 1
+    #     os.environ['MASTER_ADDR'] = '127.0.0.1'
+    #     os.environ['MASTER_PORT'] = '29500'
+    # else:
+    #     print('Does not support training without GPU.')
+    #     sys.exit(1)
 
     dist.init_process_group(
         backend="nccl",
-        init_method=args.dist_url,
-        world_size=args.world_size,
-        rank=args.rank,
+        init_method=cfg.train.dist_url,
+        world_size=cfg.train.world_size,
+        rank=cfg.train.rank,
     )
 
-    torch.cuda.set_device(args.gpu)
+    torch.cuda.set_device(cfg.train.gpu)
     print('| distributed init (rank {}): {}'.format(
-        args.rank, args.dist_url), flush=True)
+        cfg.train.rank, cfg.train.dist_url), flush=True)
     dist.barrier()
-    setup_for_distributed(args.rank == 0)
+    setup_for_distributed(cfg.train.rank == 0)
 
 
 def accuracy(output, target, topk=(1,)):
