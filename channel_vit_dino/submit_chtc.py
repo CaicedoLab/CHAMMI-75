@@ -8,7 +8,7 @@ sys.path.append('../../')
 
 from config import *
 
-default_path = '/home/jgpeters3/FoundationModels/chtc/dinov2/configs'
+default_path = '/home/jgpeters3/configs'
 
 def submit_command(command:str):
     result = subprocess.run(
@@ -28,7 +28,7 @@ def run_command(config: DINOV1Config):
                         f"wandb_key={os.environ.get('WANDB_API_KEY')}",
                         f'config_name={config.train.name}.yaml',
                         f"config_path={os.path.join(default_path, f'{config.train.name}.yaml')}",
-                        "hyperparam_sweep.sh"
+                        "chtc_job.sh"
                     ])
     submit_command(command=command)
 
