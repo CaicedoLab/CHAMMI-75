@@ -58,6 +58,7 @@ torchvision_archs = sorted(name for name in torchvision_models.__dict__
 def get_args_parser():
     parser = argparse.ArgumentParser('DINO', add_help=False)
     parser.add_argument('-c', '--config', required=True, help="Path to config file")
+    parser.add_argument('--local-rank') # don't use. It's just for silly torchrun things
     return parser
 
 
