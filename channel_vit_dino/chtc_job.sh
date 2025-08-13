@@ -1,7 +1,7 @@
 container_image = file:///staging/groups/caicedo_group/images/channel_vit_dino.sif
 log = logs/train$(Cluster).log
 universe = container
-executable = execute_sweep.sh
+executable = execute_job.sh
 arguments = $(Process)
 output = logs/train$(Cluster)_$(Process).out
 error = logs/train$(Cluster)_$(Process).err
