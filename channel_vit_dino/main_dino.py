@@ -230,7 +230,7 @@ def train_dino(cfg: DINOV1Config):
             'teacher': teacher.state_dict(),
             'optimizer': optimizer.state_dict(),
             'epoch': epoch + 1,
-            'args': cfg.to_container(),
+            'args': OmegaConf.to_container(cfg),
             'dino_loss': dino_loss.state_dict(),
         }
         if fp16_scaler is not None:
