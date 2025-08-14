@@ -7,6 +7,7 @@ Single-cell crops are located in Data Vault in `cellpainting-data/cpj1_single_ce
 Well-level profiles are expected to be in `features` folder. 
 
 `misc/well_level_aggregation_example.py` - feature aggregation example for DINO. In principle the same applies to other deep learning methods (mind the feature dimensionality). 
+It is basically mean aggregation over cells in a well (no step for per image aggregation as in DeepProfiler paper).  
 
 Results for reporting would be in `fr_replicability_{feature_extractor}_results.csv` and `fr_matching_{feature_extractor}_results.csv`. 
 
