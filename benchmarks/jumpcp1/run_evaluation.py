@@ -68,12 +68,12 @@ def get_downstream_result(feature_extractor):
                         gene_compound_matching_map_df, gene_compound_matching_fr_df = pipelines.matching_pipeline_gene_compound(well_level_data, gene_compound_matching_map_df, gene_compound_matching_fr_df, matching_map_df, matching_fr_df, replicability_map_df, perturbation_type, cell_type, timepoint, replicate_feature, data_input, compound_consensus_profiles)
 
 
-    replicability_fr_df.to_csv(f'fr_replicability_{feature_extractor}_group_results.csv', index = False)
-    replicability_map_df.to_csv(f'map_replicability_{feature_extractor}_group_results.csv', index = False)
-    matching_fr_df.to_csv(f'fr_matching_{feature_extractor}_group_results.csv', index = False)
-    matching_map_df.to_csv(f'map_matching_{feature_extractor}_group_results.csv', index = False)
-    gene_compound_matching_fr_df.to_csv(f'fr_genecompoundmatching_{feature_extractor}_group_results.csv', index = False)
-    gene_compound_matching_map_df.to_csv(f'map_genecompoundmatching_{feature_extractor}_group_results.csv', index = False)
+    replicability_fr_df.to_csv(f'./output/fr_replicability_{feature_extractor}_results.csv', index = False)
+    replicability_map_df.to_csv(f'./output/map_replicability_{feature_extractor}_results.csv', index = False)
+    matching_fr_df.to_csv(f'./output/fr_matching_{feature_extractor}_results.csv', index = False)
+    matching_map_df.to_csv(f'./output/map_matching_{feature_extractor}_results.csv', index = False)
+    gene_compound_matching_fr_df.to_csv(f'./output/fr_genecompoundmatching_{feature_extractor}_results.csv', index = False)
+    gene_compound_matching_map_df.to_csv(f'./output/map_genecompoundmatching_{feature_extractor}_results.csv', index = False)
 
 
 if __name__ == "__main__":
