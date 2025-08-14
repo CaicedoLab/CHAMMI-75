@@ -1,0 +1,9 @@
+# Ignore debug files and folders
+debug
+debug/
+*.debug
+debug.log
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
