@@ -43,16 +43,9 @@ def get_downstream_result(feature_extractor):
     compound_consensus_profiles = {}
 
     if feature_extractor == 'cellprofiler':
-        data_inputs = ['normalized_feature_select_negcon_batch','bygroupfilt_cellpaint_robustized_featsel', 'bygroupfilt_all_robustized_featsel', 'bybatch_cellpaint_robustized_featsel', 
-                        'bybatch_all_robustized_featsel', 'byplate_cellpaint_robustized_featsel', 'byplate_all_robustized_featsel']
-        for se in [1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]:
-            data_inputs.append(f'bygroupfilt_cellpaint_spherized_featsel_{str(se)}')
-            data_inputs.append(f'bygroupfilt_all_spherized_featsel_{str(se)}')
-            data_inputs.append(f'bygroupfilt_cellpaint_spherized_{str(se)}')
+        data_inputs = ['bygroupfilt_cellpaint_spherized_featsel_0.001']
     else:
-        data_inputs = []
-        for se in [1, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]:
-            data_inputs.append(f'bygroupfilt_spherized_{str(se)}')
+        data_inputs = ['bygroupfilt_spherized_0.001']
 
     for data_input in data_inputs:
         for cell_type in ["U2OS", "A549"]:
@@ -84,6 +77,6 @@ def get_downstream_result(feature_extractor):
 
 
 if __name__ == "__main__":
-    feature_extractors = ['cellprofiler', 'cpcnn', 'dino4cells','openphenom_comp_chmean', 'openphenom_comp_allch']
+    feature_extractors = ['cpcnn']#, 'dino4cells','openphenom_comp_chmean', 'openphenom_comp_allch'] #cellprofiler evaluated 
     for feature_extractor in feature_extractors:
         get_downstream_result(feature_extractor)

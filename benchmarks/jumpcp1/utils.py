@@ -32,7 +32,7 @@ from copairs.map import (
 
 def load_data(feature_extractor, plate, filetype):
     """load all data from a single experiment into a single dataframe"""
-    path = os.path.join(f"../../../{feature_extractor}_profiles/2020_11_04_CPJUMP1/", f"{plate}", f"*_{filetype}")
+    path = os.path.join(f"./features/{feature_extractor}_profiles/2020_11_04_CPJUMP1/", f"{plate}", f"*_{filetype}")
     files = glob.glob(path)
     df = pd.concat(pd.read_csv(_, low_memory=False) for _ in files)
     return df
