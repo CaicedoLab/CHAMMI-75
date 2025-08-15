@@ -58,6 +58,8 @@ import numpy as np
 import torch
 from albumentations.pytorch import ToTensorV2
 
+import wandb
+
 torchvision_archs = sorted(name for name in torchvision_models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(torchvision_models.__dict__[name]))
@@ -76,6 +78,15 @@ def train_dino(cfg: DINOV1Config):
     print("git:\n  {}\n".format(utils.get_sha()))
     print("\n".join("%s: %s" % (k, v) for k, v in sorted(cfg.items())))
     cudnn.benchmark = True
+
+    if utils.is_main_process():
+        wandb.init(
+                project="channelvit-dino",
+                config=OmegaConf.to_container(cfg),
+                name=cfg.train.name,
+                id=cfg.train.name,
+                resume = "allow"
+            )
 
     # ============ preparing data ... ============
 
@@ -329,6 +340,10 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
         metric_logger.update(loss=loss.item())
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
         metric_logger.update(wd=optimizer.param_groups[0]["weight_decay"])
+        if utils.is_main_process():
+            stats = {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+            wandb.log(stats)
+    
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)

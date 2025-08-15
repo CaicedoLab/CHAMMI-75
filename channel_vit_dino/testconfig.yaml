@@ -1,6 +1,6 @@
 dataset:
   metadata: /mnt/cephfs/mir/jcaicedo/morphem/dataset/sampling/multi_channel_chammi_metadata.csv
 train:
-  name: "6ae1638_baseline"
+  name: "wandb_test"
   data_path: /scr/data/CHAMMI/chammi_train.zip
   output_dir: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models
