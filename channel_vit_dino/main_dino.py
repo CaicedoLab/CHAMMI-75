@@ -50,6 +50,14 @@ from vision_transformer import DINOHead
 #os.makedirs("/scratch/cache", exist_ok=True)
 #torch.hub.set_dir("/scratch/cache") 
 
+from typing import Union
+
+import albumentations as A
+import cv2
+import numpy as np
+import torch
+from albumentations.pytorch import ToTensorV2
+
 torchvision_archs = sorted(name for name in torchvision_models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(torchvision_models.__dict__[name]))
@@ -77,6 +85,12 @@ def train_dino(cfg: DINOV1Config):
         cfg.crops.local_crops_scale,
         cfg.crops.local_crops_number,
     )
+
+    # transform = CellAugmentationDino(
+    #     is_train=True,
+    #     local_crops_number=cfg.crops.local_crops_number,
+    #     brightness=True,   
+    # )
 
     config = dataset_config.DatasetConfig(
                 cfg.train.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
@@ -261,26 +275,9 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
         for i, param_group in enumerate(optimizer.param_groups):
             param_group["lr"] = lr_schedule[it]
             if i == 0:  # only the first group is regularized
-                param_group["weight_decay"] = wd_schedule[it]
-        
-        # loss = 0.0
-        # for channels, minibatch in batch.items():
-        #     extra_tokens = {
-        #             "channels": [channel_map[chan] for chan in channels]
-        #     }
-
-        #     with torch.cuda.amp.autocast(fp16_scaler is not None):
-        #         global_crops = minibatch['global_crops'].cuda(non_blocking=True)
-        #         local_crops = minibatch['local_crops'].cuda(non_blocking=True)
-        #         teacher_output = teacher(global_crops, extra_tokens=extra_tokens)
-                
-        #         student_output = student([global_crops, local_crops], extra_tokens=extra_tokens)        
-
-        #     loss += dino_loss(student_output, teacher_output, epoch)
+                param_group["weight_decay"] = wd_schedule[it]            
             
-            
-        teacher_outputs = []
-        student_outputs = []
+        loss = 0.0
         for channels, minibatch in batch.items():
             extra_tokens = {
                     "channels": [channel_map[chan] for chan in channels]
@@ -290,14 +287,13 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                 global_crops = minibatch['global_crops'].cuda(non_blocking=True)
                 local_crops = minibatch['local_crops'].cuda(non_blocking=True)
                 teacher_output = teacher(global_crops, extra_tokens=extra_tokens)
-                teacher_outputs.append(teacher_output)
                 
-                student_output = student([global_crops, local_crops], extra_tokens=extra_tokens)
-                student_outputs.append(student_output)
-                
-        student_combined_out, teacher_combined_out = torch.cat(student_outputs, dim=0), torch.cat(teacher_outputs, dim=0)
-        loss = dino_loss(student_combined_out, teacher_combined_out, epoch)
+                student_output = student([global_crops, local_crops], extra_tokens=extra_tokens)        
+
+            loss += dino_loss(student_output, teacher_output, epoch)
             
+            
+        loss = loss / len(batch)
         if not math.isfinite(loss.item()):
             print("Loss is {}, stopping training".format(loss.item()), force=True)
             sys.exit(1)
@@ -547,11 +543,11 @@ class TensorAugmentationDINO(object):
         ])
         
         augmentation_pipeline = transforms.Compose([
-            flips
-            #ChangeBrightness(p=0.4),
-            #ChangeContrast(p=0.4),
-            #safe_color_jitter
-            #random_invert
+            flips,
+            # ChangeBrightness(p=0.4),
+            # ChangeContrast(p=0.4),
+            # safe_color_jitter
+            # random_invert
         ])
 
 
@@ -611,6 +607,174 @@ class TensorAugmentationDINO(object):
             crops.append(self.local_transfo(image))
         return crops
 
+class CellAugmentationDino(object):
+    def __init__(
+        self,
+        is_train: bool,
+        local_crops_number: int,
+        global_resize: int = 224,
+        local_resize: int = 96,
+        normalization_mean: list[float] = [0.4914, 0.4822, 0.4465],
+        normalization_std: list[float] = [0.2023, 0.1994, 0.2010],
+        brightness: bool = False,
+        use_channel_shuffle: bool = False,
+        use_coarse_dropout: bool = True,
+        max_channels: int = -1,
+    ):
+        """
+        MulticropAugmentation strategy, as developed by M. Caron
+        https://arxiv.org/pdf/2006.09882.pdf.
+        ASSUMES images are from the distribution N(0,I).
+        global_crops_scale: List[float]
+            List of (a, b) that defines the scale, sampled uniformly, at which
+            to crop the image for the global crop. For instance, (.8, 1.0) will mean that each
+            global crop will shrink the original image to be x ~ Uniform([.8, 1.])
+            % of the original size.
+        local_crops_scale: List[float]
+            List of (a, b) that defines the scale, sampled uniformly, at which
+            to crop the image for the local crop. For instance, (.6, .8) will mean that each
+            local crop will shrink the original image to be x ~ Uniform([.6, .8])
+            % of the original size.
+        n_local_crops_per_image : int
+            number of of local crops per image in the original pair.
+            n_local_crops_per_image==0 implies just a single pair of
+            reference images (global crops only), whereas n_local_crops_per_image>0
+            (as in DINO) implies applying a local crop to each image n_local_crops_per_image
+            times.
+        global_resize: int
+            After cropping image to be of global_crops_scale size of the original size,
+            will resize to this value. 224 by default.
+        local_resize: int
+            After cropping image to be of local_crops_scale size of the original size,
+            will resize to this value. 96 by default.
+        """
+        flip_rotate = A.OneOf(
+            [
+                A.HorizontalFlip(),
+                A.VerticalFlip(),
+                A.Rotate(90),
+                A.Rotate(180),
+                A.Rotate(270),
+            ]
+        )
+
+        if brightness:
+            print("Apply brightness change after flip and rotate")
+            flip_rotate = A.Compose([flip_rotate, A.RandomBrightness()])
+
+        mean_div_255 = [m / 255.0 for m in normalization_mean]
+        std_div_255 = [s / 255.0 for s in normalization_std]
+        normalize = A.Compose([ToTensorV2()])
+#A.Normalize(mean_div_255, std_div_255), 
+        self.is_train = is_train
+        self.normalize = normalize
+
+        # global crop
+        if use_coarse_dropout:
+            coarse_dropout = A.CoarseDropout(max_holes=10, max_height=10, max_width=10)
+        else:
+            coarse_dropout = A.NoOp()
+
+        self.global_transform1 = A.Compose(
+            [
+                RandomPadCrop(global_resize),
+                flip_rotate,
+                A.Defocus(radius=(1, 3)),
+                coarse_dropout,
+                normalize
+            ]
+        )
+
+        self.global_transform2 = A.Compose(
+            [
+                RandomPadCrop(global_resize),
+                flip_rotate,
+                A.Defocus(radius=(1, 5)),
+                coarse_dropout,
+                normalize
+            ]
+        )
+        # transformation for the local small crops
+        self.local_crops_number = local_crops_number
+        self.local_transform = A.Compose(
+            [
+                RandomPadAndCropCenter(local_resize),
+                flip_rotate,
+                A.Defocus(radius=(1, 3)),
+                normalize
+            ]
+        )
+
+        self.use_channel_shuffle = use_channel_shuffle
+        self.num_channels = len(mean_div_255)
+        self.max_channels = max_channels
+
+    def __call__(self, image: torch.Tensor) -> Union[list[torch.Tensor], torch.Tensor]:
+        """
+        Takes as input two images as the reference pair,
+        and outputs:
+        [global_transformed(img1), global_transformed(img2),
+         n_local_crops_per_image local_transformed(img1),
+         n_local_crops_per_image local_transformed(img2)]
+        """
+        image = image.numpy()
+        if self.is_train:
+            crops = []
+            crops.append(self.global_transform1(image=image)["image"])
+            crops.append(self.global_transform2(image=image)["image"])
+
+            for _ in range(self.local_crops_number):
+                crops.append(self.local_transform(image=image)["image"])
+
+            if self.use_channel_shuffle:
+                # shuffle the channels for each view in the same way
+                idx = torch.randperm(self.num_channels)
+                crops = [c[idx, :, :] for c in crops]
+
+            if self.max_channels != -1:
+                # subsample channels during training
+                idx = torch.randperm(self.num_channels)[: self.max_channels]
+                crops = [c[idx, :, :] for c in crops]
+
+            return crops
+        else:
+            return self.normalize(image=image)["image"]
+        
+def RandomPadCrop(size):
+    """
+    Crops image to range of `scale` inputs and resize to `size`
+    """
+    return A.Compose(
+        [
+            A.PadIfNeeded(
+                min_width=256,
+                min_height=256,
+                position="random",
+                border_mode=cv2.BORDER_CONSTANT,
+                value=0,
+            ),
+            A.RandomCrop(width=size, height=size),
+        ]
+    )
+    
+def RandomPadAndCropCenter(size):
+    """
+    Crops image to range of `scale` inputs and resize to `size`
+    """
+    return A.Compose(
+        [
+            A.PadIfNeeded(
+                min_width=320,
+                min_height=320,
+                position="random",
+                border_mode=cv2.BORDER_CONSTANT,
+                value=0,
+            ),
+            A.CenterCrop(width=size, height=size),
+            # A.ChannelDropout(p=0.2, channel_drop_range=(1, 3)),
+        ]
+    )
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('DINO', parents=[get_args_parser()])
     args = parser.parse_args()
@@ -624,3 +788,4 @@ if __name__ == '__main__':
     
     Path(cfg.train.output_dir).mkdir(parents=True, exist_ok=True)
     train_dino(cfg)
+    
