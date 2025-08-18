@@ -16,7 +16,7 @@ transfer_input_files = execute_job.sh, /home/jgpeters3/CHAMMI-75, /hdd/jcaicedo/
 # Tell HTCondor what amount of compute resources
 #  each job will need on the computer where it runs.
 
-requirements = ( Machine == "jcaicedogpu0002.chtc.wisc.edu" )
+requirements = ( Machine == "jcaicedogpu0002.chtc.wisc.edu" || Machine == "jcaicedogpu0001.chtc.wisc.edu" )
 request_cpus = 8
 request_memory = 400GB
 request_disk =  100GB

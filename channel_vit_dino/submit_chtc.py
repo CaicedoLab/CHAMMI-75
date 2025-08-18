@@ -34,8 +34,9 @@ def run_command(config: DINOV1Config):
 
 def main():    
     config = DINOV1Config()
-    config.train.name = "ee8a769_baseline"
+    config.train.name = "e7fa229_"
     run_command(config)
+    
     
 if __name__ == "__main__":
     main()
