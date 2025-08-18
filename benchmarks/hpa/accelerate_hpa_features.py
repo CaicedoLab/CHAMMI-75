@@ -20,7 +20,7 @@ import yaml
 accelerator = Accelerator()
 
 sys.path.append("../morphem")
-from vision_transformer import vit_small
+from vision_transformer import vit_small, vit_base
 from vit_pool import ViTPoolModel
 
 
@@ -45,15 +45,19 @@ def preprocess_input_subcell(images, per_channel=False):
 Class to call DINOv1 model for feature extraction.
 '''
 class ViTClass():
-    def __init__(self, device):
+    def __init__(self, device, model_path, model_size='small'):
         self.device = device
+        self.model_path = model_path
 
         # Create model with in_chans=1 to match training setup
-        self.model = vit_small()
+        if model_size == 'small':
+            self.model = vit_small()
+        elif model_size == 'base':
+            self.model = vit_base()
         remove_prefixes = ["module.backbone.", "module.", "module.head."]
 
         # Load model weights
-        student_model = torch.load("/scr/vidit/Models/Dino_Small_75ds_Guided/checkpoint.pth", map_location=device)['student']
+        student_model = torch.load(os.path.join(self.model_path, "checkpoint.pth"), map_location=device)['student']
         # Remove unwanted prefixes
         cleaned_state_dict = {}
         for k, v in student_model.items():
@@ -223,12 +227,12 @@ class UnZippedImageArchive(Dataset):
 '''
 New extraction feature function to collate all the features from the GPUs on CPUs as when using SubCell Model, the gpu goes out of memory from the previous method!
 '''
-def extract_features_alternative(dataloader: torch.utils.data.DataLoader, output_folder: str, model_type: str = 'vit', config_path: str = None):
+def extract_features_alternative(dataloader: torch.utils.data.DataLoader, output_folder: str, model_type: str = 'vit', config_path: str = None, model_path: str = None, model_size: str = None):
     """Alternative approach: Save features from each process separately, then combine"""
 
     # Initialize model on accelerator device
     if model_type == 'vit':
-        vit_instance = ViTClass(accelerator.device)
+        vit_instance = ViTClass(accelerator.device, model_path, model_size)
         vit_model = vit_instance.get_model()
         vit_model.eval()
         vit_model, dataloader = accelerator.prepare(vit_model, dataloader)
@@ -250,8 +254,13 @@ def extract_features_alternative(dataloader: torch.utils.data.DataLoader, output
             batch_size = images.shape[0]
             num_channels = images.shape[1]
 
+            dim = 384
+
+            if model_size == 'base':
+                dim = 768
+
             if model_type == 'vit':
-                batch_feat = torch.zeros((batch_size, num_channels * 384), device=accelerator.device)
+                batch_feat = torch.zeros((batch_size, num_channels * dim), device=accelerator.device)
                 
                 for c in range(num_channels):
                     single_channel = images[:, c, :, :].unsqueeze(1).float()
@@ -262,7 +271,7 @@ def extract_features_alternative(dataloader: torch.utils.data.DataLoader, output
                         output = vit_model.forward_features(single_channel)
                     feat_temp = output["x_norm_clstoken"]
                     
-                    batch_feat[:, c * 384:(c + 1) * 384] = feat_temp
+                    batch_feat[:, c * dim:(c + 1) * dim] = feat_temp
                 
                 features = batch_feat.cpu()  # Move to CPU immediately
 
@@ -486,7 +495,8 @@ if __name__ == "__main__":
                         help='Batch size for processing')
     parser.add_argument('--num_workers', type=int, default=4,
                         help='Number of workers for data loading')
-    
+    parser.add_argument('--model_path', type=str, default="", help = "")
+    parser.add_argument('--model_size', type=str, choices=['small', 'base'], default='small')
     args = parser.parse_args()
 
     # Validate arguments
@@ -528,7 +538,9 @@ if __name__ == "__main__":
         dataloader=dataloader, 
         output_folder=args.output_folder,
         model_type=args.model,
-        config_path=args.config_path
+        config_path=args.config_path,
+        model_path=args.model_path,
+        model_size=args.model_size
     )
     
     if accelerator.is_main_process:
