@@ -1,0 +1,405 @@
+/scr/vidit/conda_env/lib/python3.10/site-packages/torch/distributed/launch.py:181: FutureWarning: The module torch.distributed.launch is deprecated
+and will be removed in future. Use torchrun.
+Note that --use-env is set by default in torchrun.
+If your script expects `--local-rank` argument to be set, please
+change it to read from `os.environ['LOCAL_RANK']` instead. See 
+https://pytorch.org/docs/stable/distributed.html#launch-utility for 
+further instructions
+
+  warnings.warn(
+WARNING:torch.distributed.run:
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/datapoints/__init__.py:12: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/datapoints/__init__.py:12: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/datapoints/__init__.py:12: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/datapoints/__init__.py:12: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/datapoints/__init__.py:12: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/datapoints/__init__.py:12: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/datapoints/__init__.py:12: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/transforms/v2/__init__.py:54: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/transforms/v2/__init__.py:54: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/transforms/v2/__init__.py:54: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/transforms/v2/__init__.py:54: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/transforms/v2/__init__.py:54: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/transforms/v2/__init__.py:54: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/transforms/v2/__init__.py:54: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/datapoints/__init__.py:12: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/scr/vidit/conda_env/lib/python3.10/site-packages/torchvision/transforms/v2/__init__.py:54: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+| distributed init (rank 3): env://
+| distributed init (rank 0): env://
+| distributed init (rank 7): env://
+| distributed init (rank 4): env://
+| distributed init (rank 5): env://
+| distributed init (rank 1): env://
+| distributed init (rank 6): env://
+| distributed init (rank 2): env://
+git:
+  sha: bdd52da23df89068f298357d9a254a3439055922, status: clean, branch: main
+
+arch: vit_small
+batch_size_per_gpu: 224
+clip_grad: 3.0
+data_path: /scr/data/75ds_train/CHAMMI-75_train.zip
+dataset_size: large
+dist_url: env://
+drop_path_rate: 0.1
+epochs: 100
+freeze_last_layer: 1
+global_crops_scale: (0.4, 1.0)
+gpu: 0
+guided_cropping: True
+guided_crops_path: /scr/data/75ds_large_segmentations/CHAMMI-75_guidance.zip
+guided_crops_size: (256, 256)
+local_crops_number: 8
+local_crops_scale: (0.05, 0.4)
+local_rank: 0
+lr: 5e-05
+min_lr: 1e-06
+momentum_teacher: 0.996
+multiscale: True
+norm_last_layer: True
+num_workers: 7
+optimizer: adamw
+out_dim: 65536
+output_dir: /scr/vidit/Models/test_12
+patch_size: 16
+rank: 0
+saveckp_freq: 20
+seed: 0
+small_list_path: None
+teacher_temp: 0.04
+use_bn_in_head: False
+use_fp16: True
+warmup_epochs: 10
+warmup_teacher_temp: 0.04
+warmup_teacher_temp_epochs: 0
+weight_decay: 0.04
+weight_decay_end: 0.4
+world_size: 8
+Data loaded: there are 4480 images.
+Student and Teacher are built: they are both vit_small network.
+Loss, optimizer and schedulers ready.
+8
+Starting DINO training !
+Epoch: [0/100]  [   0/4480]  eta: 6 days, 10:04:06  loss: 10.580166 (10.580166)  lr: 0.000000 (0.000000)  wd: 0.040000 (0.040000)  time: 123.804970  data: 98.279617  max mem: 36626
+Epoch: [0/100]  [  10/4480]  eta: 1 day, 16:47:53  loss: 10.785917 (10.773268)  lr: 0.000000 (0.000000)  wd: 0.040000 (0.040000)  time: 32.857582  data: 8.938310  max mem: 36945
+Epoch: [0/100]  [  20/4480]  eta: 1 day, 11:16:53  loss: 10.910478 (10.878786)  lr: 0.000000 (0.000000)  wd: 0.040000 (0.040000)  time: 23.712042  data: 0.003537  max mem: 36945
+Epoch: [0/100]  [  30/4480]  eta: 1 day, 9:21:10  loss: 11.035549 (10.937604)  lr: 0.000000 (0.000000)  wd: 0.040000 (0.040000)  time: 23.750721  data: 0.002815  max mem: 36945
+Epoch: [0/100]  [  40/4480]  eta: 1 day, 8:18:09  loss: 11.067513 (10.970484)  lr: 0.000000 (0.000000)  wd: 0.040000 (0.040000)  time: 23.790005  data: 0.002836  max mem: 36945
+Epoch: [0/100]  [  50/4480]  eta: 1 day, 7:37:58  loss: 11.068563 (10.989245)  lr: 0.000000 (0.000000)  wd: 0.040000 (0.040000)  time: 23.728725  data: 0.002912  max mem: 36945
+Epoch: [0/100]  [  60/4480]  eta: 1 day, 7:10:18  loss: 11.054619 (10.999086)  lr: 0.000000 (0.000000)  wd: 0.040000 (0.040000)  time: 23.743622  data: 0.002891  max mem: 36945
+Epoch: [0/100]  [  70/4480]  eta: 1 day, 6:49:04  loss: 11.035756 (11.003347)  lr: 0.000000 (0.000000)  wd: 0.040000 (0.040000)  time: 23.757595  data: 0.002849  max mem: 36945
+Epoch: [0/100]  [  80/4480]  eta: 1 day, 6:32:06  loss: 11.018582 (11.003604)  lr: 0.000001 (0.000000)  wd: 0.040000 (0.040000)  time: 23.746712  data: 0.002824  max mem: 36945
+Epoch: [0/100]  [  90/4480]  eta: 1 day, 6:18:08  loss: 10.997050 (11.001128)  lr: 0.000001 (0.000000)  wd: 0.040000 (0.040000)  time: 23.755894  data: 0.002772  max mem: 36945
+Epoch: [0/100]  [ 100/4480]  eta: 1 day, 6:06:08  loss: 10.971295 (10.997571)  lr: 0.000001 (0.000000)  wd: 0.040000 (0.040000)  time: 23.762646  data: 0.002777  max mem: 36945
+Epoch: [0/100]  [ 110/4480]  eta: 1 day, 5:54:46  loss: 10.957918 (10.993414)  lr: 0.000001 (0.000000)  wd: 0.040000 (0.040000)  time: 23.699991  data: 0.002834  max mem: 36945
+Epoch: [0/100]  [ 120/4480]  eta: 1 day, 5:45:11  loss: 10.934456 (10.987899)  lr: 0.000001 (0.000000)  wd: 0.040000 (0.040000)  time: 23.684170  data: 0.002890  max mem: 36945
+Epoch: [0/100]  [ 130/4480]  eta: 1 day, 5:37:21  loss: 10.916628 (10.981892)  lr: 0.000001 (0.000001)  wd: 0.040000 (0.040000)  time: 23.811127  data: 0.002883  max mem: 36945
+Epoch: [0/100]  [ 140/4480]  eta: 1 day, 5:29:43  loss: 10.898368 (10.975838)  lr: 0.000001 (0.000001)  wd: 0.040000 (0.040000)  time: 23.857229  data: 0.002737  max mem: 36945
+Epoch: [0/100]  [ 150/4480]  eta: 1 day, 5:22:06  loss: 10.884259 (10.969116)  lr: 0.000001 (0.000001)  wd: 0.040000 (0.040000)  time: 23.773401  data: 0.002709  max mem: 36945
+Epoch: [0/100]  [ 160/4480]  eta: 1 day, 5:14:37  loss: 10.865460 (10.961998)  lr: 0.000001 (0.000001)  wd: 0.040000 (0.040000)  time: 23.689880  data: 0.002869  max mem: 36945
+Epoch: [0/100]  [ 170/4480]  eta: 1 day, 5:08:23  loss: 10.842655 (10.954576)  lr: 0.000001 (0.000001)  wd: 0.040000 (0.040000)  time: 23.754604  data: 0.002953  max mem: 36945
+Epoch: [0/100]  [ 180/4480]  eta: 1 day, 5:02:21  loss: 10.826415 (10.947120)  lr: 0.000001 (0.000001)  wd: 0.040000 (0.040000)  time: 23.845987  data: 0.002831  max mem: 36945
+Epoch: [0/100]  [ 190/4480]  eta: 1 day, 4:56:33  loss: 10.800113 (10.938978)  lr: 0.000001 (0.000001)  wd: 0.040000 (0.040000)  time: 23.841480  data: 0.002792  max mem: 36945
+Epoch: [0/100]  [ 200/4480]  eta: 1 day, 4:50:54  loss: 10.785644 (10.931065)  lr: 0.000001 (0.000001)  wd: 0.040000 (0.040000)  time: 23.842030  data: 0.002843  max mem: 36945
+Epoch: [0/100]  [ 210/4480]  eta: 1 day, 4:45:27  loss: 10.776323 (10.923836)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.841772  data: 0.002907  max mem: 36945
+Epoch: [0/100]  [ 220/4480]  eta: 1 day, 4:39:54  loss: 10.770808 (10.916160)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.810331  data: 0.002884  max mem: 36945
+Epoch: [0/100]  [ 230/4480]  eta: 1 day, 4:34:42  loss: 10.737085 (10.908289)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.810785  data: 0.002747  max mem: 36945
+Epoch: [0/100]  [ 240/4480]  eta: 1 day, 4:29:40  loss: 10.716893 (10.900160)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.856520  data: 0.002740  max mem: 36945
+Epoch: [0/100]  [ 250/4480]  eta: 1 day, 4:24:27  loss: 10.708905 (10.892488)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.820536  data: 0.002717  max mem: 36945
+Epoch: [0/100]  [ 260/4480]  eta: 1 day, 4:19:40  loss: 10.701646 (10.884860)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.833393  data: 0.002761  max mem: 36945
+Epoch: [0/100]  [ 270/4480]  eta: 1 day, 4:14:11  loss: 10.678865 (10.877228)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.749081  data: 0.002938  max mem: 36945
+Epoch: [0/100]  [ 280/4480]  eta: 1 day, 4:09:19  loss: 10.662620 (10.869466)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.708126  data: 0.002890  max mem: 36945
+Epoch: [0/100]  [ 290/4480]  eta: 1 day, 4:04:32  loss: 10.658142 (10.861901)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.813614  data: 0.002669  max mem: 36945
+Epoch: [0/100]  [ 300/4480]  eta: 1 day, 3:59:44  loss: 10.637380 (10.853946)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.800919  data: 0.002737  max mem: 36945
+Epoch: [0/100]  [ 310/4480]  eta: 1 day, 3:54:50  loss: 10.620941 (10.846442)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.750563  data: 0.002925  max mem: 36945
+Epoch: [0/100]  [ 320/4480]  eta: 1 day, 3:50:07  loss: 10.605892 (10.838682)  lr: 0.000002 (0.000001)  wd: 0.040000 (0.040000)  time: 23.745888  data: 0.002875  max mem: 36945
+Epoch: [0/100]  [ 330/4480]  eta: 1 day, 3:45:28  loss: 10.580317 (10.830808)  lr: 0.000003 (0.000001)  wd: 0.040000 (0.040000)  time: 23.777897  data: 0.002860  max mem: 36945
+Epoch: [0/100]  [ 340/4480]  eta: 1 day, 3:40:52  loss: 10.560065 (10.822813)  lr: 0.000003 (0.000001)  wd: 0.040000 (0.040000)  time: 23.782978  data: 0.002843  max mem: 36945
+Epoch: [0/100]  [ 350/4480]  eta: 1 day, 3:36:19  loss: 10.540344 (10.814341)  lr: 0.000003 (0.000001)  wd: 0.040001 (0.040000)  time: 23.793980  data: 0.002754  max mem: 36945
+Epoch: [0/100]  [ 360/4480]  eta: 1 day, 3:31:54  loss: 10.510327 (10.805653)  lr: 0.000003 (0.000001)  wd: 0.040001 (0.040000)  time: 23.824055  data: 0.002718  max mem: 36945
+Epoch: [0/100]  [ 370/4480]  eta: 1 day, 3:27:22  loss: 10.472460 (10.796171)  lr: 0.000003 (0.000001)  wd: 0.040001 (0.040000)  time: 23.809708  data: 0.002764  max mem: 36945
+Epoch: [0/100]  [ 380/4480]  eta: 1 day, 3:22:49  loss: 10.424889 (10.784528)  lr: 0.000003 (0.000001)  wd: 0.040001 (0.040000)  time: 23.758549  data: 0.002870  max mem: 36945
+Epoch: [0/100]  [ 390/4480]  eta: 1 day, 3:18:33  loss: 10.305609 (10.770464)  lr: 0.000003 (0.000002)  wd: 0.040001 (0.040000)  time: 23.822155  data: 0.002888  max mem: 36945
+Epoch: [0/100]  [ 400/4480]  eta: 1 day, 3:14:16  loss: 10.143274 (10.750096)  lr: 0.000003 (0.000002)  wd: 0.040001 (0.040000)  time: 23.884357  data: 0.002830  max mem: 36945
+Epoch: [0/100]  [ 410/4480]  eta: 1 day, 3:09:53  loss: 9.816472 (10.724621)  lr: 0.000003 (0.000002)  wd: 0.040001 (0.040000)  time: 23.835947  data: 0.002840  max mem: 36945
+Epoch: [0/100]  [ 420/4480]  eta: 1 day, 3:05:29  loss: 9.547156 (10.692948)  lr: 0.000003 (0.000002)  wd: 0.040001 (0.040000)  time: 23.793583  data: 0.002759  max mem: 36945
+Epoch: [0/100]  [ 430/4480]  eta: 1 day, 3:01:15  loss: 9.242108 (10.657406)  lr: 0.000003 (0.000002)  wd: 0.040001 (0.040000)  time: 23.833126  data: 0.002733  max mem: 36945
+Epoch: [0/100]  [ 440/4480]  eta: 1 day, 2:57:05  loss: 9.156039 (10.620547)  lr: 0.000003 (0.000002)  wd: 0.040001 (0.040000)  time: 23.896339  data: 0.002873  max mem: 36945
+Epoch: [0/100]  [ 450/4480]  eta: 1 day, 2:52:45  loss: 8.926259 (10.584629)  lr: 0.000003 (0.000002)  wd: 0.040001 (0.040000)  time: 23.850723  data: 0.002794  max mem: 36945
+Epoch: [0/100]  [ 460/4480]  eta: 1 day, 2:48:35  loss: 8.911339 (10.549237)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.841518  data: 0.002761  max mem: 36945
+Epoch: [0/100]  [ 470/4480]  eta: 1 day, 2:44:20  loss: 8.865743 (10.514012)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.863550  data: 0.002882  max mem: 36945
+Epoch: [0/100]  [ 480/4480]  eta: 1 day, 2:39:58  loss: 8.856671 (10.479911)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.787432  data: 0.002865  max mem: 36945
+Epoch: [0/100]  [ 490/4480]  eta: 1 day, 2:35:37  loss: 8.834711 (10.447378)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.743887  data: 0.002923  max mem: 36945
+Epoch: [0/100]  [ 500/4480]  eta: 1 day, 2:31:23  loss: 8.852534 (10.414085)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.784174  data: 0.002902  max mem: 36945
+Epoch: [0/100]  [ 510/4480]  eta: 1 day, 2:27:05  loss: 8.709764 (10.382602)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.786327  data: 0.002720  max mem: 36945
+Epoch: [0/100]  [ 520/4480]  eta: 1 day, 2:22:41  loss: 8.709764 (10.350656)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.712749  data: 0.002723  max mem: 36945
+Epoch: [0/100]  [ 530/4480]  eta: 1 day, 2:18:25  loss: 8.691289 (10.319681)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.718685  data: 0.002755  max mem: 36945
+Epoch: [0/100]  [ 540/4480]  eta: 1 day, 2:14:11  loss: 8.797585 (10.289676)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.767445  data: 0.002791  max mem: 36945
+Epoch: [0/100]  [ 550/4480]  eta: 1 day, 2:09:54  loss: 8.701264 (10.260052)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.755768  data: 0.002845  max mem: 36945
+Epoch: [0/100]  [ 560/4480]  eta: 1 day, 2:05:39  loss: 8.701264 (10.233307)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.740910  data: 0.002884  max mem: 36945
+Epoch: [0/100]  [ 570/4480]  eta: 1 day, 2:01:28  loss: 8.766380 (10.206127)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.773655  data: 0.002925  max mem: 36945
+Epoch: [0/100]  [ 580/4480]  eta: 1 day, 1:57:20  loss: 8.564301 (10.176043)  lr: 0.000004 (0.000002)  wd: 0.040001 (0.040000)  time: 23.818714  data: 0.002802  max mem: 36945
+Epoch: [0/100]  [ 590/4480]  eta: 1 day, 1:53:09  loss: 8.471316 (10.151020)  lr: 0.000005 (0.000002)  wd: 0.040001 (0.040001)  time: 23.808319  data: 0.002700  max mem: 36945
+Epoch: [0/100]  [ 600/4480]  eta: 1 day, 1:48:56  loss: 8.607075 (10.124536)  lr: 0.000005 (0.000002)  wd: 0.040002 (0.040001)  time: 23.764664  data: 0.002774  max mem: 36945
+Epoch: [0/100]  [ 610/4480]  eta: 1 day, 1:44:44  loss: 8.485567 (10.096460)  lr: 0.000005 (0.000002)  wd: 0.040002 (0.040001)  time: 23.750614  data: 0.002837  max mem: 36945
+Epoch: [0/100]  [ 620/4480]  eta: 1 day, 1:40:32  loss: 8.383786 (10.070233)  lr: 0.000005 (0.000002)  wd: 0.040002 (0.040001)  time: 23.755985  data: 0.002850  max mem: 36945
+Epoch: [0/100]  [ 630/4480]  eta: 1 day, 1:36:28  loss: 8.381014 (10.044171)  lr: 0.000005 (0.000002)  wd: 0.040002 (0.040001)  time: 23.807898  data: 0.002854  max mem: 36945
+Epoch: [0/100]  [ 640/4480]  eta: 1 day, 1:32:21  loss: 8.399393 (10.018808)  lr: 0.000005 (0.000003)  wd: 0.040002 (0.040001)  time: 23.843386  data: 0.002876  max mem: 36945
+Epoch: [0/100]  [ 650/4480]  eta: 1 day, 1:28:15  loss: 8.443448 (9.993728)  lr: 0.000005 (0.000003)  wd: 0.040002 (0.040001)  time: 23.830059  data: 0.002933  max mem: 36945
+Epoch: [0/100]  [ 660/4480]  eta: 1 day, 1:24:05  loss: 8.290939 (9.967176)  lr: 0.000005 (0.000003)  wd: 0.040002 (0.040001)  time: 23.797325  data: 0.002922  max mem: 36945
+Epoch: [0/100]  [ 670/4480]  eta: 1 day, 1:19:57  loss: 8.249218 (9.940489)  lr: 0.000005 (0.000003)  wd: 0.040002 (0.040001)  time: 23.769863  data: 0.002860  max mem: 36945
+Epoch: [0/100]  [ 680/4480]  eta: 1 day, 1:15:49  loss: 8.227499 (9.915331)  lr: 0.000005 (0.000003)  wd: 0.040002 (0.040001)  time: 23.781139  data: 0.002866  max mem: 36945
+Epoch: [0/100]  [ 690/4480]  eta: 1 day, 1:11:40  loss: 8.220466 (9.889405)  lr: 0.000005 (0.000003)  wd: 0.040002 (0.040001)  time: 23.767702  data: 0.002882  max mem: 36945
+Epoch: [0/100]  [ 700/4480]  eta: 1 day, 1:07:32  loss: 8.139244 (9.865194)  lr: 0.000005 (0.000003)  wd: 0.040002 (0.040001)  time: 23.762230  data: 0.002852  max mem: 36945
+Epoch: [0/100]  [ 710/4480]  eta: 1 day, 1:03:28  loss: 8.132538 (9.840846)  lr: 0.000005 (0.000003)  wd: 0.040002 (0.040001)  time: 23.805254  data: 0.002863  max mem: 36945
+Epoch: [0/100]  [ 720/4480]  eta: 1 day, 0:59:25  loss: 8.022070 (9.814955)  lr: 0.000006 (0.000003)  wd: 0.040002 (0.040001)  time: 23.852930  data: 0.002831  max mem: 36945
+Epoch: [0/100]  [ 730/4480]  eta: 1 day, 0:55:23  loss: 7.989203 (9.789747)  lr: 0.000006 (0.000003)  wd: 0.040002 (0.040001)  time: 23.870178  data: 0.002772  max mem: 36945
+Epoch: [0/100]  [ 740/4480]  eta: 1 day, 0:51:17  loss: 7.925013 (9.764968)  lr: 0.000006 (0.000003)  wd: 0.040002 (0.040001)  time: 23.835398  data: 0.002775  max mem: 36945
+Epoch: [0/100]  [ 750/4480]  eta: 1 day, 0:47:11  loss: 7.925013 (9.740416)  lr: 0.000006 (0.000003)  wd: 0.040002 (0.040001)  time: 23.786249  data: 0.002761  max mem: 36945
+Epoch: [0/100]  [ 760/4480]  eta: 1 day, 0:43:03  loss: 7.755715 (9.713445)  lr: 0.000006 (0.000003)  wd: 0.040002 (0.040001)  time: 23.762043  data: 0.002757  max mem: 36945
+Epoch: [0/100]  [ 770/4480]  eta: 1 day, 0:38:56  loss: 7.706408 (9.687775)  lr: 0.000006 (0.000003)  wd: 0.040003 (0.040001)  time: 23.756140  data: 0.002797  max mem: 36945
+Epoch: [0/100]  [ 780/4480]  eta: 1 day, 0:34:56  loss: 7.756480 (9.662634)  lr: 0.000006 (0.000003)  wd: 0.040003 (0.040001)  time: 23.830938  data: 0.002786  max mem: 36945
+Epoch: [0/100]  [ 790/4480]  eta: 1 day, 0:30:54  loss: 7.627132 (9.635797)  lr: 0.000006 (0.000003)  wd: 0.040003 (0.040001)  time: 23.875824  data: 0.002768  max mem: 36945
+Epoch: [0/100]  [ 800/4480]  eta: 1 day, 0:26:53  loss: 7.627132 (9.610753)  lr: 0.000006 (0.000003)  wd: 0.040003 (0.040001)  time: 23.860867  data: 0.002800  max mem: 36945
+Epoch: [0/100]  [ 810/4480]  eta: 1 day, 0:22:52  loss: 7.691473 (9.586272)  lr: 0.000006 (0.000003)  wd: 0.040003 (0.040001)  time: 23.874601  data: 0.002767  max mem: 36945
+Epoch: [0/100]  [ 820/4480]  eta: 1 day, 0:18:48  loss: 7.582369 (9.561166)  lr: 0.000006 (0.000003)  wd: 0.040003 (0.040001)  time: 23.849091  data: 0.002768  max mem: 36945
+Epoch: [0/100]  [ 830/4480]  eta: 1 day, 0:14:46  loss: 7.401163 (9.534090)  lr: 0.000006 (0.000003)  wd: 0.040003 (0.040001)  time: 23.826017  data: 0.002797  max mem: 36945
+Epoch: [0/100]  [ 840/4480]  eta: 1 day, 0:10:44  loss: 7.290112 (9.507599)  lr: 0.000006 (0.000003)  wd: 0.040003 (0.040001)  time: 23.850840  data: 0.002829  max mem: 36945
+Epoch: [0/100]  [ 850/4480]  eta: 1 day, 0:06:38  loss: 7.295634 (9.482233)  lr: 0.000007 (0.000003)  wd: 0.040003 (0.040001)  time: 23.802479  data: 0.002881  max mem: 36945
+Epoch: [0/100]  [ 860/4480]  eta: 1 day, 0:02:34  loss: 7.450846 (9.459157)  lr: 0.000007 (0.000003)  wd: 0.040003 (0.040001)  time: 23.770815  data: 0.002870  max mem: 36945
+Epoch: [0/100]  [ 870/4480]  eta: 23:58:29  loss: 7.454278 (9.435255)  lr: 0.000007 (0.000003)  wd: 0.040003 (0.040001)  time: 23.785604  data: 0.002790  max mem: 36945
+Epoch: [0/100]  [ 880/4480]  eta: 23:54:24  loss: 7.279565 (9.410516)  lr: 0.000007 (0.000003)  wd: 0.040003 (0.040001)  time: 23.758871  data: 0.002747  max mem: 36945
+Epoch: [0/100]  [ 890/4480]  eta: 23:50:18  loss: 7.271614 (9.387494)  lr: 0.000007 (0.000003)  wd: 0.040003 (0.040001)  time: 23.751581  data: 0.002781  max mem: 36945
+Epoch: [0/100]  [ 900/4480]  eta: 23:46:15  loss: 7.258565 (9.363679)  lr: 0.000007 (0.000004)  wd: 0.040004 (0.040001)  time: 23.770712  data: 0.002810  max mem: 36945
+Epoch: [0/100]  [ 910/4480]  eta: 23:42:03  loss: 7.182209 (9.339654)  lr: 0.000007 (0.000004)  wd: 0.040004 (0.040001)  time: 23.692211  data: 0.002896  max mem: 36945
+Epoch: [0/100]  [ 920/4480]  eta: 23:37:56  loss: 7.097384 (9.314464)  lr: 0.000007 (0.000004)  wd: 0.040004 (0.040001)  time: 23.641897  data: 0.002889  max mem: 36945
+Epoch: [0/100]  [ 930/4480]  eta: 23:33:50  loss: 7.089349 (9.291078)  lr: 0.000007 (0.000004)  wd: 0.040004 (0.040001)  time: 23.694368  data: 0.002804  max mem: 36945
+Epoch: [0/100]  [ 940/4480]  eta: 23:29:46  loss: 7.185651 (9.269168)  lr: 0.000007 (0.000004)  wd: 0.040004 (0.040001)  time: 23.727982  data: 0.002802  max mem: 36945
+Epoch: [0/100]  [ 950/4480]  eta: 23:25:43  loss: 7.087831 (9.245737)  lr: 0.000007 (0.000004)  wd: 0.040004 (0.040001)  time: 23.774929  data: 0.002722  max mem: 36945
+Epoch: [0/100]  [ 960/4480]  eta: 23:21:41  loss: 7.081766 (9.222640)  lr: 0.000007 (0.000004)  wd: 0.040004 (0.040001)  time: 23.803242  data: 0.002508  max mem: 36945
+Epoch: [0/100]  [ 970/4480]  eta: 23:17:38  loss: 6.968328 (9.199058)  lr: 0.000008 (0.000004)  wd: 0.040004 (0.040001)  time: 23.803156  data: 0.002529  max mem: 36945
+Epoch: [0/100]  [ 980/4480]  eta: 23:13:35  loss: 6.908945 (9.176356)  lr: 0.000008 (0.000004)  wd: 0.040004 (0.040001)  time: 23.779324  data: 0.002631  max mem: 36945
+Epoch: [0/100]  [ 990/4480]  eta: 23:09:34  loss: 6.893982 (9.152973)  lr: 0.000008 (0.000004)  wd: 0.040004 (0.040001)  time: 23.789831  data: 0.002675  max mem: 36945
+Epoch: [0/100]  [1000/4480]  eta: 23:05:30  loss: 6.776508 (9.128029)  lr: 0.000008 (0.000004)  wd: 0.040004 (0.040001)  time: 23.783772  data: 0.002784  max mem: 36945
+Epoch: [0/100]  [1010/4480]  eta: 23:01:32  loss: 6.724402 (9.106232)  lr: 0.000008 (0.000004)  wd: 0.040004 (0.040002)  time: 23.833588  data: 0.002759  max mem: 36945
+Epoch: [0/100]  [1020/4480]  eta: 22:57:29  loss: 6.914151 (9.084328)  lr: 0.000008 (0.000004)  wd: 0.040005 (0.040002)  time: 23.842558  data: 0.002750  max mem: 36945
+Epoch: [0/100]  [1030/4480]  eta: 22:53:20  loss: 6.772414 (9.060400)  lr: 0.000008 (0.000004)  wd: 0.040005 (0.040002)  time: 23.684412  data: 0.002822  max mem: 36945
+Epoch: [0/100]  [1040/4480]  eta: 22:49:20  loss: 6.675585 (9.037559)  lr: 0.000008 (0.000004)  wd: 0.040005 (0.040002)  time: 23.710943  data: 0.002778  max mem: 36945
+Epoch: [0/100]  [1050/4480]  eta: 22:45:18  loss: 6.672949 (9.014306)  lr: 0.000008 (0.000004)  wd: 0.040005 (0.040002)  time: 23.803810  data: 0.002744  max mem: 36945
+Epoch: [0/100]  [1060/4480]  eta: 22:41:08  loss: 6.564533 (8.991532)  lr: 0.000008 (0.000004)  wd: 0.040005 (0.040002)  time: 23.674557  data: 0.002910  max mem: 36945
+Epoch: [0/100]  [1070/4480]  eta: 22:37:06  loss: 6.650908 (8.970645)  lr: 0.000008 (0.000004)  wd: 0.040005 (0.040002)  time: 23.668932  data: 0.002932  max mem: 36945
+Epoch: [0/100]  [1080/4480]  eta: 22:33:05  loss: 6.712653 (8.948198)  lr: 0.000008 (0.000004)  wd: 0.040005 (0.040002)  time: 23.792183  data: 0.002773  max mem: 36945
+Epoch: [0/100]  [1090/4480]  eta: 22:29:04  loss: 6.557808 (8.925549)  lr: 0.000008 (0.000004)  wd: 0.040005 (0.040002)  time: 23.797979  data: 0.002740  max mem: 36945
+Epoch: [0/100]  [1100/4480]  eta: 22:25:01  loss: 6.420014 (8.902594)  lr: 0.000009 (0.000004)  wd: 0.040005 (0.040002)  time: 23.763325  data: 0.002667  max mem: 36945
+Epoch: [0/100]  [1110/4480]  eta: 22:20:59  loss: 6.490921 (8.881003)  lr: 0.000009 (0.000004)  wd: 0.040005 (0.040002)  time: 23.759144  data: 0.002561  max mem: 36945
+Epoch: [0/100]  [1120/4480]  eta: 22:16:57  loss: 6.490921 (8.859075)  lr: 0.000009 (0.000004)  wd: 0.040005 (0.040002)  time: 23.768524  data: 0.002529  max mem: 36945
+Epoch: [0/100]  [1130/4480]  eta: 22:12:55  loss: 6.437941 (8.837974)  lr: 0.000009 (0.000004)  wd: 0.040006 (0.040002)  time: 23.764606  data: 0.002562  max mem: 36945
+Epoch: [0/100]  [1140/4480]  eta: 22:08:52  loss: 6.431452 (8.815495)  lr: 0.000009 (0.000004)  wd: 0.040006 (0.040002)  time: 23.757010  data: 0.002622  max mem: 36945
+Epoch: [0/100]  [1150/4480]  eta: 22:04:49  loss: 6.402743 (8.794164)  lr: 0.000009 (0.000004)  wd: 0.040006 (0.040002)  time: 23.723747  data: 0.002703  max mem: 36945
+Epoch: [0/100]  [1160/4480]  eta: 22:00:43  loss: 6.299037 (8.771766)  lr: 0.000009 (0.000005)  wd: 0.040006 (0.040002)  time: 23.663610  data: 0.002844  max mem: 36945
+Epoch: [0/100]  [1170/4480]  eta: 21:56:35  loss: 6.254032 (8.750517)  lr: 0.000009 (0.000005)  wd: 0.040006 (0.040002)  time: 23.589527  data: 0.002944  max mem: 36945
+Epoch: [0/100]  [1180/4480]  eta: 21:52:33  loss: 6.311110 (8.730323)  lr: 0.000009 (0.000005)  wd: 0.040006 (0.040002)  time: 23.638216  data: 0.002787  max mem: 36945
+Epoch: [0/100]  [1190/4480]  eta: 21:48:31  loss: 6.311408 (8.710285)  lr: 0.000009 (0.000005)  wd: 0.040006 (0.040002)  time: 23.733143  data: 0.002734  max mem: 36945
+Epoch: [0/100]  [1200/4480]  eta: 21:44:30  loss: 6.240880 (8.689555)  lr: 0.000009 (0.000005)  wd: 0.040006 (0.040002)  time: 23.766598  data: 0.002831  max mem: 36945
+Epoch: [0/100]  [1210/4480]  eta: 21:40:29  loss: 6.117797 (8.668460)  lr: 0.000009 (0.000005)  wd: 0.040006 (0.040002)  time: 23.787048  data: 0.002791  max mem: 36945
+Epoch: [0/100]  [1220/4480]  eta: 21:36:31  loss: 6.117797 (8.649331)  lr: 0.000009 (0.000005)  wd: 0.040006 (0.040002)  time: 23.832666  data: 0.002806  max mem: 36945
+Epoch: [0/100]  [1230/4480]  eta: 21:32:28  loss: 6.371462 (8.628786)  lr: 0.000010 (0.000005)  wd: 0.040007 (0.040002)  time: 23.777832  data: 0.002836  max mem: 36945
+Epoch: [0/100]  [1240/4480]  eta: 21:28:27  loss: 6.188501 (8.609731)  lr: 0.000010 (0.000005)  wd: 0.040007 (0.040002)  time: 23.718397  data: 0.002797  max mem: 36945
+Epoch: [0/100]  [1250/4480]  eta: 21:24:26  loss: 6.201022 (8.590300)  lr: 0.000010 (0.000005)  wd: 0.040007 (0.040002)  time: 23.774435  data: 0.002853  max mem: 36945
+Epoch: [0/100]  [1260/4480]  eta: 21:20:23  loss: 6.069882 (8.569790)  lr: 0.000010 (0.000005)  wd: 0.040007 (0.040002)  time: 23.740206  data: 0.002989  max mem: 36945
+Epoch: [0/100]  [1270/4480]  eta: 21:16:22  loss: 5.968978 (8.550204)  lr: 0.000010 (0.000005)  wd: 0.040007 (0.040002)  time: 23.720501  data: 0.002966  max mem: 36945
+Epoch: [0/100]  [1280/4480]  eta: 21:12:23  loss: 6.047148 (8.530761)  lr: 0.000010 (0.000005)  wd: 0.040007 (0.040002)  time: 23.806000  data: 0.002815  max mem: 36945
+Epoch: [0/100]  [1290/4480]  eta: 21:08:27  loss: 5.910367 (8.510165)  lr: 0.000010 (0.000005)  wd: 0.040007 (0.040002)  time: 23.907154  data: 0.002786  max mem: 36945
+Epoch: [0/100]  [1300/4480]  eta: 21:04:24  loss: 5.865743 (8.489482)  lr: 0.000010 (0.000005)  wd: 0.040007 (0.040002)  time: 23.814230  data: 0.002906  max mem: 36945
+Epoch: [0/100]  [1310/4480]  eta: 21:00:26  loss: 5.865743 (8.470040)  lr: 0.000010 (0.000005)  wd: 0.040007 (0.040003)  time: 23.768034  data: 0.002884  max mem: 36945
+Epoch: [0/100]  [1320/4480]  eta: 20:56:28  loss: 5.834041 (8.448736)  lr: 0.000010 (0.000005)  wd: 0.040008 (0.040003)  time: 23.870396  data: 0.002717  max mem: 36945
+Epoch: [0/100]  [1330/4480]  eta: 20:52:25  loss: 5.714426 (8.429122)  lr: 0.000010 (0.000005)  wd: 0.040008 (0.040003)  time: 23.785187  data: 0.002731  max mem: 36945
+Epoch: [0/100]  [1340/4480]  eta: 20:48:23  loss: 5.829260 (8.410189)  lr: 0.000010 (0.000005)  wd: 0.040008 (0.040003)  time: 23.688646  data: 0.002837  max mem: 36945
+Epoch: [0/100]  [1350/4480]  eta: 20:44:18  loss: 5.803757 (8.390638)  lr: 0.000010 (0.000005)  wd: 0.040008 (0.040003)  time: 23.645166  data: 0.002880  max mem: 36945
+Epoch: [0/100]  [1360/4480]  eta: 20:40:17  loss: 5.736467 (8.370782)  lr: 0.000011 (0.000005)  wd: 0.040008 (0.040003)  time: 23.660807  data: 0.002822  max mem: 36945
+Epoch: [0/100]  [1370/4480]  eta: 20:36:16  loss: 5.639334 (8.351842)  lr: 0.000011 (0.000005)  wd: 0.040008 (0.040003)  time: 23.741383  data: 0.002774  max mem: 36945
+Epoch: [0/100]  [1380/4480]  eta: 20:32:17  loss: 5.556677 (8.330826)  lr: 0.000011 (0.000005)  wd: 0.040008 (0.040003)  time: 23.791435  data: 0.002844  max mem: 36945
+Epoch: [0/100]  [1390/4480]  eta: 20:28:19  loss: 5.511585 (8.310911)  lr: 0.000011 (0.000005)  wd: 0.040008 (0.040003)  time: 23.857605  data: 0.002776  max mem: 36945
+Epoch: [0/100]  [1400/4480]  eta: 20:24:19  loss: 5.511585 (8.291160)  lr: 0.000011 (0.000005)  wd: 0.040009 (0.040003)  time: 23.836565  data: 0.002725  max mem: 36945
+Epoch: [0/100]  [1410/4480]  eta: 20:20:19  loss: 5.384333 (8.270638)  lr: 0.000011 (0.000006)  wd: 0.040009 (0.040003)  time: 23.766140  data: 0.002750  max mem: 36945
+Epoch: [0/100]  [1420/4480]  eta: 20:16:19  loss: 5.305857 (8.249088)  lr: 0.000011 (0.000006)  wd: 0.040009 (0.040003)  time: 23.768101  data: 0.002754  max mem: 36945
+Epoch: [0/100]  [1430/4480]  eta: 20:12:18  loss: 5.225424 (8.228213)  lr: 0.000011 (0.000006)  wd: 0.040009 (0.040003)  time: 23.766865  data: 0.002768  max mem: 36945
+Epoch: [0/100]  [1440/4480]  eta: 20:08:16  loss: 5.163942 (8.207009)  lr: 0.000011 (0.000006)  wd: 0.040009 (0.040003)  time: 23.719608  data: 0.002823  max mem: 36945
+Epoch: [0/100]  [1450/4480]  eta: 20:04:17  loss: 5.035170 (8.184835)  lr: 0.000011 (0.000006)  wd: 0.040009 (0.040003)  time: 23.754660  data: 0.002828  max mem: 36945
+Epoch: [0/100]  [1460/4480]  eta: 20:00:18  loss: 4.910516 (8.162500)  lr: 0.000011 (0.000006)  wd: 0.040009 (0.040003)  time: 23.812384  data: 0.002793  max mem: 36945
+Epoch: [0/100]  [1470/4480]  eta: 19:56:22  loss: 4.892531 (8.139986)  lr: 0.000011 (0.000006)  wd: 0.040009 (0.040003)  time: 23.885569  data: 0.002798  max mem: 36945
+Epoch: [0/100]  [1480/4480]  eta: 19:52:22  loss: 4.738917 (8.117009)  lr: 0.000011 (0.000006)  wd: 0.040010 (0.040003)  time: 23.867605  data: 0.002884  max mem: 36945
+Epoch: [0/100]  [1490/4480]  eta: 19:48:21  loss: 4.635763 (8.093575)  lr: 0.000012 (0.000006)  wd: 0.040010 (0.040003)  time: 23.750805  data: 0.002867  max mem: 36945
+Epoch: [0/100]  [1500/4480]  eta: 19:44:23  loss: 4.522860 (8.069848)  lr: 0.000012 (0.000006)  wd: 0.040010 (0.040003)  time: 23.803158  data: 0.002744  max mem: 36945
+Epoch: [0/100]  [1510/4480]  eta: 19:40:23  loss: 4.522860 (8.046340)  lr: 0.000012 (0.000006)  wd: 0.040010 (0.040003)  time: 23.819658  data: 0.002787  max mem: 36945
+Epoch: [0/100]  [1520/4480]  eta: 19:36:22  loss: 4.397616 (8.021504)  lr: 0.000012 (0.000006)  wd: 0.040010 (0.040003)  time: 23.742277  data: 0.002693  max mem: 36945
+Epoch: [0/100]  [1530/4480]  eta: 19:32:21  loss: 4.339541 (7.997823)  lr: 0.000012 (0.000006)  wd: 0.040010 (0.040003)  time: 23.705719  data: 0.002726  max mem: 36945
+Epoch: [0/100]  [1540/4480]  eta: 19:28:23  loss: 4.327411 (7.974288)  lr: 0.000012 (0.000006)  wd: 0.040010 (0.040003)  time: 23.780556  data: 0.002836  max mem: 36945
+Epoch: [0/100]  [1550/4480]  eta: 19:24:23  loss: 4.318908 (7.950830)  lr: 0.000012 (0.000006)  wd: 0.040010 (0.040004)  time: 23.817848  data: 0.002786  max mem: 36945
+Epoch: [0/100]  [1560/4480]  eta: 19:20:25  loss: 4.163169 (7.926224)  lr: 0.000012 (0.000006)  wd: 0.040011 (0.040004)  time: 23.812733  data: 0.002823  max mem: 36945
+Epoch: [0/100]  [1570/4480]  eta: 19:16:26  loss: 4.158160 (7.902161)  lr: 0.000012 (0.000006)  wd: 0.040011 (0.040004)  time: 23.850683  data: 0.002805  max mem: 36945
+Epoch: [0/100]  [1580/4480]  eta: 19:12:26  loss: 4.100277 (7.878104)  lr: 0.000012 (0.000006)  wd: 0.040011 (0.040004)  time: 23.812269  data: 0.002674  max mem: 36945
+Epoch: [0/100]  [1590/4480]  eta: 19:08:26  loss: 4.090465 (7.854333)  lr: 0.000012 (0.000006)  wd: 0.040011 (0.040004)  time: 23.760706  data: 0.002653  max mem: 36945
+Epoch: [0/100]  [1600/4480]  eta: 19:04:24  loss: 4.078361 (7.830553)  lr: 0.000012 (0.000006)  wd: 0.040011 (0.040004)  time: 23.694677  data: 0.002750  max mem: 36945
+Epoch: [0/100]  [1610/4480]  eta: 19:00:23  loss: 3.996437 (7.806394)  lr: 0.000013 (0.000006)  wd: 0.040011 (0.040004)  time: 23.654881  data: 0.002689  max mem: 36945
+Epoch: [0/100]  [1620/4480]  eta: 18:56:20  loss: 3.923458 (7.782530)  lr: 0.000013 (0.000006)  wd: 0.040011 (0.040004)  time: 23.632074  data: 0.002764  max mem: 36945
+Epoch: [0/100]  [1630/4480]  eta: 18:52:18  loss: 3.886221 (7.758548)  lr: 0.000013 (0.000006)  wd: 0.040012 (0.040004)  time: 23.617615  data: 0.002863  max mem: 36945
+Epoch: [0/100]  [1640/4480]  eta: 18:48:17  loss: 3.861809 (7.735717)  lr: 0.000013 (0.000006)  wd: 0.040012 (0.040004)  time: 23.659184  data: 0.002754  max mem: 36945
+Epoch: [0/100]  [1650/4480]  eta: 18:44:17  loss: 3.959328 (7.712228)  lr: 0.000013 (0.000006)  wd: 0.040012 (0.040004)  time: 23.708893  data: 0.002795  max mem: 36945
+Epoch: [0/100]  [1660/4480]  eta: 18:40:16  loss: 3.752844 (7.688189)  lr: 0.000013 (0.000006)  wd: 0.040012 (0.040004)  time: 23.704845  data: 0.002818  max mem: 36945
+Epoch: [0/100]  [1670/4480]  eta: 18:36:14  loss: 3.695493 (7.663693)  lr: 0.000013 (0.000007)  wd: 0.040012 (0.040004)  time: 23.661991  data: 0.002669  max mem: 36945
+Epoch: [0/100]  [1680/4480]  eta: 18:32:15  loss: 3.638445 (7.640061)  lr: 0.000013 (0.000007)  wd: 0.040012 (0.040004)  time: 23.721447  data: 0.002714  max mem: 36945
+Epoch: [0/100]  [1690/4480]  eta: 18:28:17  loss: 3.661644 (7.616580)  lr: 0.000013 (0.000007)  wd: 0.040012 (0.040004)  time: 23.813124  data: 0.002808  max mem: 36945
+Epoch: [0/100]  [1700/4480]  eta: 18:24:17  loss: 3.582842 (7.592440)  lr: 0.000013 (0.000007)  wd: 0.040013 (0.040004)  time: 23.799438  data: 0.002804  max mem: 36945
+Epoch: [0/100]  [1710/4480]  eta: 18:20:17  loss: 3.453485 (7.568384)  lr: 0.000013 (0.000007)  wd: 0.040013 (0.040004)  time: 23.725006  data: 0.002873  max mem: 36945
+Epoch: [0/100]  [1720/4480]  eta: 18:16:17  loss: 3.579943 (7.545042)  lr: 0.000013 (0.000007)  wd: 0.040013 (0.040004)  time: 23.719486  data: 0.002845  max mem: 36945
+Epoch: [0/100]  [1730/4480]  eta: 18:12:18  loss: 3.458225 (7.521284)  lr: 0.000013 (0.000007)  wd: 0.040013 (0.040004)  time: 23.766262  data: 0.002823  max mem: 36945
+Epoch: [0/100]  [1740/4480]  eta: 18:08:18  loss: 3.355291 (7.497768)  lr: 0.000014 (0.000007)  wd: 0.040013 (0.040004)  time: 23.767227  data: 0.002862  max mem: 36945
+Epoch: [0/100]  [1750/4480]  eta: 18:04:19  loss: 3.355291 (7.474013)  lr: 0.000014 (0.000007)  wd: 0.040013 (0.040005)  time: 23.768522  data: 0.002809  max mem: 36945
+Epoch: [0/100]  [1760/4480]  eta: 18:00:20  loss: 3.333328 (7.450979)  lr: 0.000014 (0.000007)  wd: 0.040014 (0.040005)  time: 23.772684  data: 0.002782  max mem: 36945
+Epoch: [0/100]  [1770/4480]  eta: 17:56:21  loss: 3.315266 (7.427516)  lr: 0.000014 (0.000007)  wd: 0.040014 (0.040005)  time: 23.775314  data: 0.002837  max mem: 36945
+Epoch: [0/100]  [1780/4480]  eta: 17:52:23  loss: 3.303908 (7.404670)  lr: 0.000014 (0.000007)  wd: 0.040014 (0.040005)  time: 23.807947  data: 0.002821  max mem: 36945
+Epoch: [0/100]  [1790/4480]  eta: 17:48:26  loss: 3.363506 (7.382095)  lr: 0.000014 (0.000007)  wd: 0.040014 (0.040005)  time: 23.894722  data: 0.002726  max mem: 36945
+Epoch: [0/100]  [1800/4480]  eta: 17:44:28  loss: 3.363506 (7.359685)  lr: 0.000014 (0.000007)  wd: 0.040014 (0.040005)  time: 23.888477  data: 0.002771  max mem: 36945
+Epoch: [0/100]  [1810/4480]  eta: 17:40:29  loss: 3.279946 (7.336990)  lr: 0.000014 (0.000007)  wd: 0.040014 (0.040005)  time: 23.809620  data: 0.002903  max mem: 36945
+Epoch: [0/100]  [1820/4480]  eta: 17:36:28  loss: 3.257273 (7.315063)  lr: 0.000014 (0.000007)  wd: 0.040014 (0.040005)  time: 23.737333  data: 0.002918  max mem: 36945
+Epoch: [0/100]  [1830/4480]  eta: 17:32:32  loss: 3.281717 (7.292640)  lr: 0.000014 (0.000007)  wd: 0.040015 (0.040005)  time: 23.807001  data: 0.002838  max mem: 36945
+Epoch: [0/100]  [1840/4480]  eta: 17:28:34  loss: 3.263540 (7.270747)  lr: 0.000014 (0.000007)  wd: 0.040015 (0.040005)  time: 23.905617  data: 0.002755  max mem: 36945
+Epoch: [0/100]  [1850/4480]  eta: 17:24:34  loss: 3.284834 (7.249229)  lr: 0.000014 (0.000007)  wd: 0.040015 (0.040005)  time: 23.808851  data: 0.002754  max mem: 36945
+Epoch: [0/100]  [1860/4480]  eta: 17:20:35  loss: 3.306776 (7.227858)  lr: 0.000014 (0.000007)  wd: 0.040015 (0.040005)  time: 23.753239  data: 0.002702  max mem: 36945
+Epoch: [0/100]  [1870/4480]  eta: 17:16:36  loss: 3.251909 (7.206710)  lr: 0.000015 (0.000007)  wd: 0.040015 (0.040005)  time: 23.765705  data: 0.002701  max mem: 36945
+Epoch: [0/100]  [1880/4480]  eta: 17:12:36  loss: 3.251909 (7.185864)  lr: 0.000015 (0.000007)  wd: 0.040015 (0.040005)  time: 23.753645  data: 0.002804  max mem: 36945
+Epoch: [0/100]  [1890/4480]  eta: 17:08:35  loss: 3.293016 (7.165374)  lr: 0.000015 (0.000007)  wd: 0.040016 (0.040005)  time: 23.669149  data: 0.002985  max mem: 36945
+Epoch: [0/100]  [1900/4480]  eta: 17:04:36  loss: 3.260724 (7.145026)  lr: 0.000015 (0.000007)  wd: 0.040016 (0.040005)  time: 23.685320  data: 0.002979  max mem: 36945
+Epoch: [0/100]  [1910/4480]  eta: 17:00:36  loss: 3.289810 (7.125051)  lr: 0.000015 (0.000007)  wd: 0.040016 (0.040005)  time: 23.759346  data: 0.002766  max mem: 36945
+Epoch: [0/100]  [1920/4480]  eta: 16:56:38  loss: 3.317489 (7.105529)  lr: 0.000015 (0.000008)  wd: 0.040016 (0.040005)  time: 23.798676  data: 0.002751  max mem: 36945
+Epoch: [0/100]  [1930/4480]  eta: 16:52:40  loss: 3.260843 (7.085276)  lr: 0.000015 (0.000008)  wd: 0.040016 (0.040005)  time: 23.817327  data: 0.002823  max mem: 36945
+Epoch: [0/100]  [1940/4480]  eta: 16:48:42  loss: 3.236836 (7.065949)  lr: 0.000015 (0.000008)  wd: 0.040016 (0.040006)  time: 23.818626  data: 0.002883  max mem: 36945
+Epoch: [0/100]  [1950/4480]  eta: 16:44:44  loss: 3.252637 (7.046358)  lr: 0.000015 (0.000008)  wd: 0.040017 (0.040006)  time: 23.859070  data: 0.002868  max mem: 36945
+Epoch: [0/100]  [1960/4480]  eta: 16:40:45  loss: 3.203483 (7.026985)  lr: 0.000015 (0.000008)  wd: 0.040017 (0.040006)  time: 23.813862  data: 0.002885  max mem: 36945
+Epoch: [0/100]  [1970/4480]  eta: 16:36:46  loss: 3.222522 (7.007943)  lr: 0.000015 (0.000008)  wd: 0.040017 (0.040006)  time: 23.769821  data: 0.002908  max mem: 36945
+Epoch: [0/100]  [1980/4480]  eta: 16:32:47  loss: 3.262987 (6.989056)  lr: 0.000015 (0.000008)  wd: 0.040017 (0.040006)  time: 23.794697  data: 0.002807  max mem: 36945
+Epoch: [0/100]  [1990/4480]  eta: 16:28:49  loss: 3.225069 (6.969913)  lr: 0.000015 (0.000008)  wd: 0.040017 (0.040006)  time: 23.818974  data: 0.002762  max mem: 36945
+Epoch: [0/100]  [2000/4480]  eta: 16:24:50  loss: 3.216101 (6.951497)  lr: 0.000016 (0.000008)  wd: 0.040018 (0.040006)  time: 23.793018  data: 0.002818  max mem: 36945
+Epoch: [0/100]  [2010/4480]  eta: 16:20:51  loss: 3.241435 (6.933186)  lr: 0.000016 (0.000008)  wd: 0.040018 (0.040006)  time: 23.760365  data: 0.002847  max mem: 36945
+Epoch: [0/100]  [2020/4480]  eta: 16:16:52  loss: 3.243453 (6.914947)  lr: 0.000016 (0.000008)  wd: 0.040018 (0.040006)  time: 23.765177  data: 0.002767  max mem: 36945
+Epoch: [0/100]  [2030/4480]  eta: 16:12:53  loss: 3.310367 (6.897351)  lr: 0.000016 (0.000008)  wd: 0.040018 (0.040006)  time: 23.761908  data: 0.002755  max mem: 36945
+Epoch: [0/100]  [2040/4480]  eta: 16:08:54  loss: 3.293437 (6.879583)  lr: 0.000016 (0.000008)  wd: 0.040018 (0.040006)  time: 23.761732  data: 0.002832  max mem: 36945
+Epoch: [0/100]  [2050/4480]  eta: 16:04:55  loss: 3.269502 (6.862311)  lr: 0.000016 (0.000008)  wd: 0.040018 (0.040006)  time: 23.763548  data: 0.002805  max mem: 36945
+Epoch: [0/100]  [2060/4480]  eta: 16:00:56  loss: 3.233440 (6.844924)  lr: 0.000016 (0.000008)  wd: 0.040019 (0.040006)  time: 23.763943  data: 0.002753  max mem: 36945
+Epoch: [0/100]  [2070/4480]  eta: 15:56:57  loss: 3.295530 (6.827982)  lr: 0.000016 (0.000008)  wd: 0.040019 (0.040006)  time: 23.761036  data: 0.002728  max mem: 36945
+Epoch: [0/100]  [2080/4480]  eta: 15:52:58  loss: 3.295530 (6.810572)  lr: 0.000016 (0.000008)  wd: 0.040019 (0.040006)  time: 23.759760  data: 0.002736  max mem: 36945
+Epoch: [0/100]  [2090/4480]  eta: 15:49:01  loss: 3.188080 (6.793654)  lr: 0.000016 (0.000008)  wd: 0.040019 (0.040006)  time: 23.833561  data: 0.002671  max mem: 36945
+Epoch: [0/100]  [2100/4480]  eta: 15:45:04  loss: 3.226334 (6.776805)  lr: 0.000016 (0.000008)  wd: 0.040019 (0.040007)  time: 23.916529  data: 0.002746  max mem: 36945
+Epoch: [0/100]  [2110/4480]  eta: 15:41:05  loss: 3.270420 (6.760149)  lr: 0.000016 (0.000008)  wd: 0.040020 (0.040007)  time: 23.852665  data: 0.002787  max mem: 36945
+Epoch: [0/100]  [2120/4480]  eta: 15:37:06  loss: 3.266856 (6.743752)  lr: 0.000016 (0.000008)  wd: 0.040020 (0.040007)  time: 23.766592  data: 0.002684  max mem: 36945
+Epoch: [0/100]  [2130/4480]  eta: 15:33:07  loss: 3.243945 (6.727147)  lr: 0.000017 (0.000008)  wd: 0.040020 (0.040007)  time: 23.754099  data: 0.002722  max mem: 36945
+Epoch: [0/100]  [2140/4480]  eta: 15:29:09  loss: 3.242200 (6.710750)  lr: 0.000017 (0.000008)  wd: 0.040020 (0.040007)  time: 23.822416  data: 0.002739  max mem: 36945
+Epoch: [0/100]  [2150/4480]  eta: 15:25:11  loss: 3.279059 (6.695125)  lr: 0.000017 (0.000008)  wd: 0.040020 (0.040007)  time: 23.858250  data: 0.002614  max mem: 36945
+Epoch: [0/100]  [2160/4480]  eta: 15:21:12  loss: 3.241982 (6.678717)  lr: 0.000017 (0.000008)  wd: 0.040020 (0.040007)  time: 23.796301  data: 0.002632  max mem: 36945
+Epoch: [0/100]  [2170/4480]  eta: 15:17:13  loss: 3.168471 (6.662722)  lr: 0.000017 (0.000008)  wd: 0.040021 (0.040007)  time: 23.760534  data: 0.002801  max mem: 36945
+Epoch: [0/100]  [2180/4480]  eta: 15:13:14  loss: 3.192990 (6.646915)  lr: 0.000017 (0.000009)  wd: 0.040021 (0.040007)  time: 23.760204  data: 0.002777  max mem: 36945
+Epoch: [0/100]  [2190/4480]  eta: 15:09:15  loss: 3.226943 (6.631677)  lr: 0.000017 (0.000009)  wd: 0.040021 (0.040007)  time: 23.767637  data: 0.002808  max mem: 36945
+Epoch: [0/100]  [2200/4480]  eta: 15:05:16  loss: 3.226943 (6.616111)  lr: 0.000017 (0.000009)  wd: 0.040021 (0.040007)  time: 23.747391  data: 0.002787  max mem: 36945
+Epoch: [0/100]  [2210/4480]  eta: 15:01:18  loss: 3.166278 (6.600679)  lr: 0.000017 (0.000009)  wd: 0.040021 (0.040007)  time: 23.778547  data: 0.002748  max mem: 36945
+Epoch: [0/100]  [2220/4480]  eta: 14:57:19  loss: 3.166278 (6.585145)  lr: 0.000017 (0.000009)  wd: 0.040022 (0.040007)  time: 23.790396  data: 0.002810  max mem: 36945
+Epoch: [0/100]  [2230/4480]  eta: 14:53:19  loss: 3.170259 (6.570017)  lr: 0.000017 (0.000009)  wd: 0.040022 (0.040007)  time: 23.715134  data: 0.002798  max mem: 36945
+Epoch: [0/100]  [2240/4480]  eta: 14:49:19  loss: 3.213260 (6.555134)  lr: 0.000017 (0.000009)  wd: 0.040022 (0.040007)  time: 23.658688  data: 0.002855  max mem: 36945
+Epoch: [0/100]  [2250/4480]  eta: 14:45:20  loss: 3.156581 (6.540105)  lr: 0.000018 (0.000009)  wd: 0.040022 (0.040007)  time: 23.664454  data: 0.002755  max mem: 36945
+Epoch: [0/100]  [2260/4480]  eta: 14:41:21  loss: 3.143218 (6.525082)  lr: 0.000018 (0.000009)  wd: 0.040022 (0.040008)  time: 23.703022  data: 0.002631  max mem: 36945
+Epoch: [0/100]  [2270/4480]  eta: 14:37:24  loss: 3.153788 (6.510207)  lr: 0.000018 (0.000009)  wd: 0.040023 (0.040008)  time: 23.830906  data: 0.002528  max mem: 36945
+Epoch: [0/100]  [2280/4480]  eta: 14:33:25  loss: 3.149728 (6.495512)  lr: 0.000018 (0.000009)  wd: 0.040023 (0.040008)  time: 23.873322  data: 0.002611  max mem: 36945
+Epoch: [0/100]  [2290/4480]  eta: 14:29:27  loss: 3.101535 (6.480791)  lr: 0.000018 (0.000009)  wd: 0.040023 (0.040008)  time: 23.838673  data: 0.002849  max mem: 36945
+Epoch: [0/100]  [2300/4480]  eta: 14:25:30  loss: 3.139013 (6.466438)  lr: 0.000018 (0.000009)  wd: 0.040023 (0.040008)  time: 23.862164  data: 0.002828  max mem: 36945
+Epoch: [0/100]  [2310/4480]  eta: 14:21:31  loss: 3.175616 (6.452216)  lr: 0.000018 (0.000009)  wd: 0.040023 (0.040008)  time: 23.809216  data: 0.002757  max mem: 36945
+Epoch: [0/100]  [2320/4480]  eta: 14:17:33  loss: 3.150326 (6.438012)  lr: 0.000018 (0.000009)  wd: 0.040024 (0.040008)  time: 23.806265  data: 0.002755  max mem: 36945
+Epoch: [0/100]  [2330/4480]  eta: 14:13:34  loss: 3.163363 (6.424030)  lr: 0.000018 (0.000009)  wd: 0.040024 (0.040008)  time: 23.819742  data: 0.002771  max mem: 36945
+Epoch: [0/100]  [2340/4480]  eta: 14:09:36  loss: 3.163363 (6.409846)  lr: 0.000018 (0.000009)  wd: 0.040024 (0.040008)  time: 23.805782  data: 0.002803  max mem: 36945
+Epoch: [0/100]  [2350/4480]  eta: 14:05:37  loss: 3.140400 (6.396035)  lr: 0.000018 (0.000009)  wd: 0.040024 (0.040008)  time: 23.755919  data: 0.002829  max mem: 36945
+[E ProcessGroupNCCL.cpp:828] [Rank 6] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802739 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:828] [Rank 1] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802727 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:828] [Rank 4] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802205 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:828] [Rank 7] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802676 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:828] [Rank 2] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802771 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:828] [Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802846 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:828] [Rank 3] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802654 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:455] Some NCCL operations have failed or timed out. Due to the asynchronous nature of CUDA kernels, subsequent GPU operations might run on corrupted/incomplete data.
+[E ProcessGroupNCCL.cpp:460] To avoid data inconsistency, we are taking the entire process down.
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  [Rank 4] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802205 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:455] Some NCCL operations have failed or timed out. Due to the asynchronous nature of CUDA kernels, subsequent GPU operations might run on corrupted/incomplete data.
+[E ProcessGroupNCCL.cpp:460] To avoid data inconsistency, we are taking the entire process down.
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  [Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802846 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:455] Some NCCL operations have failed or timed out. Due to the asynchronous nature of CUDA kernels, subsequent GPU operations might run on corrupted/incomplete data.
+[E ProcessGroupNCCL.cpp:460] To avoid data inconsistency, we are taking the entire process down.
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  [Rank 7] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802676 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:455] Some NCCL operations have failed or timed out. Due to the asynchronous nature of CUDA kernels, subsequent GPU operations might run on corrupted/incomplete data.
+[E ProcessGroupNCCL.cpp:460] To avoid data inconsistency, we are taking the entire process down.
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  [Rank 1] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802727 milliseconds before timing out.
+[E ProcessGroupNCCL.cpp:455] Some NCCL operations have failed or timed out. Due to the asynchronous nature of CUDA kernels, subsequent GPU operations might run on corrupted/incomplete data.
+[E ProcessGroupNCCL.cpp:460] To avoid data inconsistency, we are taking the entire process down.
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  [Rank 6] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=14133, OpType=ALLREDUCE, Timeout(ms)=1800000) ran for 1802739 milliseconds before timing out.
+WARNING:torch.distributed.elastic.multiprocessing.api:Sending process 517632 closing signal SIGTERM
+WARNING:torch.distributed.elastic.multiprocessing.api:Sending process 517633 closing signal SIGTERM
+WARNING:torch.distributed.elastic.multiprocessing.api:Sending process 517634 closing signal SIGTERM
+WARNING:torch.distributed.elastic.multiprocessing.api:Sending process 517635 closing signal SIGTERM
+WARNING:torch.distributed.elastic.multiprocessing.api:Sending process 517637 closing signal SIGTERM
+WARNING:torch.distributed.elastic.multiprocessing.api:Sending process 517638 closing signal SIGTERM
+WARNING:torch.distributed.elastic.multiprocessing.api:Sending process 517639 closing signal SIGTERM
+ERROR:torch.distributed.elastic.multiprocessing.api:failed (exitcode: -6) local_rank: 4 (pid: 517636) of binary: /scr/vidit/conda_env/bin/python
+Traceback (most recent call last):
+  File "/scr/vidit/conda_env/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/scr/vidit/conda_env/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/scr/vidit/conda_env/lib/python3.10/site-packages/torch/distributed/launch.py", line 196, in <module>
+    main()
+  File "/scr/vidit/conda_env/lib/python3.10/site-packages/torch/distributed/launch.py", line 192, in main
+    launch(args)
+  File "/scr/vidit/conda_env/lib/python3.10/site-packages/torch/distributed/launch.py", line 177, in launch
+    run(args)
+  File "/scr/vidit/conda_env/lib/python3.10/site-packages/torch/distributed/run.py", line 785, in run
+    elastic_launch(
+  File "/scr/vidit/conda_env/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 134, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/scr/vidit/conda_env/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 250, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+=======================================================
+main_dino.py FAILED
+-------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+-------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2025-07-28_15:18:31
+  host      : caicedo-gpu-3.morgridge.net
+  rank      : 4 (local_rank: 4)
+  exitcode  : -6 (pid: 517636)
+  error_file: <N/A>
+  traceback : Signal 6 (SIGABRT) received by PID 517636
+=======================================================
