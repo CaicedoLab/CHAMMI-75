@@ -34,9 +34,19 @@ def run_command(config: DINOV1Config):
 
 def main():    
     config = DINOV1Config()
-    config.train.name = "d998ffc_no_scaling_rule"
+    config.train.name = "d998ffc_no_drop_path"
+    config.optim.drop_path_rate = 0.0
     run_command(config)
     
+    config = DINOV1Config()
+    config.train.name = "d998ffc_batch_norm"
+    config.model.use_bn_in_head = True
+    run_command(config)
+    
+    config = DINOV1Config()
+    config.train.name = "d998ffc_no_last_norm"
+    config.model.norm_last_layer = False
+    run_command(config)
     
 if __name__ == "__main__":
     main()

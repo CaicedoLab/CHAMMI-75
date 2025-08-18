@@ -35,7 +35,7 @@ class OptimConfig:
     batch_size_per_gpu: int = 32
     epochs: int = 100
     freeze_last_layer: int = 1
-    lr: float = 0.0005
+    lr: float = 0.00005
     warmup_epochs: int = 10
     min_lr: float = 1e-6
     optimizer: str = 'adamw' 
