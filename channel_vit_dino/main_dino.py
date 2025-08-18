@@ -212,7 +212,7 @@ def train_dino(cfg: DINOV1Config):
 
     # ============ init schedulers ... ============
     lr_schedule = utils.cosine_scheduler(
-        cfg.optim.lr * (cfg.optim.batch_size_per_gpu * utils.get_world_size()) / 256.,  # linear scaling rule
+        cfg.optim.lr,  # linear scaling rule
         cfg.optim.min_lr,
         cfg.optim.epochs, len(data_loader),
         warmup_epochs=cfg.optim.warmup_epochs,

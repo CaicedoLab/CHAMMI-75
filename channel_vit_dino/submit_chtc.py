@@ -34,7 +34,7 @@ def run_command(config: DINOV1Config):
 
 def main():    
     config = DINOV1Config()
-    config.train.name = "e7fa229_"
+    config.train.name = "d998ffc_no_scaling_rule"
     run_command(config)
     
     
