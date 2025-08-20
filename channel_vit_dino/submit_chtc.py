@@ -34,7 +34,7 @@ def run_command(config: DINOV1Config):
 
 def main():    
     config = DINOV1Config()
-    config.train.name = "2514d64_allen_no_noise"
+    config.train.name = "eea860c_baseline"
     run_command(config)
     
     

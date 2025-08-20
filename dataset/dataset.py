@@ -255,7 +255,7 @@ class ChannelViTDataset(IterableImageArchive):
     def load_dataset_config(self, config_path):
         proper_path = os.path.abspath(os.path.expanduser(config_path))
         self.dataset_config = pl.read_csv(proper_path, schema_overrides=OVERRIDES)
-        self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/Allen/'))
+        # self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/Allen/'))
         self.channels = self.dataset_config['imaging.channel_type'].unique().to_list()
         self.num_channels = len(self.channels)
         aggregated = self.dataset_config.sort('imaging.channel').group_by('imaging.multi_channel_id', maintain_order=True).agg(pl.col('storage.path'), pl.col('imaging.channel_type'))
