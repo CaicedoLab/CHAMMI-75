@@ -144,7 +144,8 @@ class MultiChannelDataset(IterableImageArchive):
         self.config = config
         self.num_channels = None # This gets set later, but it's the total unique channels. Channel vit will need this to init its models.
         self.channels = None # this is the set of all the unique channel types.
-        
+        self.guided_crops: GuidedCrop = None
+
         if self.config.dataset_config:
             config_path: str = self.config.dataset_config 
         else:
@@ -181,13 +182,13 @@ class MultiChannelDataset(IterableImageArchive):
                     self.guided_crops.crop_size = (crop_height, crop_width)
                 else:
                     self.guided_crops.crop_size = (-1, -1)
-
+                
                 if self.guided_crops.crop_size != (-1, -1) and self.config.guided_crops_path:
-                    safetensors_name = file_group[0][:-4] + ".safetensors"
-                    safetensors_name = safetensors_name.replace("CHAMMI-75_train", "CHAMMI-75_guidance")
+                    safetensors_name:str = file_group[0][:-4] + ".safetensors"
+                    safetensors_name = "CHAMMI-75_guidance/" + safetensors_name.split('/', maxsplit=1)[1] 
                     if safetensors_name in self.guided_crops.data_paths:
                         image_tensor = self.guided_crops(image_tensor, safetensors_name)
- 
+            
             if self.config.transform:
                 image_tensor = self.config.transform(image_tensor)
         
@@ -220,7 +221,7 @@ class MultiChannelDataset(IterableImageArchive):
             self.load_archive()
             
         if self.config.guided_crops_path:
-            self.default_transform = v2.RandomResizedCrop(size=self.guided_crops.crop_size, antialias=True)  
+            self.default_transform = v2.RandomResizedCrop(size=self.config.guided_crops_size, antialias=True)  
         
         worker_data = self.call_splitting_fns(self.image_paths)    
         samples = iter(self.return_sample(worker_data))
