@@ -288,7 +288,7 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             if i == 0:  # only the first group is regularized
                 param_group["weight_decay"] = wd_schedule[it]            
             
-        loss = 0.0
+        # loss = 0.0
         for channels, minibatch in batch.items():
             extra_tokens = {
                     "channels": [channel_map[chan] for chan in channels]
@@ -301,10 +301,9 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                 
                 student_output = student([global_crops, local_crops], extra_tokens=extra_tokens)        
 
-            loss += dino_loss(student_output, teacher_output, epoch)
+        loss = dino_loss(student_output, teacher_output, epoch)
             
-            
-        loss = loss / len(batch)
+        # loss = loss / len(batch)
         if not math.isfinite(loss.item()):
             print("Loss is {}, stopping training".format(loss.item()), force=True)
             sys.exit(1)
@@ -553,8 +552,8 @@ class TensorAugmentationDINO(object):
         )
         self.common_normalization = transforms.Compose([
             v2.ToImageTensor(),
-            SaturationNoiseInjector(low=200, high=255),
             PerImageNormalize()
+            # SaturationNoiseInjector(low=200, high=255),
         ])
         
         augmentation_pipeline = transforms.Compose([
