@@ -213,6 +213,16 @@ class ChannelViTDataset(IterableImageArchive):
             else:
                 yield sample
     
+    def collate_crops(self, crops):
+        num_global_crops = len(crops[0])
+        gcs = [list() for _ in range(num_global_crops)]
+        for gc in crops:
+            for idx, crop in enumerate(gc):
+                gcs[idx].append(crop)
+                
+        gcs = [torch.stack(crops) for crops in gcs]
+        return gcs
+    
     def collate_fn(self, samples: list):        
         collate_list = []
         for sample in samples:
@@ -226,9 +236,17 @@ class ChannelViTDataset(IterableImageArchive):
         [minibatches[sample['channels']].append(sample) for sample in collate_list]
         
         for channel_config, minibatch in minibatches.items():
+            torch.cat([torch.stack(sample['global_crops']) for sample in minibatch])
+            global_crops = [sample['global_crops'] for sample in minibatch]
+            global_crops = self.collate_crops(global_crops)    
+        
+            local_crops = [sample['local_crops'] for sample in minibatch]
+            local_crops = self.collate_crops(local_crops)
+            
+            # print(type(local_crops), type(local_crops[0]))
+            
             minibatches[channel_config] = {
-                'global_crops': torch.cat([torch.stack(sample['global_crops']) for sample in minibatch]),
-                'local_crops': torch.cat([torch.stack(sample['local_crops']) for sample in minibatch]),
+                'crops': [*global_crops, *local_crops],
                 'channels': channel_config
             }
         

@@ -1,6 +1,12 @@
 dataset:
   metadata: /mnt/cephfs/mir/jcaicedo/morphem/dataset/sampling/multi_channel_chammi_metadata.csv
 train:
-  name: "wandb_test"
+  name: wandb_test
   data_path: /scr/data/CHAMMI/chammi_train.zip
   output_dir: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models
+optim:
+  lr: 0.0005
+  batch_size_per_gpu: 32
+temp:
+  teacher_temp: 0.04
+  warmup_teacher_temp_epochs: 0

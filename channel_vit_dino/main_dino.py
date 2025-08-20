@@ -85,7 +85,8 @@ def train_dino(cfg: DINOV1Config):
                 config=OmegaConf.to_container(cfg),
                 name=cfg.train.name,
                 id=cfg.train.name,
-                resume = "allow"
+                resume = "allow",
+                mode="disabled"
             )
 
     # ============ preparing data ... ============
@@ -294,13 +295,12 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                     "channels": [channel_map[chan] for chan in channels]
             }
 
+            # print(len(minibatch['crops']))
+            crops = [crop.cuda(non_blocking=True) for crop in minibatch['crops']]
             with torch.cuda.amp.autocast(fp16_scaler is not None):
-                global_crops = minibatch['global_crops'].cuda(non_blocking=True)
-                local_crops = minibatch['local_crops'].cuda(non_blocking=True)
-                teacher_output = teacher(global_crops, extra_tokens=extra_tokens)
-                
-                student_output = student([global_crops, local_crops], extra_tokens=extra_tokens)        
-
+                teacher_output = teacher(crops[:2], extra_tokens=extra_tokens)
+                student_output = student(crops, extra_tokens=extra_tokens)        
+        
         loss = dino_loss(student_output, teacher_output, epoch)
             
         # loss = loss / len(batch)
@@ -519,25 +519,25 @@ class SaturationNoiseInjector(nn.Module):
         x = x.to(torch.float32)
         
         # Since x has one channel, extract the channel as a 2D tensor (H, W)
-        channel = x[0]
+        # channel = x[0]
         
-        # Generate noise with values uniformly drawn between self.low and self.high
-        noise = torch.empty_like(channel).uniform_(self.low, self.high)
+        # # Generate noise with values uniformly drawn between self.low and self.high
+        # noise = torch.empty_like(channel).uniform_(self.low, self.high)
         
-        # Create a mask of pixels that are saturated (value == 255)
-        mask = (channel == 255).float()
+        # # Create a mask of pixels that are saturated (value == 255)
+        # mask = (channel == 255).float()
         
-        # Apply the mask to the noise to affect only the saturated pixels
-        noise_masked = noise * mask
+        # # Apply the mask to the noise to affect only the saturated pixels
+        # noise_masked = noise * mask
         
-        # Remove the saturated pixels by setting them to zero
-        channel[channel == 255] = 0
+        # # Remove the saturated pixels by setting them to zero
+        # channel[channel == 255] = 0
         
-        # Add the masked noise to the channel
-        channel = channel + noise_masked
+        # # Add the masked noise to the channel
+        # channel = channel + noise_masked
         
-        # Update the tensor with the modified channel
-        x[0] = channel
+        # # Update the tensor with the modified channel
+        # x[0] = channel
         
         return x
 
@@ -552,8 +552,8 @@ class TensorAugmentationDINO(object):
         )
         self.common_normalization = transforms.Compose([
             v2.ToImageTensor(),
-            PerImageNormalize()
-            # SaturationNoiseInjector(low=200, high=255),
+            SaturationNoiseInjector(low=200, high=255),
+            PerImageNormalize(),
         ])
         
         augmentation_pipeline = transforms.Compose([
