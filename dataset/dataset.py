@@ -166,12 +166,10 @@ class MultiChannelDataset(IterableImageArchive):
     
     def return_sample(self, file_list: list):
         for file_group, channel_types in file_list:
-            try:
-                ims = [self.read_im(im) for im in file_group]
-                image_tensor = torch.concat(ims, dim=0)
-            except:
-                continue
-            
+        
+            ims = [self.read_im(im) for im in file_group]
+            image_tensor = torch.concat(ims, dim=0)
+        
             if self.guided_crops:
                 dataset = file_group[0].split(os.sep)[1]
                 baseline = get_crop_size(dataset)
