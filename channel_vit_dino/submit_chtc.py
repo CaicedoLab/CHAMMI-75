@@ -34,9 +34,8 @@ def run_command(config: DINOV1Config):
 
 def main():    
     config = DINOV1Config()
-    config.train.name = "eea860c_baseline"
+    config.train.name = "eefb00c_fixed_noise_inject"
     run_command(config)
-    
     
 if __name__ == "__main__":
     main()

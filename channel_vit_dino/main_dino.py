@@ -112,7 +112,8 @@ def train_dino(cfg: DINOV1Config):
                 dataset_size=cfg.dataset.dataset_size,
                 small_list_path = cfg.dataset.small_list_path,
                 seed=42,
-                dataset_config=cfg.dataset.metadata
+                dataset_config=cfg.dataset.metadata,
+                TEMP_DATASET=cfg.dataset.TEMP_DATASET
         )
     
     # If guided cropping is enabled, we add the guided crops path and size to the config
@@ -486,60 +487,14 @@ class PerImageNormalize(nn.Module):
 
 class SaturationNoiseInjector(nn.Module):
     def __init__(self, low=200, high=255):
-        """
-        Initialize the SaturationNoiseInjector module.
-        
-        Parameters:
-            low (int): Lower bound for uniform noise values.
-            high (int): Upper bound for uniform noise values.
-        """
         super().__init__()
         self.low = low
         self.high = high
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Apply high-intensity noise injection to saturated pixels in a single-channel image.
-        The function expects the input tensor to have the shape (1, H, W) with pixel intensities in the 0-255 range.
-
-        Process:
-          - Convert the input tensor to float32.
-          - Generate noise drawn uniformly from [low, high] for each pixel.
-          - Create a mask for saturated pixels (where the pixel value equals 255).
-          - Zero-out saturated pixels and add the masked noise.
-
-        Parameters:
-            x (torch.Tensor): Input tensor of shape (1, H, W).
-        
-        Returns:
-            torch.Tensor: The processed tensor with noise injected.
-        """
-        # Ensure input is in floating point for correct arithmetic
         x = x.to(torch.float32)
-        
-        # Since x has one channel, extract the channel as a 2D tensor (H, W)
-        # channel = x[0]
-        
-        # # Generate noise with values uniformly drawn between self.low and self.high
-        # noise = torch.empty_like(channel).uniform_(self.low, self.high)
-        
-        # # Create a mask of pixels that are saturated (value == 255)
-        # mask = (channel == 255).float()
-        
-        # # Apply the mask to the noise to affect only the saturated pixels
-        # noise_masked = noise * mask
-        
-        # # Remove the saturated pixels by setting them to zero
-        # channel[channel == 255] = 0
-        
-        # # Add the masked noise to the channel
-        # channel = channel + noise_masked
-        
-        # # Update the tensor with the modified channel
-        # x[0] = channel
-        
-        return x
-
+        noise = torch.empty_like(x).uniform_(self.low, self.high)
+        return torch.where(x == 255, noise, x)
 
 class TensorAugmentationDINO(object):
     def __init__(self, global_crops_scale, local_crops_scale, local_crops_number):
