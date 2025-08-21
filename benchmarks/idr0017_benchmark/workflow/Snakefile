@@ -1,0 +1,98 @@
+import os
+import sys
+from sys import argv
+import json
+from collections.abc import Iterable
+import shutil
+
+def path_expansion(path:str):
+    return os.path.normpath(os.path.abspath(os.path.expanduser(path)))
+
+# Load models from here
+from torch import hub
+hub.set_dir(config['models'])
+
+if '--configfile' in sys.argv:
+    i = sys.argv.index('--configfile')
+elif '--configfiles' in sys.argv:
+    i = sys.argv.index('--configfiles')
+
+config_path = path_expansion(argv[i + 1])
+plate_dir = os.path.basename(path_expansion(config['study']))
+model_dir = path_expansion(config['models'])
+cache_dir = path_expansion(config['cache'])
+out_abs_path = path_expansion(config['out_folder'])
+
+
+workflow_dir = os.getcwd()
+feature_script = os.path.join(workflow_dir,'scripts/feature_extraction.py')
+
+# For feature_extraction directory naming. Dinov2 or v1 don't use these, so we make it blank in that case.
+model = config['feature_extraction']['model']
+model_mode = config['feature_extraction']['model_mode']
+if 'dino' in model:
+    model_mode = '' 
+elif 'subcell' == model:
+    subcell_map = config['feature_extraction']['subcell_config']
+    subcell_run_config = ''.join([f"_{k[0]}_{v}" for k, v in subcell_map.items() if v is not None])
+    model_mode = f'_{model_mode}{subcell_run_config}'
+else:
+    model_mode = f"_{model_mode}"
+
+run_feature_extraction = config['feature_extraction']['run_job']
+
+feat_out = os.path.join(out_abs_path, plate_dir, f"{model}{model_mode}_features")
+
+
+
+os.makedirs(feat_out, exist_ok=True)
+with open(os.path.join(feat_out, os.path.basename(config_path)), 'w') as f:
+    f.write(open(config_path, 'r').read())
+# shutil.copy(config_path, os.path.join(feat_out, os.path.basename(config_path)))
+
+seg_wildcard = os.path.join(out_abs_path, plate_dir, "segmentations", '{name}_segment.safetensors')
+feature_wildcard = os.path.join(out_abs_path, plate_dir, f"{model}{model_mode}_features", '{name}_features.safetensors')
+plate_names = [f[:-4] for f in os.listdir(config['study']) if f.endswith(".zip")]
+output_wildcard = feature_wildcard
+#plate_names = plate_names[0]
+rule all:
+    input:
+        expand(feature_wildcard, name=plate_names)
+
+        
+feature_config = config['feature_extraction']
+rule feature_extraction:
+    input:
+        safetensors_file = seg_wildcard,
+        image_zip = os.path.join(config['study'], "{name}.zip"),
+    output:
+        tensors_out = feature_wildcard
+    threads: feature_config['resources']['threads']
+    run:
+        cache_out = os.path.join(cache_dir, plate_dir, 'feature_cache', wildcards.name)
+        job_out = os.path.join(out_abs_path, plate_dir, f'{model}{model_mode}_features')
+        feature_cache = os.path.join(cache_dir, plate_dir, 'feature_cache', f"{wildcards.name}_features")
+        
+        if feature_config['resources']['num_gpus'] == 0:
+            gpu_assign = ""
+        else:
+            plate_index = plate_names.index(wildcards.name)
+            gpu_assign = f"-d {plate_index % feature_config['resources']['num_gpus']}"
+        
+        if not os.path.exists(cache_out):
+            shell(f"mkdir -p {cache_out}")
+
+
+        shell(f"cp -n {input.safetensors_file} {cache_out}")
+
+        shell(f"cp -n {input.image_zip} {cache_out}") 
+        shell(f"unzip -q -u {os.path.join(cache_out, wildcards.name)}.zip -d {cache_out}")
+
+        if not os.path.exists(feature_cache):
+            shell(f"mkdir -p {feature_cache}")
+            
+        shell(f"python {feature_script} -s {cache_out} -o {feature_cache} -c {config_path} -m {model_dir} {gpu_assign}")
+
+        shell(f"mkdir -p {job_out}")
+        shell(f"cp {os.path.join(feature_cache, f'{wildcards.name}_features.safetensors')} {job_out}")
+        # shell(f"chmod 777 -R {job_out}")
