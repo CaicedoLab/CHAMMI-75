@@ -1,0 +1,31 @@
+# Paths and directories used for all rules
+out_folder: /hdd/jcaicedo/morphem/dataset/study_replication
+cache: ./
+study: /hdd/jcaicedo/morphem/dataset/images/idr0017
+metadata: /hdd/jcaicedo/morphem/dataset/metadata/single-channel/v8/idr0017_meta.csv
+models: /hdd/jcaicedo/morphem/dataset/models
+
+feature_extraction:
+  # add in parameters needed for feature extraction
+  run_job: true # set this to true to run feature extraction. False if you only want segmentations 
+  feature_agg: true
+  model_mode: None
+  model: dinov2 # openphenom, subcell, dinov2 
+  subcell_channel_map: # to configure subcell mapping
+    nucleus: 1 # Cannot be null
+    protein: 2 # Cannot be null
+    er: null # Can be null
+    mt: null # Can be null
+  crop: 100 
+  resize: 224
+
+  resources:
+    num_gpus: 1 # Global when running locally and per job when running CHTC. Use 1 when running on CHTC in most cases.
+    batch_size: 2048
+    num_workers: 4
+    threads: 8
+  
+  chtc_resources: 
+    request_memory: 52GB
+    request_disk: 52GB
+
