@@ -241,7 +241,7 @@ class GeneCompoundInteraction:
                 unique_plates = replicate_metadata["storage.zip"].unique().to_list()
 
                 # Iterate through each plate
-                for plate in unique_plates:
+                for plate in tqdm(unique_plates):
 
                     # Get the feature for the plate
                     plate_metadata = replicate_metadata.filter(pl.col("storage.zip") == plate)

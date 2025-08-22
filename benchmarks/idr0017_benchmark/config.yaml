@@ -4,9 +4,9 @@ metadata_path: "/mnt/cephfs/mir/jcaicedo/morphem/dataset/metadata/single-channel
 save_dir: /scr/vidit/idr17_scores # directory to save analysis results
 
 # Model and Benchmark Configuration
-model_name: subcell #dinov2, subcell, openphenom_conc_masked 
+model_name: subcell_unmasked_features # for directory naming
 benchmark_test: auc_roc # auc_roc, replicate_corr
-fusion_type: late_fusion # late_fusion, early_fusion
+fusion_type: early_fusion # late_fusion, early_fusion
 mutations: null # null or list of mutations as per metadata
 
 # Distance Metrics
