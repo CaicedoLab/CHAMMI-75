@@ -34,7 +34,7 @@ if __name__ == "__main__":
     # Read config.yaml file
     with open("config.yaml", 'r') as f: config = yaml.safe_load(f)
 
-    # SAve the config
+    # Save the config
     
 
     # Run the benchmark test

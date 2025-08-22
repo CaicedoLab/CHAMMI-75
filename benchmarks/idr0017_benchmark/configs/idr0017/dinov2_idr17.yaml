@@ -1,9 +1,9 @@
 # Paths and directories used for all rules
-out_folder: /hdd/jcaicedo/morphem/dataset/study_replication
-cache: ./
-study: /hdd/jcaicedo/morphem/dataset/images/idr0017
-metadata: /hdd/jcaicedo/morphem/dataset/metadata/single-channel/v8/idr0017_meta.csv
-models: /hdd/jcaicedo/morphem/dataset/models
+out_folder: /scr/data/75ds_test/idr0017/study_replication
+cache: /scr/vidit/cache
+study: /scr/data/75ds_test/idr0017/images
+metadata: /scr/data/75ds_test/idr0017/metadata/idr0017_meta.csv
+models: /mnt/cephfs/mir/jcaicedo/morphem/dataset/models
 
 feature_extraction:
   # add in parameters needed for feature extraction

@@ -111,8 +111,8 @@ class Standard_Normalizer(object):
     def __init__(self, controls):
         self.mu = controls.mean(axis = 0)
         self.std = controls.std(axis = 0)
-        print("shape of mu: ", self.mu.shape)
-        print("shape of std: ", self.std.shape)
+        #print("shape of mu: ", self.mu.shape)
+        #print("shape of std: ", self.std.shape)
 
     def normalize(self, X):
         return (X - self.mu) / self.std

@@ -1,7 +1,7 @@
 # Paths
-features_dir: /mnt/cephfs/mir/jcaicedo/morphem/dataset/study_replication/idr0017/subcell_mae_n_1_p_2_features/ # feature embedding path
+features_dir: /mnt/cephfs/mir/jcaicedo/morphem/dataset/study_replication/idr0017/subcell_mae_n_1_p_2_unmasked_features/ # feature embedding path
 metadata_path: "/mnt/cephfs/mir/jcaicedo/morphem/dataset/metadata/single-channel/v8/idr0017_meta.csv" # metadata csv path
-save_dir: /home/MORGRIDGE/akazi/foundation_models/idr0017_benchmarking/debug # directory to save analysis results
+save_dir: /scr/vidit/idr17_scores # directory to save analysis results
 
 # Model and Benchmark Configuration
 model_name: subcell #dinov2, subcell, openphenom_conc_masked 
