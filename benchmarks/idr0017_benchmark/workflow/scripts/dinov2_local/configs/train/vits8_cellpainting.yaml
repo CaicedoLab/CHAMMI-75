@@ -1,0 +1,71 @@
+MODEL:
+  WEIGHTS: ''
+compute_precision:
+  grad_scaler: true
+  teacher:
+    backbone:
+      sharding_strategy: SHARD_GRAD_OP
+      mixed_precision:
+        param_dtype: fp32
+        reduce_dtype: fp32
+        buffer_dtype: fp32
+    dino_head:
+      sharding_strategy: SHARD_GRAD_OP
+      mixed_precision:
+        param_dtype: fp32
+        reduce_dtype: fp32
+        buffer_dtype: fp32
+    ibot_head:
+      sharding_strategy: SHARD_GRAD_OP
+      mixed_precision:
+        param_dtype: fp32
+        reduce_dtype: fp32
+        buffer_dtype: fp32
+  student:
+    backbone:
+      sharding_strategy: SHARD_GRAD_OP
+      mixed_precision:
+        param_dtype: fp32
+        reduce_dtype: fp32
+        buffer_dtype: fp32
+    dino_head:
+      sharding_strategy: SHARD_GRAD_OP
+      mixed_precision:
+        param_dtype: fp32
+        reduce_dtype: fp32
+        buffer_dtype: fp32
+    ibot_head:
+      sharding_strategy: SHARD_GRAD_OP
+      mixed_precision:
+        param_dtype: fp32
+        reduce_dtype: fp32
+        buffer_dtype: fp32
+dino:
+  head_n_prototypes: 131072 # decrease number of prototypes for memory 
+  head_bottleneck_dim: 384
+ibot:
+  separate_head: true
+  head_n_prototypes: 131072 # decrease number of prototypes for memory 
+train:
+  batch_size_per_gpu: 256 # A6000 base for Cell Painting
+  OFFICIAL_EPOCH_LENGTH: 2801 #5377070 / (256*8)
+  dataset_path: CombinedDataset
+  centering: sinkhorn_knopp
+student:
+  arch: vit_small
+  patch_size: 16
+  drop_path_rate: 0.0
+  ffn_layer: swiglufused
+  block_chunks: 4
+  in_chans: 5
+teacher:
+  momentum_teacher: 0.994
+optim:
+  epochs: 100
+  weight_decay_end: 0.2
+  base_lr: 3.0e-04  # learning rate for a batch size of 1024
+  warmup_epochs: 15
+  layerwise_decay: 1.0
+crops:
+  local_crops_size: 64
+  global_crops_size: 128

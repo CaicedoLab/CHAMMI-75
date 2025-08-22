@@ -28,7 +28,7 @@ def fetch_embeddings_from_metadata(embedding_path: str, metadata: pl.DataFrame, 
 
     embedding_dict = {}
 
-    if model_name == "dinov2":
+    if "dinov2" in model_name:
 
         for row in metadata.iter_rows(named=True):
             plate_id = row['storage.zip']
@@ -111,8 +111,6 @@ class Standard_Normalizer(object):
     def __init__(self, controls):
         self.mu = controls.mean(axis = 0)
         self.std = controls.std(axis = 0)
-        print("shape of mu: ", self.mu.shape)
-        print("shape of std: ", self.std.shape)
 
     def normalize(self, X):
         return (X - self.mu) / self.std

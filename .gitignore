@@ -172,3 +172,6 @@ cython_debug/
 /dataset/__pycache__/
 /dinov1/log.txt
 /mae/*.sh
+
+benchmarks/idr0017_benchmark/workflow/.snakemake
+*pycache*

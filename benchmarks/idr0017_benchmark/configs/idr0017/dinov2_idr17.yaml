@@ -1,0 +1,27 @@
+# Paths and directories used for all rules
+out_folder: /scr/data/75ds_test/idr0017/study_replication
+cache: /scr/vidit/cache
+study: /scr/data/75ds_test/idr0017/images
+metadata: /scr/data/75ds_test/idr0017/metadata/idr0017_meta.csv
+models: /mnt/cephfs/mir/jcaicedo/morphem/dataset/models
+
+feature_extraction:
+  # add in parameters needed for feature extraction
+  run_job: true # set this to true to run feature extraction. False if you only want segmentations 
+  feature_agg: true
+  model_mode: None
+  model: dinov2 # openphenom, subcell, dinov2 
+  subcell_channel_map: # to configure subcell mapping
+    nucleus: 1 # Cannot be null
+    protein: 2 # Cannot be null
+    er: null # Can be null
+    mt: null # Can be null
+  crop: 100 
+  resize: 224
+
+  resources:
+    num_gpus: 8 # Global when running locally and per job when running CHTC. Use 1 when running on CHTC in most cases.
+    batch_size: 2048
+    num_workers: 8
+    threads: 16
+
