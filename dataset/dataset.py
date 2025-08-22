@@ -19,6 +19,10 @@ from collections import defaultdict
 
 disable_beta_transforms_warning()
 
+# 10 datatsets for that run...
+DS10 = ["hpa0018", "idr0002", "idr0008", "idr0086", "idr0088", "idr0089", "jump0001", "nidr0031", "nidr0032", "wtc0001"]
+
+
 class IterableImageArchive(IterableDataset):
     def __init__(self, config: DatasetConfig) -> None:
         super().__init__()
@@ -164,39 +168,29 @@ class ChannelViTDataset(IterableImageArchive):
         
     def load_archive(self):
         self.archive = zipfile.ZipFile(self.config.data_path, "r")
-        if self.config.dataset_size == "small":
-            self.image_paths = json.load(self.config.small_list_path)
     
     def return_sample(self, file_list: list):
         for file_group, channel_types in file_list:
             ims = [self.read_im(im) for im in file_group]
             image_tensor = torch.concat(ims, dim=0)
-            
-            dataset = file_group[0].split(os.sep)[1]
-            
-            # baseline = get_crop_size(dataset)
+                    
+            if self.guided_crops:
+                dataset = file_group[0].split(os.sep)[1]
+                baseline = get_crop_size(dataset)
 
-            # Apply cropping based on baseline
-            # if baseline != (-1, -1):
-                # Calculate range with proper bounds to avoid randint errors
-                # crop_height = random.randint(int(baseline[0] * 0.9), int(baseline[0] * 1.1))
-                # crop_width = random.randint(int(baseline[1] * 0.9), int(baseline[1] * 1.1))
-                # self.guided_crops.crop_size = (crop_height, crop_width)
-            # else:
-            #     self.guided_crops.crop_size = (-1, -1)
-
-            # # Apply guided crops if available
-            # if self.guided_crops.crop_size != (-1, -1) and self.config.guided_crops_path:
-            #     safetensors_name = file_path.filename[:-4] + ".safetensors"
-            #     safetensors_name = safetensors_name.replace("CHAMMI-75_train", "CHAMMI-75_guidance")
-            #     if safetensors_name in self.guided_crops.data_paths:
-            #         image_tensor = self.guided_crops(image_tensor, safetensors_name)
-            #     else:
-            #         pass
-            # else:
-            #     pass
-
-            # Apply additional transforms if configured
+                if baseline != (-1, -1):
+                    crop_height = random.randint(int(baseline[0] * 0.9), int(baseline[0] * 1.1))
+                    crop_width = random.randint(int(baseline[1] * 0.9), int(baseline[1] * 1.1))
+                    self.guided_crops.crop_size = (crop_height, crop_width)
+                else:
+                    self.guided_crops.crop_size = (-1, -1)
+                
+                if self.guided_crops.crop_size != (-1, -1) and self.config.guided_crops_path:
+                    safetensors_name:str = file_group[0][:-4] + ".safetensors"
+                    safetensors_name = "CHAMMI-75_guidance/" + safetensors_name.split('/', maxsplit=1)[1] 
+                    if safetensors_name in self.guided_crops.data_paths:
+                        image_tensor = self.guided_crops(image_tensor, safetensors_name)
+                                    
             if self.config.transform:
                 image_tensor = self.config.transform(image_tensor)
             
@@ -255,12 +249,15 @@ class ChannelViTDataset(IterableImageArchive):
     def load_dataset_config(self, config_path):
         proper_path = os.path.abspath(os.path.expanduser(config_path))
         self.dataset_config = pl.read_csv(proper_path, schema_overrides=OVERRIDES)
+        
         if self.config.TEMP_DATASET == "allen":
             self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/Allen/'))
         elif self.config.TEMP_DATASET == 'cp':
             self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/CP/'))
         elif self.config.TEMP_DATASET == 'hpa':
             self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/HPA/'))
+        elif self.config.TEMP_DATASET == '10ds':
+            self.dataset_config = self.dataset_config.filter(pl.col('experiment.study').is_in(DS10))
         
         self.channels = self.dataset_config['imaging.channel_type'].unique().to_list()
         self.num_channels = len(self.channels)

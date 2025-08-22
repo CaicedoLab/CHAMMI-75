@@ -56,7 +56,6 @@ class DatasetSize(str, Enum):
 class DatasetConfig:
     """Dataset parameters"""
     guided_crops_path: Optional[str] = None
-    dataset_size: DatasetSize = DatasetSize.large
     multiscale: bool = False
     guided_cropping: bool = False
     guided_crops_size: Tuple[int, int] = (256, 256)

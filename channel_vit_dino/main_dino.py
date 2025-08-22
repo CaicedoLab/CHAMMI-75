@@ -86,6 +86,7 @@ def train_dino(cfg: DINOV1Config):
                 name=cfg.train.name,
                 id=cfg.train.name,
                 resume = "allow",
+                mode='disabled'
             )
 
     # ============ preparing data ... ============
@@ -109,7 +110,6 @@ def train_dino(cfg: DINOV1Config):
                 num_procs = utils.get_world_size(), # maybe works? brother needs to check!
                 proc = torch.distributed.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
                 transform=transform,
-                dataset_size=cfg.dataset.dataset_size,
                 small_list_path = cfg.dataset.small_list_path,
                 seed=42,
                 dataset_config=cfg.dataset.metadata,
@@ -123,19 +123,20 @@ def train_dino(cfg: DINOV1Config):
                 split_fns=[get_proc_split, randomize, split_for_workers],
                 num_procs = utils.get_world_size(), # maybe works? brother needs to check!
                 proc = torch.distributed.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
-                guided_crops_path = cfg.crops.guided_crops_path,
-                guided_crops_size = cfg.crops.guided_crops_size,
+                guided_crops_path = cfg.dataset.guided_crops_path,
+                guided_crops_size = cfg.dataset.guided_crops_size,
+                dataset_config=cfg.dataset.metadata,
                 transform=transform,
-                dataset_size=cfg.dataset.dataset_size,
                 small_list_path = cfg.dataset.small_list_path,
-                seed=42
+                seed=42,
+                TEMP_DATASET=cfg.dataset.TEMP_DATASET
                 )
 
     dataset = ChannelViTDataset(config)
     #args.batch_size_per_gpu
     data_loader = DataLoader(dataset=dataset, batch_size=cfg.optim.batch_size_per_gpu, num_workers=cfg.train.num_workers, worker_init_fn=dataset.worker_init_fn, collate_fn=dataset.collate_fn, drop_last=True)
     
-    print(f"Data loaded: there are {len(data_loader)} images.")
+    print(f"Data loaded: there are {len(data_loader)} batches of images.")
     # ============ building student and teacher networks ... ============
     # if the network is a Vision Transformer (i.e. vit_tiny, vit_small, vit_base)
     if cfg.model.arch in vits.__dict__.keys():
