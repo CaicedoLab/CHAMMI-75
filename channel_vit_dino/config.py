@@ -71,7 +71,7 @@ class TrainConfig:
     output_dir: str = "/hdd/jcaicedo/projects/channel_vit_dinov1/models"
     saveckp_freq: int = 20
     seed: int = 42
-    num_workers: int = 10
+    num_workers: int = 5
     dist_url: str = "env://"
     local_rank: int = 0
     world_size: int = 0
