@@ -20,12 +20,8 @@ feature_extraction:
   resize: 224
 
   resources:
-    num_gpus: 1 # Global when running locally and per job when running CHTC. Use 1 when running on CHTC in most cases.
+    num_gpus: 8 # Global when running locally and per job when running CHTC. Use 1 when running on CHTC in most cases.
     batch_size: 2048
-    num_workers: 4
-    threads: 8
-  
-  chtc_resources: 
-    request_memory: 52GB
-    request_disk: 52GB
+    num_workers: 8
+    threads: 16
 
