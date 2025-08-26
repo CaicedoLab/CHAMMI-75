@@ -86,6 +86,7 @@ def train_dino(cfg: DINOV1Config):
                 name=cfg.train.name,
                 id=cfg.train.name,
                 resume = "allow",
+                mode=cfg.train.wandb
             )
 
     # ============ preparing data ... ============

@@ -63,6 +63,10 @@ class DatasetConfig:
     metadata: str = '../../multi_channel_chammi_metadata.csv'
     TEMP_DATASET: Optional[str] = None
 
+class WandbLog(str, Enum):
+    disabled = "disabled"
+    enabled = None
+
 @dataclass
 class TrainConfig:
     """Misc parameters"""
@@ -77,6 +81,7 @@ class TrainConfig:
     world_size: int = 0
     gpu: int = 0
     rank: int = 0
+    wandb: WandbLog = WandbLog.enabled
 
 @dataclass
 class DINOV1Config:

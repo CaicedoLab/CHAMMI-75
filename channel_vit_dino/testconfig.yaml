@@ -7,5 +7,7 @@ train:
   name: 75ds_test
   data_path: /scr/data/CHAMMI-75_small.zip
   output_dir: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models
+  num_workers: 5
+  wandb: disabled
 optim:
   batch_size_per_gpu: 32
