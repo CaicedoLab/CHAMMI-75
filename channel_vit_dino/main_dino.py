@@ -107,13 +107,14 @@ def train_dino(cfg: DINOV1Config):
     config = dataset_config.DatasetConfig(
                 cfg.train.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
                 split_fns=[get_proc_split, randomize, split_for_workers],
+                # split_fns=[get_proc_split, randomize],
                 num_procs = utils.get_world_size(), # maybe works? brother needs to check!
                 proc = torch.distributed.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
                 transform=transform,
                 small_list_path = cfg.dataset.small_list_path,
                 seed=42,
                 dataset_config=cfg.dataset.metadata,
-                TEMP_DATASET=cfg.dataset.TEMP_DATASET
+                dataset_filter=cfg.dataset.dataset_filter
         )
     
     # If guided cropping is enabled, we add the guided crops path and size to the config
@@ -129,7 +130,7 @@ def train_dino(cfg: DINOV1Config):
                 transform=transform,
                 small_list_path = cfg.dataset.small_list_path,
                 seed=42,
-                TEMP_DATASET=cfg.dataset.TEMP_DATASET
+                dataset_filter=cfg.dataset.dataset_filter
                 )
 
     dataset = ChannelViTDataset(config)
@@ -243,7 +244,7 @@ def train_dino(cfg: DINOV1Config):
     start_epoch = to_restore["epoch"]
 
     start_time = time.time()
-    print("Starting DINO training !")
+    print("Starting DINO training!")
     for epoch in range(start_epoch, cfg.optim.epochs):
 
         # ============ training one epoch of DINO ... ============
@@ -280,6 +281,9 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                     fp16_scaler, cfg: DINOV1Config):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Epoch: [{}/{}]'.format(epoch, cfg.optim.epochs)
+    
+    # loss = 0.0
+    back_freq = cfg.optim.accumulation_steps
     for it, batch in enumerate(metric_logger.log_every(data_loader, 10, header)):
         # update weight decay and learning rate according to their schedule
         it = len(data_loader) * epoch + it  # global training iteration
@@ -289,11 +293,12 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             param_group["lr"] = lr_schedule[it]
             if i == 0:  # only the first group is regularized
                 param_group["weight_decay"] = wd_schedule[it]            
-            
+
+        # print("Starting batching")
         loss = 0.0
         for channels, minibatch in batch.items():
             extra_tokens = {
-                    "channels": [channel_map[chan] for chan in channels]
+                "channels": [channel_map[chan] for chan in channels]
             }
 
             # print(len(minibatch['crops']))
@@ -303,38 +308,17 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
                 student_output = student(crops, extra_tokens=extra_tokens)        
         
             loss += dino_loss(student_output, teacher_output, epoch)
-            
-        loss = loss / len(batch)
-        if not math.isfinite(loss.item()):
-            print("Loss is {}, stopping training".format(loss.item()), force=True)
-            sys.exit(1)
-
-        # student update
-        optimizer.zero_grad()
-        param_norms = None
+        
+        loss /= len(batch)
+        # loss = minibatch_loss
+        
         if fp16_scaler is None:
             loss.backward()
-            if cfg.optim.clip_grad:
-                param_norms = utils.clip_gradients(student, cfg.optim.clip_grad)
-            utils.cancel_gradients_last_layer(epoch, student,
-                                              cfg.optim.freeze_last_layer)
-            optimizer.step()
+           
         else:
             fp16_scaler.scale(loss).backward()
-            if cfg.optim.clip_grad:
-                fp16_scaler.unscale_(optimizer)  # unscale the gradients of optimizer's assigned params in-place
-                param_norms = utils.clip_gradients(student, cfg.optim.clip_grad)
-            utils.cancel_gradients_last_layer(epoch, student,
-                                              cfg.optim.freeze_last_layer)
-            fp16_scaler.step(optimizer)
-            fp16_scaler.update()
-
-        # EMA update for the teacher
-        with torch.no_grad():
-            m = momentum_schedule[it]  # momentum parameter
-            for param_q, param_k in zip(student.module.parameters(), teacher_without_ddp.parameters()):
-                param_k.data.mul_(m).add_((1 - m) * param_q.detach().data)
-
+            
+            
         # logging
         torch.cuda.synchronize()
         metric_logger.update(loss=loss.item())
@@ -343,7 +327,41 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
         if utils.is_main_process():
             stats = {k: meter.global_avg for k, meter in metric_logger.meters.items()}
             wandb.log(stats)
+            
+        if it+1 % back_freq != 0:
+            continue
+                
+        if not math.isfinite(loss.item()):
+            print("Loss is {}, stopping training".format(loss.item()), force=True)
+            dist.destroy_process_group(group=dist.group.WORLD)
+            sys.exit(1)
+            
+        # student update
+        param_norms = None
+        if fp16_scaler is None:
+            if cfg.optim.clip_grad:
+                param_norms = utils.clip_gradients(student, cfg.optim.clip_grad)
+            utils.cancel_gradients_last_layer(epoch, student,
+                                              cfg.optim.freeze_last_layer)
+            optimizer.step()
+            
+        else:
+            if cfg.optim.clip_grad:
+                fp16_scaler.unscale_(optimizer)  # unscale the gradients of optimizer's assigned params in-place
+                param_norms = utils.clip_gradients(student, cfg.optim.clip_grad)
+            utils.cancel_gradients_last_layer(epoch, student,
+                                            cfg.optim.freeze_last_layer)
+            fp16_scaler.step(optimizer)
+            fp16_scaler.update()
+        
+        # EMA update for the teacher
+        with torch.no_grad():
+            m = momentum_schedule[it]  # momentum parameter
+            for param_q, param_k in zip(student.module.parameters(), teacher_without_ddp.parameters()):
+                param_k.data.mul_(m).add_((1 - m) * param_q.detach().data)
     
+        # loss = 0.0 
+        optimizer.zero_grad()
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)

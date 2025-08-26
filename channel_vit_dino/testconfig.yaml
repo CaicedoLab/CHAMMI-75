@@ -1,11 +1,13 @@
 dataset:
   metadata: /scr/data/CHAMMI-75_small_metadata.csv
   guided_crops_path: /scr/data/CHAMMI-75_guidance.zip
-  guided_cropping: True 
-  TEMP_DATASET: 10ds
+  guided_cropping: True
+  dataset_filter: 10ds
 train:
   name: 75ds_test
   data_path: /scr/data/CHAMMI-75_small.zip
   output_dir: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models
+  num_workers: 5
 optim:
-  batch_size_per_gpu: 32
+  batch_size_per_gpu: 1
+  accumulation_steps: 32

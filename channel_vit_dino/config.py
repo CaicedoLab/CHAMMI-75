@@ -40,7 +40,8 @@ class OptimConfig:
     min_lr: float = 1e-6
     optimizer: str = 'adamw' 
     drop_path_rate: float = 0.1
-
+    accumulation_steps: int = 32
+    
 @dataclass
 class MultiCropConfig:
     """Multi-crop parameters"""
@@ -61,7 +62,7 @@ class DatasetConfig:
     guided_crops_size: Tuple[int, int] = (256, 256)
     small_list_path: Optional[str] = None
     metadata: str = '../../multi_channel_chammi_metadata.csv'
-    TEMP_DATASET: Optional[str] = None
+    dataset_filter: Optional[str] = None
 
 @dataclass
 class TrainConfig:
@@ -71,7 +72,7 @@ class TrainConfig:
     output_dir: str = "/hdd/jcaicedo/projects/channel_vit_dinov1/models"
     saveckp_freq: int = 20
     seed: int = 42
-    num_workers: int = 10
+    num_workers: int = 5
     dist_url: str = "env://"
     local_rank: int = 0
     world_size: int = 0
