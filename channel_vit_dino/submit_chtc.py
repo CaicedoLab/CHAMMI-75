@@ -34,8 +34,40 @@ def run_command(config: DINOV1Config):
 
 def main():    
     config = DINOV1Config()
-    config.train.name = "eefb00c_fixed_noise_inject"
+    config.train.name = "e51716f_75ds_base"
+    
+    config.dataset.metadata = '/hdd/jcaicedo/morphem/dataset/sampling/CHAMMI-75_small_metadata.csv'
+    config.dataset.guided_cropping = True
+    config.dataset.guided_crops_path = '/scratch/CHAMMI-75_guidance.zip'
+    config.model.arch = Arch.channelvit_base
+    config.optim.batch_size_per_gpu = 7
+    
+    config.train.data_path = '/scratch/CHAMMI-75_small.zip' 
+    
     run_command(config)
+    
+    # config = DINOV1Config()
+    # config.train.name = "e51716f_10ds"
+    
+    # config.dataset.TEMP_DATASET = "10ds"
+    # config.dataset.metadata = '/hdd/jcaicedo/morphem/dataset/sampling/CHAMMI-75_small_metadata.csv'
+    # config.dataset.guided_cropping = True
+    # config.dataset.guided_crops_path = '/scratch/CHAMMI-75_guidance.zip'
+    
+    # config.train.data_path = '/scratch/CHAMMI-75_small.zip' 
+    
+    # run_command(config)
+    
+    # config = DINOV1Config()
+    # config.train.name = "e51716f_75ds"
+    
+    # config.dataset.metadata = '/hdd/jcaicedo/morphem/dataset/sampling/CHAMMI-75_small_metadata.csv'
+    # config.dataset.guided_cropping = True
+    # config.dataset.guided_crops_path = '/scratch/CHAMMI-75_guidance.zip'
+    
+    # config.train.data_path = '/scratch/CHAMMI-75_small.zip' 
+    
+    # run_command(config)
     
 if __name__ == "__main__":
     main()
