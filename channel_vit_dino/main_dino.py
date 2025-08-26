@@ -38,7 +38,7 @@ from dataset.dataset_functions import randomize, split_for_workers, get_proc_spl
 from torch.utils.data import DataLoader
 from torchvision.transforms import v2
 from omegaconf import OmegaConf
-from config import DINOV1Config
+from config import DINOV1Config, WandbLog
 
 import torch
 import torchvision.transforms.v2.functional as func
@@ -80,13 +80,17 @@ def train_dino(cfg: DINOV1Config):
     cudnn.benchmark = True
 
     if utils.is_main_process():
+        if cfg.train.wandb == WandbLog.enabled:
+            mode = None
+        else:
+            mode = cfg.train.wandb
         wandb.init(
                 project="channelvit-dino",
                 config=OmegaConf.to_container(cfg),
                 name=cfg.train.name,
                 id=cfg.train.name,
                 resume = "allow",
-                mode=cfg.train.wandb
+                mode=mode
             )
 
     # ============ preparing data ... ============

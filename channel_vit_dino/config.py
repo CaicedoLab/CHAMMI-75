@@ -66,7 +66,7 @@ class DatasetConfig:
 
 class WandbLog(str, Enum):
     disabled = "disabled"
-    enabled = None
+    enabled = "None"
 
 @dataclass
 class TrainConfig:
