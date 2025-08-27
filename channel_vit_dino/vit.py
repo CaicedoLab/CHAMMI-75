@@ -26,7 +26,6 @@ import torch
 import torch.nn as nn
 from vit_utils import trunc_normal_
 
-
 def drop_path(x, drop_prob: float = 0.0, training: bool = False):
     if drop_prob == 0.0 or not training:
         return x
@@ -112,14 +111,12 @@ class Attention(nn.Module):
         sim = sim - sim.amax(dim=-1, keepdim=True).detach()
         attn = sim.softmax(dim=-1)
 
-        attn = attn.softmax(dim=-1)
-        attn = self.attn_drop(attn)
+        attn = self.attn_drop(sim)
 
         x = (attn @ v).transpose(1, 2).reshape(B, N, C)
         x = self.proj(x)
         x = self.proj_drop(x)
         return x, attn
-
 
 class Block(nn.Module):
     def __init__(

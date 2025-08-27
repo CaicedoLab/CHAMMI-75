@@ -2,7 +2,7 @@
 #   metadata: /scr/data/CHAMMI-75_small_metadata.csv
 #   guided_crops_path: /scr/data/CHAMMI-75_guidance.zip
 #   guided_cropping: True 
-#   TEMP_DATASET: 10ds
+#   # dataset_filter: 10ds
 # train:
 #   name: 75ds_test
 #   data_path: /scr/data/CHAMMI-75_small.zip
@@ -10,7 +10,7 @@
 #   num_workers: 5
 #   wandb: disabled
 # optim:
-#   batch_size_per_gpu: 32
+#   batch_size_per_gpu: 12
 
 dataset:
   metadata: /mnt/cephfs/mir/jcaicedo/morphem/dataset/sampling/multi_channel_chammi_metadata.csv
@@ -21,4 +21,4 @@ train:
   wandb: disabled
   num_workers: 5
 optim:
-  batch_size_per_gpu: 18
+  batch_size_per_gpu: 46
