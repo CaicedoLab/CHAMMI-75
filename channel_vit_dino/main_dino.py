@@ -44,7 +44,7 @@ import torch
 import torchvision.transforms.v2.functional as func
 from torchvision.transforms.functional import to_pil_image
 
-import utils
+import vit_utils as utils
 import vision_transformer as vits
 from vision_transformer import DINOHead
 #os.makedirs("/scratch/cache", exist_ok=True)
@@ -111,13 +111,15 @@ def train_dino(cfg: DINOV1Config):
     config = dataset_config.DatasetConfig(
                 cfg.train.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
                 split_fns=[get_proc_split, randomize, split_for_workers],
+                # split_fns=[get_proc_split, randomize],
                 num_procs = utils.get_world_size(), # maybe works? brother needs to check!
                 proc = torch.distributed.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
                 transform=transform,
                 small_list_path = cfg.dataset.small_list_path,
                 seed=42,
                 dataset_config=cfg.dataset.metadata,
-                TEMP_DATASET=cfg.dataset.TEMP_DATASET
+                dataset_filter=cfg.dataset.dataset_filter,
+                output_dir=cfg.train.output_dir
         )
     
     # If guided cropping is enabled, we add the guided crops path and size to the config
@@ -133,7 +135,8 @@ def train_dino(cfg: DINOV1Config):
                 transform=transform,
                 small_list_path = cfg.dataset.small_list_path,
                 seed=42,
-                TEMP_DATASET=cfg.dataset.TEMP_DATASET
+                dataset_filter=cfg.dataset.dataset_filter,
+                output_dir=cfg.train.output_dir
                 )
 
     dataset = ChannelViTDataset(config)
@@ -185,15 +188,7 @@ def train_dino(cfg: DINOV1Config):
     for p in teacher.parameters():
         p.requires_grad = False
     print(f"Student and Teacher are built: they are both {cfg.model.arch} network.")
-
-    channel_map = {}
-    for idx, channel in enumerate(sorted(dataset.channels)):
-        channel_map[channel] = idx
-
-    with open(os.path.join(cfg.train.output_dir, 'channel_map.json'), 'w') as f: f.write(json.dumps(channel_map))
-    
-    print(f"Channel VIT channel map initialized. We have {len(channel_map.keys())} different channels in the dataset.")
-        
+            
     # ============ preparing loss ... ============
     dino_loss = DINOLoss(
         cfg.model.out_dim,
@@ -252,7 +247,7 @@ def train_dino(cfg: DINOV1Config):
 
         # ============ training one epoch of DINO ... ============
         train_stats = train_one_epoch(student, teacher, teacher_without_ddp, dino_loss,
-            data_loader, optimizer, channel_map, lr_schedule, wd_schedule, momentum_schedule,
+            data_loader, optimizer, lr_schedule, wd_schedule, momentum_schedule,
             epoch, fp16_scaler, cfg)
 
         # ============ writing logs ... ============
@@ -277,10 +272,11 @@ def train_dino(cfg: DINOV1Config):
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
+ 
 
 
 def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loader,
-                    optimizer, channel_map, lr_schedule, wd_schedule, momentum_schedule,epoch,
+                    optimizer, lr_schedule, wd_schedule, momentum_schedule,epoch,
                     fp16_scaler, cfg: DINOV1Config):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Epoch: [{}/{}]'.format(epoch, cfg.optim.epochs)
@@ -293,22 +289,17 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             param_group["lr"] = lr_schedule[it]
             if i == 0:  # only the first group is regularized
                 param_group["weight_decay"] = wd_schedule[it]            
-            
-        loss = 0.0
-        for channels, minibatch in batch.items():
-            extra_tokens = {
-                    "channels": [channel_map[chan] for chan in channels]
-            }
-
-            # print(len(minibatch['crops']))
-            crops = [crop.cuda(non_blocking=True) for crop in minibatch['crops']]
-            with torch.cuda.amp.autocast(fp16_scaler is not None):
-                teacher_output = teacher(crops[:2], extra_tokens=extra_tokens)
-                student_output = student(crops, extra_tokens=extra_tokens)        
         
-            loss += dino_loss(student_output, teacher_output, epoch)
-            
-        loss = loss / len(batch)
+        # ffff
+        
+        images, channel_ids_list, channel_masks = batch # batch is a tuple, check collate fn in the correct dataset
+        images = [crop.cuda(non_blocking=True) for crop in images]
+        with torch.cuda.amp.autocast(fp16_scaler is not None):
+            teacher_output = teacher(images[:2], channel_ids_list, channel_masks)
+            student_output = student(images, channel_ids_list, channel_masks)        
+    
+        loss = dino_loss(student_output, teacher_output, epoch)
+        
         if not math.isfinite(loss.item()):
             print("Loss is {}, stopping training".format(loss.item()), force=True)
             sys.exit(1)

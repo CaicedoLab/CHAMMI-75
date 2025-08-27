@@ -1,13 +1,24 @@
+# dataset:
+#   metadata: /scr/data/CHAMMI-75_small_metadata.csv
+#   guided_crops_path: /scr/data/CHAMMI-75_guidance.zip
+#   guided_cropping: True 
+#   TEMP_DATASET: 10ds
+# train:
+#   name: 75ds_test
+#   data_path: /scr/data/CHAMMI-75_small.zip
+#   output_dir: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models
+#   num_workers: 5
+#   wandb: disabled
+# optim:
+#   batch_size_per_gpu: 32
+
 dataset:
-  metadata: /scr/data/CHAMMI-75_small_metadata.csv
-  guided_crops_path: /scr/data/CHAMMI-75_guidance.zip
-  guided_cropping: True 
-  TEMP_DATASET: 10ds
+  metadata: /mnt/cephfs/mir/jcaicedo/morphem/dataset/sampling/multi_channel_chammi_metadata.csv
 train:
-  name: 75ds_test
-  data_path: /scr/data/CHAMMI-75_small.zip
+  name: chammi_test
+  data_path: /scr/data/CHAMMI/chammi_train.zip
   output_dir: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models
-  num_workers: 5
   wandb: disabled
+  num_workers: 5
 optim:
-  batch_size_per_gpu: 32
+  batch_size_per_gpu: 18

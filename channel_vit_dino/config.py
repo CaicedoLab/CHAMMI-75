@@ -61,7 +61,7 @@ class DatasetConfig:
     guided_crops_size: Tuple[int, int] = (256, 256)
     small_list_path: Optional[str] = None
     metadata: str = '../../multi_channel_chammi_metadata.csv'
-    TEMP_DATASET: Optional[str] = None
+    dataset_filter: Optional[str] = None
 
 class WandbLog(str, Enum):
     disabled = "disabled"

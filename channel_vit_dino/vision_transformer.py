@@ -21,55 +21,95 @@ import torch.nn as nn
 
 from vit import Block
 from optim import trunc_normal_
-
+from typing import Optional
+from torch import Tensor
 
 class PatchEmbedPerChannel(nn.Module):
-    """Image to Patch Embedding."""
-
     def __init__(
         self,
-        img_size: int = 224,
+        img_size: tuple[int, int] = (224, 224),
         patch_size: int = 16,
         in_chans: int = 3,
         embed_dim: int = 768,
+        channel_tokens_init: str = "orthogonal",
     ):
         super().__init__()
         num_patches = (img_size // patch_size) * (img_size // patch_size) * in_chans
         self.img_size = img_size
         self.patch_size = patch_size
         self.num_patches = num_patches
+        self.embed_dim = embed_dim
 
         self.proj = nn.Conv3d(
             1,
             embed_dim,
             kernel_size=(1, patch_size, patch_size),
             stride=(1, patch_size, patch_size),
-        )  # CHANGED
-
-        self.channel_embed = nn.parameter.Parameter(
-            torch.zeros(1, embed_dim, in_chans, 1, 1)
         )
-        trunc_normal_(self.channel_embed, std=0.02)
 
-    def forward(self, x, extra_tokens={}):
-        # assume all images in the same batch has the same input channels
-        cur_channels = extra_tokens["channels"] #[0] removed a slice here. Not sure why they had this.
+        self.channel_tokens = nn.parameter.Parameter(torch.zeros(1, embed_dim, in_chans, 1, 1))
+        if channel_tokens_init == "orthogonal":
+            orthogonal_tensor = torch.empty(embed_dim, in_chans)
+            nn.init.orthogonal_(orthogonal_tensor)  # produces orthogonal columns
+            with torch.no_grad():
+                self.channel_tokens[:, :, :, 0, 0].copy_(orthogonal_tensor)
+        elif channel_tokens_init == "random":
+            trunc_normal_(self.channel_tokens, std=0.02)
+        elif channel_tokens_init == "zero":
+            trunc_normal_(self.channel_tokens, std=0.02) / 1000  ## close to zero
+            # pass  ## already initialized to zero
+        else:
+            raise ValueError(f"Unknown channel_tokens_init: {channel_tokens_init}")
 
-        B, Cin, H, W = x.shape
-        # Note: The current number of channels (Cin) can be smaller or equal to in_chans
+    def forward(self, x: Tensor, channel_ids_list: list[list[int]], channel_masks: Optional[Tensor] = None):
+        """
+        channel_ids: list of `batch_size` elements, each indicates channels of the img.  E.g., [[3,  5], [2]]
+        channel_masks: Attention mask (bool) with False at the end to indicate channel padding, e.g., [[True, True, False], [True, False, False]]
+        """
+        REGULAR_CASE = channel_ids_list is None and channel_masks is None
+        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = channel_ids_list is not None and channel_masks is None
+        DIFFERENT_CHANNELS_FOR_EACH_IMG = channel_ids_list is not None and channel_masks is not None
+
+        ## get channel tokens for this batch
+        if REGULAR_CASE:  ## Assume all images in the batch have the same channels, no masks.
+            channel_tokens = self.channel_tokens
+        elif SAME_SUBSET_CHANNELS_FOR_ALL_IMG:  ## E.g., each img has 8 channels, but only 5 channels are used for each image in the batch
+            channel_ids = channel_ids_list[0]  # type: ignore
+            channel_ids_tensor = torch.tensor(channel_ids, dtype=torch.long, device=self.channel_tokens.device)
+            channel_tokens = torch.index_select(self.channel_tokens, dim=2, index=channel_ids_tensor)
+        elif DIFFERENT_CHANNELS_FOR_EACH_IMG:  ## E.g., first image has 3 channels, second image has 5 channels, etc.
+            ## get corresponding channel tokens for each image in the batch
+            # 1. Flatten all indices and group size
+            flat_idxs = [i for group in channel_ids_list for i in group]  # type: ignore
+            flat_idxs_tensor = torch.tensor(flat_idxs, dtype=torch.long, device=self.channel_tokens.device)
+            group_sizes = [len(group) for group in channel_ids_list]  # type: ignore
+
+            # 2. Gather once along the channel token's dim (dim=2)
+            #    result shape = [B, d, sum(group_sizes), 1, 1]
+            selected_flat = torch.index_select(self.channel_tokens, dim=2, index=flat_idxs_tensor)
+
+            # 3. Split
+            channel_tokens = list(torch.split(selected_flat, group_sizes, dim=2))
+
+            # 4. padding to make channel_tokens the same size
+            max_num_channels = max(group_sizes)
+            dim = self.embed_dim
+            channel_tokens = [
+                torch.cat([ct, torch.zeros(1, dim, max_num_channels - ct.shape[2], 1, 1, device=ct.device)], dim=2) for ct in channel_tokens
+            ]
+            channel_tokens = torch.cat(channel_tokens, dim=0)  # B Cout Cin 1 1
+        else:
+            raise ValueError(f"Unknown case: channel_ids_list={channel_ids_list}, channel_masks={channel_masks}")
 
         # shared projection layer across channels
         x = self.proj(x.unsqueeze(1))  # B Cout Cin H W
 
         # channel specific offsets
-        # print(cur_channels)
-        # print(self.channel_embed[:, :, cur_channels, :, :].shape, x.shape)
-        x += self.channel_embed[:, :, cur_channels, :, :]  # B Cout Cin H W
+        x += channel_tokens  # B Cout Cin H W
 
         # preparing the output sequence
         x = x.flatten(2)  # B Cout CinHW
         x = x.transpose(1, 2)  # B CinHW Cout
-
         return x
 
 
@@ -198,9 +238,9 @@ class ChannelVisionTransformer(nn.Module):
 
         return torch.cat((class_pos_embed, patch_pos_embed), dim=1)
 
-    def prepare_tokens(self, x, extra_tokens):
+    def prepare_tokens(self, x, channel_ids: list, channel_masks: list):
         B, nc, w, h = x.shape
-        x = self.patch_embed(x, extra_tokens)  # patch linear embedding
+        x = self.patch_embed(x, channel_ids, channel_masks)  # patch linear embedding
 
         # add the [CLS] token to the embed patch tokens
         cls_tokens = self.cls_token.expand(B, -1, -1)
@@ -211,8 +251,8 @@ class ChannelVisionTransformer(nn.Module):
 
         return self.pos_drop(x)
 
-    def forward(self, x, extra_tokens={}):
-        x = self.prepare_tokens(x, extra_tokens)
+    def forward(self, x, channel_ids: list, channel_masks: list):
+        x = self.prepare_tokens(x, channel_ids, channel_masks)
         for blk in self.blocks:
             x = blk(x)
         x = self.norm(x)
