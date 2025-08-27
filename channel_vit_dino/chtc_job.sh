@@ -12,8 +12,8 @@ environment = "WANDB_API_KEY=$(wandb_key) CONFIG_NAME=$(config_name)"
 #  used if there were any other files needed for the executable to use.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
-transfer_input_files = execute_job.sh, /home/jgpeters3/CHAMMI-75, $(config_path), /hdd/jcaicedo/morphem/dataset/sampling/chammi_train.zip, /hdd/jcaicedo/morphem/dataset/sampling/multi_channel_chammi_metadata.csv 
-# 
+transfer_input_files = execute_job.sh, /home/jgpeters3/CHAMMI-75, $(config_path)
+# , /hdd/jcaicedo/morphem/dataset/sampling/chammi_train.zip, /hdd/jcaicedo/morphem/dataset/sampling/multi_channel_chammi_metadata.csv 
 # we don't transfer the dataset for 10ds and 75sd experiments, they are on the servers. 
 # Tell HTCondor what amount of compute resources
 #  each job will need on the computer where it runs.

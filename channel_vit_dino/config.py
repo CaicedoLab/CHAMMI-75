@@ -40,8 +40,7 @@ class OptimConfig:
     min_lr: float = 1e-6
     optimizer: str = 'adamw' 
     drop_path_rate: float = 0.1
-    accumulation_steps: int = 32
-    
+
 @dataclass
 class MultiCropConfig:
     """Multi-crop parameters"""
@@ -62,11 +61,7 @@ class DatasetConfig:
     guided_crops_size: Tuple[int, int] = (256, 256)
     small_list_path: Optional[str] = None
     metadata: str = '../../multi_channel_chammi_metadata.csv'
-    dataset_filter: Optional[str] = None
-
-class WandbLog(str, Enum):
-    disabled = "disabled"
-    enabled = "None"
+    TEMP_DATASET: Optional[str] = None
 
 @dataclass
 class TrainConfig:
@@ -82,7 +77,6 @@ class TrainConfig:
     world_size: int = 0
     gpu: int = 0
     rank: int = 0
-    wandb: WandbLog = WandbLog.enabled
 
 @dataclass
 class DINOV1Config:

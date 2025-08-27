@@ -173,6 +173,7 @@ class ChannelViTDataset(IterableImageArchive):
         for file_group, channel_types in file_list:
             ims = [self.read_im(im) for im in file_group]
             image_tensor = torch.concat(ims, dim=0)
+                    
             if self.guided_crops:
                 dataset = file_group[0].split(os.sep)[1]
                 baseline = get_crop_size(dataset)
@@ -249,13 +250,13 @@ class ChannelViTDataset(IterableImageArchive):
         proper_path = os.path.abspath(os.path.expanduser(config_path))
         self.dataset_config = pl.read_csv(proper_path, schema_overrides=OVERRIDES)
         
-        if self.config.dataset_filter == "allen":
+        if self.config.TEMP_DATASET == "allen":
             self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/Allen/'))
-        elif self.config.dataset_filter == 'cp':
+        elif self.config.TEMP_DATASET == 'cp':
             self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/CP/'))
-        elif self.config.dataset_filter == 'hpa':
+        elif self.config.TEMP_DATASET == 'hpa':
             self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/HPA/'))
-        elif self.config.dataset_filter == '10ds':
+        elif self.config.TEMP_DATASET == '10ds':
             self.dataset_config = self.dataset_config.filter(pl.col('experiment.study').is_in(DS10))
         
         self.channels = self.dataset_config['imaging.channel_type'].unique().to_list()
