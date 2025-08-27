@@ -23,7 +23,8 @@ class DatasetConfig:
     img_type: str = ".png" # .png or .jpg or .jpeg. What torchvision.io.decode_image will support.
     test: bool = False # Set this to true, and the indexes of the files will be returned as the "classes"
     small_list_path: str = None  # Path to the small image list file, if using a small dataset.
-    TEMP_DATASET: str = None
+    dataset_filter: str = None
+    output_dir: str = './'
 
     def __post_init__(self):
         self.data_path = os.path.abspath(os.path.expanduser(self.data_path))

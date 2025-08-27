@@ -148,16 +148,24 @@ class ChannelViTDataset(IterableImageArchive):
     def __init__(self, config: DatasetConfig) -> None:
         super().__init__(config)
         self.config = config
-        self.num_channels = None # This gets set later, but it's the total unique channels. Channel vit will need this to init its models.
-        self.channels = None # this is the set of all the unique channel types.
-        
+
         if self.config.dataset_config:
             config_path: str = self.config.dataset_config 
         else:
             raise ValueError("dataset_config path to config file must be supplied")
 
-        self.image_paths = self.load_dataset_config(config_path)
-        random.shuffle(self.image_paths)
+        self.image_paths, self.channels = self.load_dataset_config(config_path)
+        self.num_channels = len(self.channels) # for init channel_vit in_chans
+        self.channel_map = self.init_channel_map(self.channels, True)
+        
+    def init_channel_map(self, channels: list, save: bool):
+        channel_map = {}
+        for idx, channel in enumerate(sorted(channels)):
+            channel_map[channel] = idx
+        
+        if save:
+            with open(os.path.join(self.config.output_dir, 'channel_map.json'), 'w') as f: f.write(json.dumps(channel_map))
+        return channel_map
 
     def read_im(self, file_path: str):
         img_bytes = bytearray(self.archive.read(file_path))
@@ -207,62 +215,51 @@ class ChannelViTDataset(IterableImageArchive):
             else:
                 yield sample
     
-    def collate_crops(self, crops):
-        num_global_crops = len(crops[0])
-        gcs = [list() for _ in range(num_global_crops)]
-        for gc in crops:
-            for idx, crop in enumerate(gc):
-                gcs[idx].append(crop)
-                
-        gcs = [torch.stack(crops) for crops in gcs]
-        return gcs
     
-    def collate_fn(self, samples: list):        
-        collate_list = []
+    def mask_crop(self, crop: torch.Tensor, max_chans:int):
+        c,w,h = crop.shape
+        mask = torch.zeros(max_chans, w, h, dtype=torch.float16)
+        mask[:c, :w, :h] = crop
+        return mask
+    
+    def collate_crops(self, crops: list[torch.Tensor], max_chans: int):
+        crops = [self.mask_crop(crop, max_chans) for crop in crops]
+        collated_crops = torch.stack(crops)
+        return collated_crops
+    
+    def collate_fn(self, samples: list[tuple[torch.Tensor, list[str]]]):        
+        max_chans = max([sample[0][0].shape[0] for sample in samples])
+        num_crops = len(samples[0])
+    
+        collate_list = [list() for _ in range(num_crops)]
+        channel_list = []
+        channel_masks = []
         for sample in samples:
-            collate_list.append({
-                "global_crops": [image for image, chans in sample[:2]],
-                "local_crops": [image for image, chans in sample[2:]],
-                "channels": sample[0][1]
-            })
-        
-        minibatches = defaultdict(list)
-        [minibatches[sample['channels']].append(sample) for sample in collate_list]
-        
-        for channel_config, minibatch in minibatches.items():
-            torch.cat([torch.stack(sample['global_crops']) for sample in minibatch])
-            global_crops = [sample['global_crops'] for sample in minibatch]
-            global_crops = self.collate_crops(global_crops)    
-        
-            local_crops = [sample['local_crops'] for sample in minibatch]
-            local_crops = self.collate_crops(local_crops)
+            for idx, (image, _) in enumerate(sample):
+                collate_list[idx].append(image)
+            channel_list.append([self.channel_map[chn] for chn in sample[0][1]])
+            num_chans = image.shape[0]
+            channel_masks.append([True if idx < num_chans else False for idx in range(max_chans)])
             
-            # print(type(local_crops), type(local_crops[0]))
-            
-            minibatches[channel_config] = {
-                'crops': [*global_crops, *local_crops],
-                'channels': channel_config
-            }
-        
-        return minibatches 
+        return [self.collate_crops(crops, max_chans) for crops in collate_list], channel_list, channel_masks
+
     
     def load_dataset_config(self, config_path):
         proper_path = os.path.abspath(os.path.expanduser(config_path))
         self.dataset_config = pl.read_csv(proper_path, schema_overrides=OVERRIDES)
         
-        if self.config.TEMP_DATASET == "allen":
+        if self.config.dataset_filter == "allen":
             self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/Allen/'))
-        elif self.config.TEMP_DATASET == 'cp':
+        elif self.config.dataset_filter == 'cp':
             self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/CP/'))
-        elif self.config.TEMP_DATASET == 'hpa':
+        elif self.config.dataset_filter == 'hpa':
             self.dataset_config = self.dataset_config.filter(pl.col('storage.path').str.contains('/HPA/'))
-        elif self.config.TEMP_DATASET == '10ds':
+        elif self.config.dataset_filter == '10ds':
             self.dataset_config = self.dataset_config.filter(pl.col('experiment.study').is_in(DS10))
         
-        self.channels = self.dataset_config['imaging.channel_type'].unique().to_list()
-        self.num_channels = len(self.channels)
+        channels = self.dataset_config['imaging.channel_type'].unique().to_list()
         aggregated = self.dataset_config.sort('imaging.channel').group_by('imaging.multi_channel_id', maintain_order=True).agg(pl.col('storage.path'), pl.col('imaging.channel_type'))
-        return list(zip(aggregated['storage.path'].to_list(), aggregated['imaging.channel_type'].to_list()))
+        return list(zip(aggregated['storage.path'].to_list(), aggregated['imaging.channel_type'].to_list())), channels
 
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
