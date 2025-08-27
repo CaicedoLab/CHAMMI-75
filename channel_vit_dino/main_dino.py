@@ -286,7 +286,6 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Epoch: [{}/{}]'.format(epoch, cfg.optim.epochs)
     
-    # loss = 0.0
     back_freq = cfg.optim.accumulation_steps
     for it, batch in enumerate(metric_logger.log_every(data_loader, 10, header)):
         # update weight decay and learning rate according to their schedule
@@ -314,7 +313,7 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             loss += dino_loss(student_output, teacher_output, epoch)
         
         loss /= len(batch)
-        # loss = minibatch_loss
+        loss /= back_freq
         
         if fp16_scaler is None:
             loss.backward()
@@ -325,7 +324,7 @@ def train_one_epoch(student, teacher, teacher_without_ddp, dino_loss, data_loade
             
         # logging
         torch.cuda.synchronize()
-        metric_logger.update(loss=loss.item())
+        metric_logger.update(loss=loss.item() * back_freq)
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
         metric_logger.update(wd=optimizer.param_groups[0]["weight_decay"])
         if utils.is_main_process():
