@@ -2,9 +2,9 @@ dataset:
   metadata: /scr/data/CHAMMI-75_small_metadata.csv
   guided_crops_path: /scr/data/CHAMMI-75_guidance.zip
   guided_cropping: True 
-  dataset_filter: 10ds
+  # dataset_filter: 10ds
 train:
-  name: 75ds_test
+  name: 9548ebf_75ds
   data_path: /scr/data/CHAMMI-75_small.zip
   output_dir: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models
   num_workers: 5
