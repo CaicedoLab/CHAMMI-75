@@ -34,8 +34,40 @@ def run_command(config: DINOV1Config):
 
 def main():    
     config = DINOV1Config()
-    config.train.name = "5dd1396_baseline"
+    config.train.name = "9548ebf_"
+    config.optim.batch_size_per_gpu = 46
     run_command(config)
+    
+    config = DINOV1Config()
+    config.train.name = "9548ebf_"
+    config.optim.batch_size_per_gpu = 46
+    run_command(config)
+
+    config = DINOV1Config()
+    config.train.name = "9548ebf_"
+    config.optim.batch_size_per_gpu = 46
+    run_command(config)
+    
+    config = DINOV1Config()
+    config.train.name = "9548ebf_"
+    config.optim.batch_size_per_gpu = 46
+    run_command(config)
+    
+    config = DINOV1Config()
+    config.train.name = "9548ebf_"
+    config.optim.batch_size_per_gpu = 46
+    run_command(config)
+    
+    config = DINOV1Config()
+    config.train.name = "9548ebf_"
+    config.optim.batch_size_per_gpu = 46
+    run_command(config)
+    
+    config = DINOV1Config()
+    config.train.name = "9548ebf_"
+    config.optim.batch_size_per_gpu = 46
+    run_command(config)
+    
     
 if __name__ == "__main__":
     main()
