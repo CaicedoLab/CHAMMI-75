@@ -14,9 +14,9 @@ class ModelConfig:
     arch: Arch = Arch.channelvit_small
     patch_size: int = 16
     out_dim: int = 65536
-    norm_last_layer: bool = False
+    norm_last_layer: bool = True
     momentum_teacher: float = 0.996
-    use_bn_in_head: bool = True
+    use_bn_in_head: bool = False
 
 @dataclass
 class TemperatureConfig:
