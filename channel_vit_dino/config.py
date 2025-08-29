@@ -32,7 +32,7 @@ class OptimConfig:
     weight_decay: float = 0.04
     weight_decay_end: float = 0.4
     clip_grad: float = 3.0
-    batch_size_per_gpu: int = 46
+    batch_size_per_gpu: int = 26
     epochs: int = 100
     freeze_last_layer: int = 1
     lr: float = 0.00005
