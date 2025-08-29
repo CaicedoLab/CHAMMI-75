@@ -14,9 +14,9 @@ class ModelConfig:
     arch: Arch = Arch.channelvit_small
     patch_size: int = 16
     out_dim: int = 65536
-    norm_last_layer: bool = True
+    norm_last_layer: bool = False
     momentum_teacher: float = 0.996
-    use_bn_in_head: bool = False
+    use_bn_in_head: bool = True
 
 @dataclass
 class TemperatureConfig:
@@ -75,7 +75,7 @@ class TrainConfig:
     output_dir: str = "/hdd/jcaicedo/projects/channel_vit_dinov1/models"
     saveckp_freq: int = 20
     seed: int = 42
-    num_workers: int = 5
+    num_workers: int = 4
     dist_url: str = "env://"
     local_rank: int = 0
     world_size: int = 0
