@@ -5,7 +5,13 @@ name = "channelvit"
 platforms = ["linux-64"]
 version = "0.1.0"
 
-[tasks]
+[environments]
+submit = ["submit"]
+
+[feature.submit.pypi-dependencies]
+numpy = "==1.25.2"
+argparse = ">=1.4.0, <2"
+omegaconf = ">=2.3.0, <3"
 
 [dependencies]
 _libgcc_mutex = { version = "==0.1", build = "conda_forge" }

@@ -71,7 +71,7 @@ class WandbLog(str, Enum):
 class TrainConfig:
     """Misc parameters"""
     name: str = ""
-    data_path: str = '../../chammi_train.zip'
+    data_path: str = '/scratch/chammi_train.zip'
     output_dir: str = "/hdd/jcaicedo/projects/channel_vit_dinov1/models"
     saveckp_freq: int = 20
     seed: int = 42

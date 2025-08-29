@@ -10,7 +10,7 @@ environment = "WANDB_API_KEY=$(wandb_key) CONFIG_NAME=$(config_name)"
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
-transfer_input_files = execute_job.sh, /home/jgpeters3/CHAMMI-75, $(config_path), /scratch/chammi_train.zip, /hdd/jcaicedo/morphem/dataset/sampling/multi_channel_chammi_metadata.csv 
+transfer_input_files = execute_job.sh, /home/jgpeters3/CHAMMI-75, $(config_path), /hdd/jcaicedo/morphem/dataset/sampling/multi_channel_chammi_metadata.csv 
 
 requirements = ( Machine == "jcaicedogpu0001.chtc.wisc.edu" || Machine == "jcaicedogpu0002.chtc.wisc.edu" )
 request_cpus = 96
