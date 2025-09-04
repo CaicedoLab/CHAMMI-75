@@ -469,6 +469,7 @@ class PerImageNormalize(nn.Module):
         """
         # If your input has a dynamic channel size, we need to re-initialize:
         C, _, _ = x.shape
+        x = x.to(torch.float32)
         if self.instance_norm.num_features != C:
             self.instance_norm = nn.InstanceNorm2d(
                 num_features=C,
@@ -502,7 +503,7 @@ class TensorAugmentationDINO(object):
         )
         self.common_normalization = transforms.Compose([
             v2.ToImageTensor(),
-            SaturationNoiseInjector(low=200, high=255),
+            # SaturationNoiseInjector(low=200, high=255),
             PerImageNormalize(),
         ])
         

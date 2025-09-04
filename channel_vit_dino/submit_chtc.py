@@ -34,24 +34,10 @@ def run_command(config: DINOV1Config):
 
 def main():    
     config = DINOV1Config()
-    config.train.name = "8829ef5_994_mom_teacher"
+    config.train.name = "6c1aa1e_no_injection_CHAMMI"
+    config.optim.batch_size_per_gpu = 26
     run_command(config)
+ 
 
-    config = DINOV1Config()
-    config.train.name = "8829ef5_no_drop_path"
-    config.optim.drop_path_rate = 0
-    run_command(config)
-    
-    config = DINOV1Config()
-    config.train.name = "8829ef5_.3_drop_path"
-    config.optim.drop_path_rate = 0.3
-    run_command(config)
-    
-    config = DINOV1Config()
-    config.train.name = "8829ef5_no_drop_path"
-    config.optim.drop_path_rate = 0
-    run_command(config)
-    
-    
 if __name__ == "__main__":
     main()
