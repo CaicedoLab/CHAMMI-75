@@ -5,7 +5,8 @@ executable = execute_job.sh
 arguments = $(Process)
 output = logs/train$(Cluster)_$(Process).out
 error = logs/train$(Cluster)_$(Process).err
-environment = "WANDB_API_KEY=$(wandb_key) CONFIG_NAME=$(config_name)"
+environment = "WANDB_API_KEY=$(<$HOME/wandb_api_key.txt)"
+
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
