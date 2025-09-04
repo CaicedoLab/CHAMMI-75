@@ -34,10 +34,14 @@ def run_command(config: DINOV1Config):
 
 def main():    
     config = DINOV1Config()
-    config.train.name = "6c1aa1e_no_injection_CHAMMI"
-    config.optim.batch_size_per_gpu = 26
+    config.train.name = "0f6fa51_allen"
+    config.optim.batch_size_per_gpu = 18
+    config.train.data_path = '/scratch/CHAMMI-75_small.zip'
+    config.dataset.guided_crops_path = '/scratch/CHAMMI-75_guidance.zip'
+    config.dataset.guided_cropping = True
+    config.dataset.dataset_filter = '10ds'
+    config.dataset.metadata = '../../CHAMMI-75_small_metadata.csv'
     run_command(config)
  
-
 if __name__ == "__main__":
     main()
