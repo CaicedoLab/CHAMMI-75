@@ -1,0 +1,21 @@
+cache: /scr/vidit/cache
+feature_extraction:
+  crop: 100
+  feature_agg: true
+  model: vit
+  model_mode: None
+  model_path: /scr/vidit/Models/DINO_CHAMMI-75_LARGE
+  resize: 224
+  resources:
+    batch_size: 2048
+    num_gpus: 7
+    num_workers: 8
+    threads: 16
+  subcell_channel_map:
+    er: null
+    mt: null
+    nucleus: 1
+    protein: 2
+metadata: /scr/data/75ds_test/idr0017/metadata/idr0017_meta.csv
+out_folder: /scr/data/75ds_test/idr0017/study_replication
+study: /scr/data/75ds_test/idr0017/images

@@ -60,7 +60,7 @@ class DatasetConfig:
     guided_cropping: bool = False
     guided_crops_size: Tuple[int, int] = (256, 256)
     small_list_path: Optional[str] = None
-    metadata: str = '../../multi_channel_chammi_metadata.csv'
+    metadata: str = '../../../multi_channel_chammi_metadata.csv'
     dataset_filter: Optional[str] = None
 
 class WandbLog(str, Enum):

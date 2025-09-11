@@ -29,7 +29,11 @@ import torchvision.datasets as datasets
 import sys
 from timm.optim import create_optimizer_v2
 from timm.optim.optim_factory import param_groups_weight_decay
+<<<<<<< HEAD:mae/main_pretrain.py
 sys.path.append('/scr/vidit/FoundationModels/FoundationModels')
+=======
+sys.path.append('../../')
+>>>>>>> origin/main:models/mae/main_pretrain.py
 from dataset.dataset import IterableImageArchive
 from dataset import dataset_config
 from dataset.dataset_functions import randomize, split_for_workers, get_proc_split
@@ -146,11 +150,10 @@ class TensorAugmentationDINO(object):
             ]
         )
         self.common_normalization = transforms.Compose([
-            v2.RandomResizedCrop(256, scale=(0.9, 1.0), ratio=(0.9, 1.1), antialias=True),
+            v2.RandomResizedCrop(224, scale=(0.9, 1.0), ratio=(0.9, 1.1), antialias=True),
             v2.ToImageTensor(),
             SaturationNoiseInjector(low=200, high=255),
             PerImageNormalize(),
-            v2.RandomResizedCrop(224, scale=(0.6, 1.0), interpolation=Image.BICUBIC, antialias=True),
             flips
         ])
 
@@ -290,6 +293,7 @@ def main(args):
         num_workers=args.num_workers,
         pin_memory=args.pin_mem,
         drop_last=True,
+        persistent_workers=True,
         worker_init_fn=dataset_train.worker_init_fn
     )
     

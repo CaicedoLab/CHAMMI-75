@@ -5,7 +5,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.pkl
 # Run Artifacts
 dino_artifacts/
 
@@ -174,3 +174,7 @@ cython_debug/
 /mae/wandb/
 /dataset/__pycache__/
 /dinov1/log.txt
+/mae/*.sh
+
+benchmarks/idr0017_benchmark/workflow/.snakemake
+*pycache*

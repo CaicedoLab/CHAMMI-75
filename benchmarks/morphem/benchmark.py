@@ -2,7 +2,7 @@
 import pandas as pd
 import os
 import json
-from morphem.evaluation import evaluate, create_umap
+from morphem.evaluation import evaluate
 
 import warnings
 warnings.filterwarnings("ignore")
