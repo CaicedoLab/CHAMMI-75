@@ -88,6 +88,10 @@ def main(cfg, snake_in:str , snake_out: str, snake_model:str):
     
 
     model_instance = get_model(model_name=model_name, model_path=model_path, model_type=model_mode)
+    
+    if model_name == "channelvit":
+        model_instance.set_dataset('idr17', model_path)
+    
     model = model_instance
     _, transforms = model_instance.get_model()
 

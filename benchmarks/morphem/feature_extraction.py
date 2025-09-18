@@ -78,6 +78,8 @@ def get_save_features(feature_dir, root_dir, model_check, gpu, batch_size):
         # Post crops and processing getting the transforms
         dataset = configure_dataset(root_dir, dataset_name, transform=transform)
         train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        if model_check == "channelvit":
+            model_instance.set_dataset(dataset_name, args.model_path)
         
         all_feat = []
         for images, label in tqdm(train_dataloader, total=len(train_dataloader)):

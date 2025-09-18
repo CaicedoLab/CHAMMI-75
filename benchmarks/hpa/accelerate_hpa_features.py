@@ -266,22 +266,13 @@ def main():
     model_instance = get_model(model_name=args.model, device=accelerator.device, model_path=args.model_path, model_size=args.model_size)
     model, transform = model_instance.get_model()
     
-    if args.model == 'vit' or args.model == 'mae':
-    # Initialize dataset and dataloader
-        dataset = UnZippedImageArchive(
-            root_dir=args.image_folder, 
-            transform=transform
-        )
-    elif args.model == 'dinov2' or args.model == 'dinov3':
-        dataset = UnZippedImageArchive(
-            root_dir=args.image_folder, 
-            transform=v2.Resize(size=(224, 224), antialias=True)
-        )
-    elif args.model == 'openphenom':
-        dataset = UnZippedImageArchive(
-            root_dir=args.image_folder, 
-            transform=transform
-        )
+    if args.model == "channelvit":
+        model_instance.set_dataset("HPA", args.model_path)
+    
+    dataset = UnZippedImageArchive(
+        root_dir=args.image_folder, 
+        transform=transform
+    )
 
     # Create dataloader - accelerator will handle the distribution
     dataloader = torch.utils.data.DataLoader(
@@ -293,7 +284,7 @@ def main():
         pin_memory=True
     )
     
-    model, dataloader = accelerator.prepare(model, dataloader)
+    dataloader = accelerator.prepare(dataloader)
 
     # Extract features
     rows, feature_data = extract_features(
@@ -313,6 +304,7 @@ def main():
             print(f"Feature tensor shape: {feature_data.shape}")
     
     accelerator.wait_for_everyone()
+    accelerator.end_training()
     #print(f"Process {accelerator.process_index} finished")
 
 if __name__ == "__main__":

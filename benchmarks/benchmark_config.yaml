@@ -1,36 +1,33 @@
 # Master Config file to change variables around
-
-MODEL_TYPE: vit   # Model Types available - vit, mae, dinov2, dinov3, openphenom, subcell in some cases
-MODEL_PATH: /scr/vidit/helsinki_models/small-dataset-base-model
-NUM_GPUS: 1
+MODEL_TYPE: channelvit   # Model Types available - vit, mae, dinov2, dinov3, openphenom, subcell in some cases
+MODEL_PATH: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models/0f6fa51_75ds_guarded/checkpoint.pth
+NUM_GPUS: 3
 MODEL_MODE: None
-MODEL_SIZE: base
+MODEL_SIZE: small
 
 # CHAMMI Benchmark
-CHAMMI: True  # Enable CHAMMI benchmark
-CHAMMI_IMAGES_PATH: /scr/vidit/Foundation_Models/CHAMMI
-CHAMMI_FEATURES_PATH: /scr/vidit/chammi_small_dino_features
-CHAMMI_SCORE_PATH: /scr/vidit/helsinki_models/CHAMMI_scores/small-dataset-base-model
+CHAMMI: False  # Enable CHAMMI benchmark
+CHAMMI_IMAGES_PATH: /scr/data/CHAMMI/dataset
+CHAMMI_FEATURES_PATH: /scr/jpeters/chammi_75_benchmarks/chammi_features
+CHAMMI_SCORE_PATH: /scr/jpeters/chammi_75_benchmarks/chammi_scores
 CHAMMI_BATCH_SIZE: 8
 
 # HPA Benchmark
 HPA: False  # Enable HPA benchmark
-HPA_IMAGES_PATH: /path/to/hpa/images
-HPA_FEATURES_PATH: /path/to/hpa/Features
-HPA_SCORE_PATH: /path/to/hpa/score
+HPA_IMAGES_PATH: /scr/data/75ds_test/mini-hpa
+HPA_FEATURES_PATH: /scr/jpeters/chammi_75_benchmarks/hpa_features
+HPA_SCORE_PATH: /scr/jpeters/chammi_75_benchmarks/hpa_scores
 HPA_BATCH_SIZE: 16
 HPA_NUM_WORKERS: 8
 
 #JUMP-CP Benchmark
 
 
-
-
 #IDR-17 Benchmark
-IDR-17: False # Enable/disable IDR-17 benchmark
+IDR-17: True # Enable/disable IDR-17 benchmark
 # Paths and directories used for all rules
-IDR_DATA_FOLDER: /scr/data/75ds_test/idr0017
-IDR_CACHE: /scr/vidit/cache # location where it will temporarily unzip things
+IDR_DATA_FOLDER: /scr/data/75ds_test/idr0017_mini
+IDR_CACHE: /scr/jpeters/chammi_75_benchmarks/17cache # location where it will temporarily unzip things
 IDR_CROP: 100 # Size of the single cell crop
 IDR_RESIZE: 224 # Resized each patch to what
 IDR_BATCH_SIZE: 2048
@@ -39,8 +36,8 @@ IDR_THREADS: 16
 
 # Neuron Features Benchmark
 NEURON_FEATURES: False  # Enable Neuron Features benchmark
-NEURON_IMAGES_PATH: /scr/vidit/neural_features/
-NEURON_FEATURES_PATH: /scr/vidit/neural_features/neuron_feature_extraction
-NEURON_SCORE_PATH: /scr/vidit/neural_features/neuron_feature_extraction
+NEURON_IMAGES_PATH: /scr/data/75ds_test/neuron-features
+NEURON_FEATURES_PATH: /scr/jpeters/chammi_75_benchmarks/neron_features
+NEURON_SCORE_PATH: /scr/jpeters/chammi_75_benchmarks/neron_scores
 NEURON_BATCH_SIZE: 16
 NEURON_NUM_WORKERS: 8

@@ -120,6 +120,9 @@ def main():
     model_instance = get_model(model_name=args.model, device=accelerator.device, model_path=args.model_path, model_size=args.model_size)
     model_instance.to(accelerator.device)
 
+    if args.model == 'channelvit':
+        model_instance.set_dataset('neuron', args.model_path)
+
     # Extract embeddings
     train_embeddings = extract_embeddings(train_dataloader, model_instance, accelerator)
     test_embeddings = extract_embeddings(test_dataloader, model_instance, accelerator)
