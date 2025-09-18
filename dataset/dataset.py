@@ -19,9 +19,26 @@ from collections import defaultdict
 
 disable_beta_transforms_warning()
 
-# 10 datatsets for that run...
 DS10 = ["hpa0018", "idr0002", "idr0008", "idr0086", "idr0088", "idr0089", "jump0001", "nidr0031", "nidr0032", "wtc0001"]
 
+
+class ZipFileWrapper:
+    """Wrapper for ZipInfo objects to add archive_index attribute"""
+    def __init__(self, zipinfo, archive_index):
+        self.zipinfo = zipinfo
+        self.archive_index = archive_index
+        
+    @property
+    def filename(self):
+        return self.zipinfo.filename
+        
+    @property
+    def is_dir(self):
+        return self.zipinfo.is_dir()
+        
+    def __getattr__(self, name):
+        # Delegate any other attribute access to the wrapped ZipInfo object
+        return getattr(self.zipinfo, name)
 
 class IterableImageArchive(IterableDataset):
     def __init__(self, config: DatasetConfig) -> None:
@@ -36,20 +53,34 @@ class IterableImageArchive(IterableDataset):
         self.metadata_df = None
 
     def load_archive(self):
-        self.archive = zipfile.ZipFile(self.config.data_path, "r")
-        if self.config.dataset_size == "small":
-            self.image_paths = json.load(self.config.small_list_path)
+        if isinstance(self.config.data_path, list) and len(self.config.data_path) == 2:
+            # Handle two data paths
+            self.archive = [zipfile.ZipFile(path, "r") for path in self.config.data_path]
+            self.image_paths = []
+            for i, archive in enumerate(self.archive):
+                archive_images = [ZipFileWrapper(file, i) for file in archive.infolist() 
+                                if not file.is_dir() and file.filename.endswith(self.config.img_type)]
+                self.image_paths.extend(archive_images)
+            print(f"Loaded {len(self.image_paths)} images from {self.config.data_path}")
         else:
+            # Handle single data path (original behavior)
+            self.archive = zipfile.ZipFile(self.config.data_path, "r")
             self.image_paths = [file for file in self.archive.infolist() 
                             if not file.is_dir() and file.filename.endswith(self.config.img_type)]
+            print(f"Loaded {len(self.image_paths)} images from {self.config.data_path}")
 
     def return_sample(self, file_list: list):
-        try:
-            for file_path in file_list:
-                if self.config.dataset_size == "small":
-                    img_bytes = bytearray(self.archive.read(file_path))
-                else:
-                    img_bytes = bytearray(self.archive.read(file_path))
+        for file_path in file_list:
+            # Handle multiple archives
+            if isinstance(self.archive, list):
+                current_archive = self.archive[file_path.archive_index]
+                # Use the wrapped ZipInfo object for reading
+                zipinfo_obj = file_path.zipinfo if hasattr(file_path, 'zipinfo') else file_path
+                img_bytes = bytearray(current_archive.read(zipinfo_obj.filename))
+            else:
+                img_bytes = bytearray(self.archive.read(file_path.filename))
+                
+            try:
                 torch_buffer = torch.frombuffer(img_bytes, dtype=torch.uint8)
                 image_tensor = decode_image(torch_buffer)
                 image_tensor = image_tensor.to(torch.float16)
@@ -75,8 +106,6 @@ class IterableImageArchive(IterableDataset):
                         image_tensor = self.guided_crops(image_tensor, safetensors_name)
                     else:
                         pass
-                else:
-                    pass
 
                 # Apply additional transforms if configured
                 if self.config.transform:
@@ -87,10 +116,10 @@ class IterableImageArchive(IterableDataset):
                     yield file_path.filename
                 else:
                     yield image_tensor
-        except Exception as e:
-            print(f"Error processing {file_path.filename}: {e}")
-            import traceback
-            traceback.print_exc()
+            except Exception as e:
+                print(f"Error processing {file_path.filename}: {e}")
+                import traceback
+                traceback.print_exc()
             
     def worker_init_fn(self, worker_id):
         worker_info = torch.utils.data.get_worker_info()
@@ -122,13 +151,23 @@ class IterableImageArchive(IterableDataset):
     
     def __len__(self):
         if not self.image_paths:
-            archive = zipfile.ZipFile(self.config.data_path, "r")
-            image_paths = [file for file in archive.infolist() 
-                            if not file.is_dir() and file.filename.endswith(self.config.img_type)] 
-            if self.config.dataset_size == "small":
-                image_paths = json.load(self.config.small_list_path)
-            else:
+            if isinstance(self.config.data_path, list) and len(self.config.data_path) == 2:
+                # Handle two data paths
+                image_paths = []
+                for i, path in enumerate(self.config.data_path):
+                    archive = zipfile.ZipFile(path, "r")
+                    archive_images = [ZipFileWrapper(file, i) for file in archive.infolist() 
+                                    if not file.is_dir() and file.filename.endswith(self.config.img_type)]
+                    image_paths.extend(archive_images)
+                    archive.close()
                 self.image_paths = image_paths
+            else:
+                # Handle single data path (original behavior)
+                archive = zipfile.ZipFile(self.config.data_path, "r")
+                image_paths = [file for file in archive.infolist() 
+                                if not file.is_dir() and file.filename.endswith(self.config.img_type)] 
+                self.image_paths = image_paths
+                archive.close()
 
         if self.config.num_procs > 1:
             return len(get_proc_split(self.image_paths, self.config))
@@ -243,6 +282,32 @@ class ChannelViTDataset(IterableImageArchive):
             
         return [self.collate_crops(crops, max_chans) for crops in collate_list], channel_list, channel_masks
 
+    def collate_fn_simclr(self, samples: list):        
+        max_chans = max([sample[0].shape[0] for sample in samples])  # sample[0] is the tensor
+        
+        images = []
+        channel_list = []
+        channel_masks = []
+        
+        for sample in samples:
+            # sample is (tensor, channels_tuple)
+            image, channels = sample  # Unpack the tuple directly
+            
+            images.append(image)
+            
+            # Channel info
+            sample_channels = [self.channel_map[chn] for chn in channels]
+            channel_list.append(sample_channels)
+            
+            # Create mask based on actual number of channels
+            num_chans = image.shape[0]
+            channel_mask = [True if idx < num_chans else False for idx in range(max_chans)]
+            channel_masks.append(channel_mask)
+        
+        # Collate into single batch [B, C, H, W]
+        batch = self.collate_crops(images, max_chans)
+            
+        return batch, channel_list, channel_masks
     
     def load_dataset_config(self, config_path):
         proper_path = os.path.abspath(os.path.expanduser(config_path))

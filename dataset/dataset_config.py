@@ -10,10 +10,12 @@ class DatasetConfig:
     """Config dataclass outlining the structure of possible configuration variables
     Parameters:
     """
-    data_path: str
+    data_path: typing.Union[str, list[str]]
     dataset_config: Optional[str] = None
-    guided_crops_path: Optional[str] = None
-    guided_crops_size: Optional[tuple[int, int]] = None
+    dataset_filter: Optional[str] = None
+    output_dir: Optional[str] = None
+    guided_crops_path: str = None
+    guided_crops_size: tuple[int, int] = None
     split_fns: list[typing.Union[callable, str]] = field(default_factory=list)
     dataset_size: str = "small"  # "small" or "large". Used to determine the size of the dataset.
     num_procs: int = 1
@@ -27,7 +29,10 @@ class DatasetConfig:
     output_dir: str = './'
 
     def __post_init__(self):
-        self.data_path = os.path.abspath(os.path.expanduser(self.data_path))
+        if isinstance(self.data_path, list):
+            self.data_path = [os.path.abspath(os.path.expanduser(path)) for path in self.data_path]
+        else:
+            self.data_path = os.path.abspath(os.path.expanduser(self.data_path))
         
         if len(self.split_fns) > 0 and any([isinstance(split_fn, str) for split_fn in self.split_fns]):
             self.split_fns = self.get_callables(self.split_fns)

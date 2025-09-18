@@ -6,10 +6,14 @@ from sklearn.metrics import roc_curve, auc, precision_recall_curve
 import polars as pl
 import logging
 import csv
+import utils
 from utils import fetch_embeddings_from_metadata, calculate_effect_size, get_hit_list_for_cell_line, create_gt_for_cell_line, Standard_Normalizer, WhiteningNormalizer
 from sklearn.metrics import roc_auc_score
 from scipy.stats import spearmanr
 from scipy.stats import pearsonr
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from fusion_methods import early_fusion
+
 
 class GeneCompoundInteraction:
 
@@ -32,10 +36,15 @@ class GeneCompoundInteraction:
         self.replicate_list = ["Replicate_1", "Replicate_2"]
         self.metadata_df = pl.read_csv(self.metadata_path)
         self.distance_metric = config['distance_metric']
+        self.num_workers = config["num_workers"] 
         
         # Get Unique list of Mutations to analyze
-        if config['mutations'] is not None: self.mutations_list = config['mutations']
-        else: self.mutations_list = self.metadata_df["biology.cell_line"].unique().to_list()
+        if config['mutations'] is not None: 
+            self.mutations_list = config['mutations']
+            
+        else: 
+            self.mutations_list = self.metadata_df["biology.cell_line"].unique().to_list()
+            self.config['mutations'] = self.mutations_list
 
         # Get Unique List of Active Reagents to Analyze
         self.reagents_list = self.metadata_df.filter(pl.col("experiment.control") != "negative control")["experiment.reagent"].unique().to_list()
@@ -52,6 +61,12 @@ class GeneCompoundInteraction:
         with open(config_save_path, 'w') as f:
             for key, value in config.items():
                 f.write(f"{key}: {value}\n")
+                
+        # Add self.reagents to self.condig
+        self.config['reagents_list'] = self.reagents_list
+        self.config['save_dir'] = self.save_dir
+        self.config['metadata_df'] = self.metadata_df
+        
 
 
     
@@ -62,34 +77,38 @@ class GeneCompoundInteraction:
 
         '''Compute the effect size for each mutation and reagent in the study.'''
         
-        # Iterate through each mutation
-        for mutation in self.mutations_list:
-            
-            # Platewise normalization
-            if self.fusion_type == "early_fusion":
-                os.makedirs(os.path.join(self.save_dir, "early_fusion"), exist_ok=True)
-                self.early_fusion(mutation)
+        # Platewise normalization
+        if self.fusion_type == "early_fusion":
+            os.makedirs(os.path.join(self.save_dir, "early_fusion"), exist_ok=True)
+            mutations_list = self.config['mutations']
+            fusion_config = self.config
+            with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
+                futures = [executor.submit(early_fusion, mutation, fusion_config) for mutation in mutations_list]
+                for future in futures:
+                    future.result()  # Wait for all to complete
+                
 
-            # Cell line-wise normalization
-            elif self.fusion_type == "late_fusion":
-                os.makedirs(os.path.join(self.save_dir, "late_fusion"), exist_ok=True)
-                self.late_fusion(mutation)
+        # Cell line-wise normalization
+        elif self.fusion_type == "late_fusion":
+            os.makedirs(os.path.join(self.save_dir, "late_fusion"), exist_ok=True)
+            with ProcessPoolExecutor(max_workers = self.num_workers) as executor:
+                results = executor.map(self.late_fusion, self.mutations_list)
 
-            # Throw Error for unknown fusion type
-            else:
-                raise ValueError(f"Unknown fusion type: {self.fusion_type['fusion_type']}")
+        # Throw Error for unknown fusion type
+        else:
+            raise ValueError(f"Unknown fusion type: {self.fusion_type['fusion_type']}")
     
     
 
 
     # --------------------- COMPUTE ROC CURVE --------------------------
 
-    def compute_study_roc(self):
+    def compute_study_auc(self):
 
-        '''Compute the ROC curve for each mutation in the study.'''
+        '''Compute the AUC for each mutation in the study.'''
 
         # Create a csv file to save the ROC scores
-        csv_file_path = os.path.join(self.save_dir, self.fusion_type, "roc_scores.csv")
+        csv_file_path = os.path.join(self.save_dir, self.fusion_type, f"{self.config['benchmark_test']}_scores.csv")
         with open(csv_file_path, mode='w', newline='') as csvfile:
             writer = csv.writer(csvfile)
 
@@ -123,30 +142,45 @@ class GeneCompoundInteraction:
                 distance_array = (distance_array - np.min(distance_array)) / (np.max(distance_array) - np.min(distance_array))
 
                 # Calculate AUC-ROC score
-                auc_score = roc_auc_score(groud_truth_array, distance_array)
+                if self.config["benchmark_test"] == "auc_roc":
+                    x, y, _ = roc_curve(groud_truth_array, distance_array, drop_intermediate=False)
+                    score = roc_auc_score(groud_truth_array, distance_array)
 
-                # Calculate Recall and Precison AUC score
-                precision, recall, thresholds = precision_recall_curve(groud_truth_array, distance_array)
-                pr_auc_score = auc(recall, precision)
+                # Calculate Recall and Precision AUC score
+                elif self.config["benchmark_test"] == "auc_pr":
+                    precision, recall, thresholds = precision_recall_curve(groud_truth_array, distance_array)
+                    score = auc(recall, precision)
+                    x = precision
+                    y = recall
+                    
+                # Top-K recall
+                elif ("recall" in self.config["benchmark_test"]) and ("_" in self.config["benchmark_test"]):
+                    k = int(self.config["benchmark_test"].split("_")[-1])
+                    score = utils.top_K_recall(groud_truth_array, distance_array, k=k)
+                    
 
-                # Calculate ROC curve
-                fpr, tpr, _ = roc_curve(groud_truth_array, distance_array, drop_intermediate=False)
+                # Raise Exception
+                else:
+                    raise ValueError(f"Unknown benchmark test: {self.config['benchmark_test']}")
+
 
                 # Plot ROC curve
-                plt.plot(fpr, tpr, label=f"{column} (AUC = {auc_score:.2f})")
+                if self.config["plot_graphs"]:
+                    plt.plot(x, y, label=f"{column} (AUC = {score:.2f})")
 
                 # Add to the list
-                roc_score_list.append(auc_score)
+                roc_score_list.append(score)
 
             # Plot Settings
-            plt.plot([0, 1], [0, 1], '--', label='Chance')
-            plt.title(f"ROC Curve for {mutation}")
-            plt.xlabel("False Positive Rate")
-            plt.ylabel("True Positive Rate")
-            plt.legend()
-            plt.grid()
-            plt.savefig(plot_save_path)
-            plt.close()
+            if self.config["plot_graphs"]:
+                plt.plot([0, 1], [0, 1], '--', label='Chance')
+                plt.title(f"ROC Curve for {mutation}")
+                plt.xlabel("False Positive Rate")
+                plt.ylabel("True Positive Rate")
+                plt.legend()
+                plt.grid()
+                plt.savefig(plot_save_path)
+                plt.close()
         
             # Write the ROC scores to the csv file
             with open(csv_file_path, mode='a', newline='') as csvfile:
@@ -201,24 +235,6 @@ class GeneCompoundInteraction:
                 writer = csv.writer(csvfile)
                 writer.writerow([mutation, spearman_correlation, pearson_correlation])
 
-
-
-            
-
-            
-
-  
-            
-
-
-
-
-        
-
-
-            
-
-
     # ------------------------- EARLY FUSION ----------------------
 
 
@@ -241,7 +257,7 @@ class GeneCompoundInteraction:
                 unique_plates = replicate_metadata["storage.zip"].unique().to_list()
 
                 # Iterate through each plate
-                for plate in tqdm(unique_plates):
+                for plate in unique_plates:
 
                     # Get the feature for the plate
                     plate_metadata = replicate_metadata.filter(pl.col("storage.zip") == plate)
@@ -302,75 +318,13 @@ class GeneCompoundInteraction:
                     row = [reagent] + [np.mean(effect_sizes_dict[reagent][self.replicate_list[0]])] + [np.mean(effect_sizes_dict[reagent][self.replicate_list[1]])] + [mean_effect_size] + [gt_value]
                     writer.writerow(row)
 
+        return None
 
 
 
-    # ------------------------- EARLY FUSION ----------------------
-
-    def early_fusion(self, mutation):
-
-        if not os.path.exists(os.path.join(self.save_dir, "early_fusion", mutation + ".csv")):
-
-            # Create a dictionary to hold the effect sizes for each reagent
-            effect_size_dict = {reagent: {"Early Merge":[]} for reagent in self.reagents_list}
-
-            # Mutation Metadata
-            mutation_metadata = self.metadata_df.filter((pl.col("biology.cell_line") == mutation)
-                                                        & (pl.col("imaging.channel_type") == "nucleus"))
-            
-            # Mutation Control Metadata
-            mutation_control_metadata = mutation_metadata.filter(pl.col("experiment.control") == "negative control")
-            mutation_control_features = np.array(list(fetch_embeddings_from_metadata(self.features_dir, mutation_control_metadata, model_name = self.model_name).values()))
-
-            # Normalization for the mutation control
-            mutation_control_normalizer = WhiteningNormalizer(mutation_control_features)
-
-            # Iterate through each reagent
-            for reagent in tqdm(self.reagents_list):
-
-                # Get the metadata for the reagent
-                reagent_metadata = mutation_metadata.filter(pl.col("experiment.reagent") == reagent) 
-            
-                # Get the features for the reagent
-                reagent_features = np.array(list(fetch_embeddings_from_metadata(self.features_dir, reagent_metadata, model_name = self.model_name).values()))
-
-                # Calculate Effect Size
-                effect_size, img = calculate_effect_size(control=mutation_control_features, 
-                                                        treated=reagent_features, 
-                                                        bins=100, 
-                                                        normalizer=mutation_control_normalizer,
-                                                        plot_save_dir=None, 
-                                                        distance_matrix=self.distance_metric)
-
-                # Save Effect Size to the Dictionary
-                effect_size_dict[reagent]["Early Merge"].append(effect_size)
-
-
-
-
-            # Load the ground truth data
-            gt_df = pl.read_csv("ground_truth.csv")
-
-            # Create a CSV file to save the effect sizes
-            csv_filename = os.path.join(self.save_dir, "early_fusion", mutation + ".csv")
-
-            with open(csv_filename, mode='w', newline='') as csvfile:
-                writer = csv.writer(csvfile)
-
-                # Write the header row
-                writer.writerow(["Reagent", "Effect Size", "Ground Truth"])
-
-                # Iterate through each reagent in the effect size dictionary
-                for reagent in self.reagents_list:
-
-                    # Find the row where 'matched_drug_name' matches the reagent and get the value in the column for the current mutation
-                    if reagent in gt_df["matched_drug_name"].to_list():
-                        gt_value = int(gt_df.filter(pl.col("matched_drug_name") == reagent).select(mutation).to_numpy().flatten()[0])
-                    else:gt_value = 0
-
-                    # Write the row with the effect sizes and ground truth value
-                    row = [reagent] + [np.mean(effect_size_dict[reagent]["Early Merge"])] + [gt_value]
-                    writer.writerow(row)
+  
+                    
+    
 
             
 

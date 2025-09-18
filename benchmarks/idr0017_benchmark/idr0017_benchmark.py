@@ -6,13 +6,13 @@ def run_benchmark(config):
     benchmark_test = config['benchmark_test']
 
     # Gene Compound ROC Test
-    if benchmark_test == "auc_roc":
+    if benchmark_test == "auc_roc" or benchmark_test == "auc_pr" or "recall" in benchmark_test:
 
         # Compute Effect Size and Plot the ROC curve
         from tests.gene_compound_roc.gene_compound_roc import GeneCompoundInteraction
         gene_compound_inter = GeneCompoundInteraction(config)
         gene_compound_inter.compute_study_effect_size()
-        gene_compound_inter.compute_study_roc()
+        gene_compound_inter.compute_study_auc()
     
 
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     # Read config.yaml file
     with open("config.yaml", 'r') as f: config = yaml.safe_load(f)
 
-    # Save the config
+    # SAve the config
     
 
     # Run the benchmark test

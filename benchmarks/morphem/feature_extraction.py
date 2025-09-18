@@ -58,7 +58,7 @@ def create_pad(images, patch_width, patch_height): # new method for vit model
     return padded_images
 
 
-def get_save_features(feature_dir, root_dir, model_check, gpu, batch_size):
+def get_save_features(feature_dir, root_dir, model_check, batch_size):
     dataset_names = ['Allen', 'CP', 'HPA']
 
     if not os.path.exists(args.feat_dir):
@@ -66,7 +66,7 @@ def get_save_features(feature_dir, root_dir, model_check, gpu, batch_size):
         for dataset_name in dataset_names:
             os.makedirs(f'{feature_dir}/{dataset_name}', exist_ok=True)
 
-    device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model_instance = get_model(model_name=model_check, device=device, model_path=args.model_path, model_size=args.model_size)
     model, transform = model_instance.get_model()
@@ -82,6 +82,12 @@ def get_save_features(feature_dir, root_dir, model_check, gpu, batch_size):
             model_instance.set_dataset(dataset_name, args.model_path)
         
         all_feat = []
+
+        if model_check == 'chanvit_simclr':
+            model_instance.set_dataset(dataset_name, args.model_path)
+        elif model_check == 'chanvit_mae':
+            model_instance.set_dataset(dataset_name, args.model_path)
+
         for images, label in tqdm(train_dataloader, total=len(train_dataloader)):
             patch_height, patch_width = model_instance.get_patch_info()
             images = create_pad(images, patch_width, patch_height)
@@ -111,7 +117,6 @@ def get_parser():
     parser.add_argument("--root_dir", type=str, help="The root directory of the original images", required=True)
     parser.add_argument("--feat_dir", type=str, help="The directory that contains the features", required=True)
     parser.add_argument("--model", type=str, help="The type of model that is being trained and evaluated (mae, openphenom, dinov2 or vit)", required=True) # Choices to get from 'mae', 'vit', 'dinov2', 'dinov3', 'openphenom'
-    parser.add_argument("--gpu", type=int, default=0, help="The gpu that is currently available/not in use", required=False)
     parser.add_argument("--batch_size", type=int, default=64, help="Select a batch size that works for your gpu size", required=True)
     parser.add_argument("--model_size", type=str, default="small", help="Size of the ViT model (small or base)", choices=['small', 'base', 'large'])
     parser.add_argument("--model_path", type=str, help="Path to the model weights", required=False)
@@ -126,8 +131,7 @@ if __name__ == '__main__':
     root_dir = args.root_dir
     feat_dir = args.feat_dir
     model = args.model
-    gpu = args.gpu
     batch_size = args.batch_size
 
-    get_save_features(feat_dir, root_dir, model, gpu, batch_size)
+    get_save_features(feat_dir, root_dir, model, batch_size)
 

@@ -17,7 +17,6 @@ import json
 import numpy as np
 import os
 import time
-import wandb
 from pathlib import Path
 
 import torch
@@ -29,11 +28,15 @@ import torchvision.datasets as datasets
 import sys
 from timm.optim import create_optimizer_v2
 from timm.optim.optim_factory import param_groups_weight_decay
+<<<<<<< HEAD
 <<<<<<< HEAD:mae/main_pretrain.py
 sys.path.append('/scr/vidit/FoundationModels/FoundationModels')
 =======
 sys.path.append('../../')
 >>>>>>> origin/main:models/mae/main_pretrain.py
+=======
+sys.path.append('../')
+>>>>>>> origin/main
 from dataset.dataset import IterableImageArchive
 from dataset import dataset_config
 from dataset.dataset_functions import randomize, split_for_workers, get_proc_split
@@ -51,8 +54,8 @@ from util.misc import NativeScalerWithGradNormCount as NativeScaler
 import models_mae
 
 from engine_pretrain import train_one_epoch
-
-
+os.makedirs("/scratch/cache", exist_ok=True)
+torch.hub.set_dir("/scratch/cache") 
 
 class PerImageNormalize(nn.Module):
     def __init__(self, eps=1e-7):
@@ -141,7 +144,7 @@ class SaturationNoiseInjector(nn.Module):
         return x
 
 
-class TensorAugmentationDINO(object):
+class TensorAugmentationMAE(object):
     def __init__(self):
         flips = transforms.Compose(
             [
@@ -187,7 +190,7 @@ def get_args_parser():
     parser.set_defaults(norm_pix_loss=False)
 
     # Optimizer parameters
-    parser.add_argument('--weight_decay', type=float, default=0.05,
+    parser.add_argument('--weight_decay', type=float, default=0.04,
                         help='weight decay (default: 0.05)')
 
     parser.add_argument('--lr', type=float, default=5e-5, metavar='LR',
@@ -201,8 +204,8 @@ def get_args_parser():
                         help='epochs to warmup LR')
 
     # Dataset parameters
-    parser.add_argument('--data_path', default='/scr/vidit/chammi_train.zip', type=str,
-                        help='dataset path')
+    parser.add_argument('--data_path', default='/scr/vidit/chammi_train.zip', type=str, nargs='+',
+                        help='dataset path (can provide one or two paths)')
 
     parser.add_argument('--output_dir', default='./output_dir',
                         help='path where to save, empty for no saving')
@@ -234,6 +237,24 @@ def get_args_parser():
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument('--dist_url', default='env://',
                         help='url used to set up distributed training')
+<<<<<<< HEAD
+=======
+    parser.add_argument('--use_fp32', action='store_true', default=True,
+                        help='Use float32 for images')
+    parser.add_argument('--guided_cropping', action='store_true',
+                        help='Use guided cropping for training. If true, guided_crops_path and guided_crops_size must be set.')
+    parser.add_argument('--guided_crops_size', default=(256, 256), type=int, nargs=2,
+                        help='Size of the guided crops to use for training. If None, no guided cropping is used.')
+    parser.add_argument('--guided_crops_path', default=None, type=str,)
+    parser.add_argument('--multiscale', action='store_true',
+                        help='Enable multiscale training.')
+    parser.add_argument('--save_freq', default=20, type=int,
+                        help='frequency of saving checkpoints (in epochs)')
+    parser.add_argument('--keep_checkpoints', default=5, type=int,
+                        help='number of recent checkpoints to keep (0 to keep all)')
+    parser.add_argument('--dataset_size', default='full', type=str,
+                        help='Size of the dataset to use. Options: full, medium, small, tiny')
+>>>>>>> origin/main
 
     return parser
 
@@ -253,6 +274,7 @@ def main(args):
 
     cudnn.benchmark = True
 
+<<<<<<< HEAD
     config = dataset_config.DatasetConfig(
             args.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
             split_fns=[get_proc_split, randomize, split_for_workers],
@@ -263,6 +285,41 @@ def main(args):
             transform=TensorAugmentationDINO(),
             seed=seed
             )
+=======
+    # Handle data_path: if single path provided, keep as string; if multiple paths, keep as list
+    if len(args.data_path) == 1:
+        args.data_path = args.data_path[0]  # Convert single-item list to string for backward compatibility
+    elif len(args.data_path) == 2:
+        # Keep as list for dual-path support
+        pass
+    else:
+        raise ValueError("data_path must be either 1 or 2 paths, got {}".format(len(args.data_path)))
+
+    if args.guided_cropping:
+        config = dataset_config.DatasetConfig(
+                args.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
+                split_fns=[get_proc_split, randomize, split_for_workers],
+                num_procs = misc.get_world_size(), # maybe works? brother needs to check!
+                proc = misc.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
+                use_fp32 = args.use_fp32,  # Use float32 for images
+                guided_crops_path = args.guided_crops_path,
+                guided_crops_size = args.guided_crops_size,
+                transform=TensorAugmentationMAE(),
+                dataset_size=args.dataset_size,
+                seed=seed,
+                )
+    else:
+        config = dataset_config.DatasetConfig(
+                args.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
+                split_fns=[get_proc_split, randomize, split_for_workers],
+                num_procs = misc.get_world_size(), # maybe works? brother needs to check!
+                proc = misc.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
+                use_fp32 = args.use_fp32,  # Use float32 for images
+                transform=TensorAugmentationMAE(),
+                dataset_size=args.dataset_size,
+                seed=seed,
+                )
+>>>>>>> origin/main
     dataset_train = IterableImageArchive(config)
 
 
@@ -294,7 +351,8 @@ def main(args):
         pin_memory=args.pin_mem,
         drop_last=True,
         persistent_workers=True,
-        worker_init_fn=dataset_train.worker_init_fn
+        worker_init_fn=dataset_train.worker_init_fn,
+        prefetch_factor=8,
     )
     
     # define the model

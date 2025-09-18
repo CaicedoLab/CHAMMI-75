@@ -1,0 +1,29 @@
+attention_cls: v2 ## choices: {regular, v1, v2} (default v2).  v1 and v2 is more efficient attention. 
+model_size: small  ## ViT-{tiny, small, base, large, huge}
+patch_size: 16
+channel_sample: ~ # do channel sampling during training. choices: {hcs, hcs_symmetric ~}
+init_values: ~ # choices {~, a float number (e.g., 1.0)}. Used for LayerScale in DINOv2. Set to ~ to disable this layer. Refer to https://github.com/facebookresearch/dinov2/blob/main/dinov2/layers/layer_scale.py
+pretrained: ~ # default ~ to train from scratch.
+## it supports dinov2 (https://github.com/facebookresearch/dinov2?tab=readme-ov-file#pretrained-models), and timm models (add "timm--" before the model name, e.g., timm--vit_small_patch16_224.augreg_in21k)
+## choices: {~, dinov2_vits14, dinov2_vitb14, timm--vit_small_patch16_224.augreg_in21k,...}
+use_cls_head: False ## no need as we do pretraining
+use_channel_tokens: False ## set to True for channelViT style; False for BoC
+channel_tokens_init: orthogonal # used when use_channel_tokens is True. choices: {random, orthogonal, zero}
+bag_of_channels_mode: False ## if True, treat each channel as a separate image (i.e., bag of single-channel images). If False, each sample is a multi-channel image 
+use_self_image_norm: False ## if True, apply self-normalization (InstanceNorm2d without learnable parameters) to each channel independently before feeding into the model. 
+
+
+########## LOSSES ##########
+## proxy loss
+proxy_loss_lambda: 0 ## set to 0 to disable the proxy loss
+proxy_temperature: 0.11
+proxy_orthogonal_init: True
+
+## supervised contrastive loss
+supervised_contrastive_lambda: 0 ## set to 0 to disable the supervised contrastive loss
+supervised_contrastive_temperature: 0.1
+
+## simclr loss (unsupervised contrastive loss)
+simclr_lambda: 1 ## set to 0 to disable the simclr loss
+simclr_temperature: 0.1
+

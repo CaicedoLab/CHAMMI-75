@@ -38,10 +38,17 @@ def fetch_embeddings_from_metadata(embedding_path: str, metadata: pl.DataFrame, 
             plate_name = f"{study_name}-{plate_id}-converted_features.safetensors"
             plate_emb_path = os.path.join(embedding_path, plate_name)
             plate_emb_dict = safe_open(plate_emb_path, framework = "pt")
-            channel_1 = plate_emb_dict.get_tensor(image_name_1).mean(dim = 0)
-            channel_2 = plate_emb_dict.get_tensor(image_name_2).mean(dim = 0)
-            image_emb = torch.cat([channel_1, channel_2])
-            embedding_dict[image_id] = image_emb
+            try:
+                channel_1 = plate_emb_dict.get_tensor(image_name_1)
+                channel_2 = plate_emb_dict.get_tensor(image_name_2)
+                image_emb = torch.cat([channel_1, channel_2])
+                embedding_dict[image_id] = image_emb
+            except:
+                print(f"Image ID {image_id} not found in {plate_emb_path}")
+                continue
+
+            
+            
         
 
 
@@ -53,8 +60,12 @@ def fetch_embeddings_from_metadata(embedding_path: str, metadata: pl.DataFrame, 
             plate_name = f"{study_name}-{plate_id}-converted_features.safetensors"
             plate_emb_path = os.path.join(embedding_path, plate_name)
             plate_emb_dict = safe_open(plate_emb_path, framework = "pt")
-            image_emb = plate_emb_dict.get_tensor(image_id)
-            embedding_dict[image_id] = image_emb
+            try:
+                image_emb = plate_emb_dict.get_tensor(image_id)
+                embedding_dict[image_id] = image_emb
+            except:
+                print(f"Image ID {image_id} not found in {plate_emb_path}")
+                continue
 
     return embedding_dict
 
@@ -82,7 +93,7 @@ def fetch_dinov2_embeddings_from_metadata(embedding_path: str, metadata: pl.Data
 
 
 class WhiteningNormalizer(object):
-    def __init__(self, controls, reg_param=1e-6):
+    def __init__(self, controls, reg_param=1e-5):
         # Whitening transform on population level data
         self.mu = controls.mean(axis = 0)
         self.whitening_transform(controls - self.mu, reg_param, rotate=True)
@@ -111,6 +122,8 @@ class Standard_Normalizer(object):
     def __init__(self, controls):
         self.mu = controls.mean(axis = 0)
         self.std = controls.std(axis = 0)
+        print("shape of mu: ", self.mu.shape)
+        print("shape of std: ", self.std.shape)
 
     def normalize(self, X):
         return (X - self.mu) / self.std
@@ -318,4 +331,26 @@ def plot_umaps(features_dir, meta_data, column_name, control_metadata=None):
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+def top_K_recall(y_true, y_pred, k = 100):
+    
+    # Combine true labels and predicted scores into a list of tuples
+    combined = list(zip(y_true, y_pred))
+
+    # Sort the combined list based on predicted scores in descending order
+    combined.sort(key=lambda x: x[1], reverse=True)
+
+    # Select the top K entries
+    top_k = combined[:k]
+
+    # Count the number of true positives in the top K entries
+    true_positives = sum([1 for label, score in top_k if label == 1])
+
+    # Count the total number of actual positives in the entire dataset
+    total_positives = sum(y_true)
+
+    # Calculate recall at K
+    recall_at_k = true_positives / total_positives if total_positives > 0 else 0
+
+    return recall_at_k
 

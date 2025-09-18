@@ -1,7 +1,15 @@
 # Master Config file to change variables around
+<<<<<<< HEAD
 MODEL_TYPE: channelvit   # Model Types available - vit, mae, dinov2, dinov3, openphenom, subcell in some cases
 MODEL_PATH: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models/0f6fa51_75ds_guarded/checkpoint.pth
 NUM_GPUS: 3
+=======
+
+
+MODEL_TYPE: vit   # Model Types available - vit, mae, dinov2, dinov3, openphenom, subcell, chanvit_simclr in some cases
+MODEL_PATH: /scr/vidit/Foundation_Models/iclr_model_weights/SimCLR_CHANViT_Allen
+NUM_GPUS: 1
+>>>>>>> origin/main
 MODEL_MODE: None
 MODEL_SIZE: small
 
