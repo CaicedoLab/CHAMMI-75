@@ -66,7 +66,7 @@ def merge_csv_files(
 
 
 if __name__ == "__main__":
-    root_dir = '/home/MORGRIDGE/akazi/foundation_models/idr0017_benchmarking'  # Replace with your actual root directory
+    root_dir = '/scr/jpeters/idr17_scores'  # Replace with your actual root directory
     input_files = glob.glob(os.path.join(root_dir, '**', 'roc_scores.csv'), recursive=True)
     output_file = 'merged_output_late.csv'
 
