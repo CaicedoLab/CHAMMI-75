@@ -156,7 +156,7 @@ class ViTClass:
         remove_prefixes = ["module.backbone.", "module.", "module.head."]
 
         # Load model weights
-        student_model = torch.load(os.path.join(weights_path, "checkpoint.pth"), weights_only=False)["student"]
+        student_model = torch.load(weights_path, weights_only=False)["student"]
         # Remove unwanted prefixes
         cleaned_state_dict = {}
         for k, v in student_model.items():
@@ -218,7 +218,7 @@ class MAEModel:
             )
         
         state_dict = torch.load(
-            os.path.join(weights_path, "checkpoint-latest.pth"),
+            weights_path,
             map_location=f"{self.device}" if torch.cuda.is_available() else "cpu",
             weights_only=False
         )
@@ -499,7 +499,7 @@ class SimCLR(Model):
         self.model = get_multi_channel_vit(**model_cfg)
         
         state_dict = torch.load(
-            os.path.join(weights_path, "checkpoint_epoch_47.pt"),
+            weights_path,
             map_location=f"{self.device}" if torch.cuda.is_available() else "cpu",
             weights_only=False
         )
@@ -546,8 +546,8 @@ class ChannelVITSimCLR(Model):
             model_cfg = yaml.safe_load(f)
         self.model_path = model_path
 
-        
-        with open(os.path.join(model_path, 'channel_map.json'), 'r') as f:
+
+        with open(os.path.join(os.path.dirname(model_path), 'channel_map.json'), 'r') as f:
             channel_map_file = f.read()
         self.channel_map = json.loads(channel_map_file)
 
@@ -555,7 +555,7 @@ class ChannelVITSimCLR(Model):
         self.model = get_multi_channel_vit(**model_cfg)
 
         state_dict = torch.load(
-            os.path.join(model_path, "checkpoint_epoch_100.pt"),
+            model_path,
             map_location=f"{self.device}" if torch.cuda.is_available() else "cpu",
             weights_only=False
         )
@@ -625,8 +625,7 @@ class ChannelVITMAE(Model):
             model_cfg = yaml.safe_load(f)
         self.model_path = model_path
 
-        
-        with open(os.path.join(model_path, 'channel_map.json'), 'r') as f:
+        with open(os.path.join(os.path.dirname(model_path), 'channel_map.json'), 'r') as f:
             channel_map_file = f.read()
         self.channel_map = json.loads(channel_map_file)
 
@@ -634,7 +633,7 @@ class ChannelVITMAE(Model):
         self.model = get_multi_channel_vit(**model_cfg)
 
         state_dict = torch.load(
-            os.path.join(model_path, "checkpoint_epoch_100.pt"),
+            model_path,
             map_location=f"{self.device}" if torch.cuda.is_available() else "cpu",
             weights_only=False
         )
