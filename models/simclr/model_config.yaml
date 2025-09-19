@@ -1,5 +1,5 @@
 attention_cls: v2 ## choices: {regular, v1, v2} (default v2).  v1 and v2 is more efficient attention. 
-model_size: large  ## ViT-{tiny, small, base, large, huge}
+model_size: small  ## ViT-{tiny, small, base, large, huge}
 patch_size: 16
 channel_sample: ~ # do channel sampling during training. choices: {hcs, hcs_symmetric ~}
 init_values: ~ # choices {~, a float number (e.g., 1.0)}. Used for LayerScale in DINOv2. Set to ~ to disable this layer. Refer to https://github.com/facebookresearch/dinov2/blob/main/dinov2/layers/layer_scale.py
