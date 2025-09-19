@@ -22,7 +22,7 @@ requirements = ( Machine == "gpu4005.chtc.wisc.edu" || Machine == "gpu4006.chtc.
 +WantGPULab = true
 request_cpus = 9
 request_memory = 42GB
-request_disk =  80GB
+request_disk =  100GB
 request_gpus = 1
 # +is_resumable = true
 queue 1
