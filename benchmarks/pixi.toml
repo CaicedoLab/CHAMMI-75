@@ -36,6 +36,7 @@ snakemake = "==8.16.0"
 ipykernel = ">=6.30.1, <7"
 gputil = ">=1.4.0, <2"
 filelock = ">=3.19.1, <4"
+einops = ">=0.8.1, <0.9"
 
 [feature.idr.pypi-dependencies]
 numpy = "==2.2.6"
