@@ -59,7 +59,15 @@ def create_pad(images, patch_width, patch_height): # new method for vit model
 
 
 def get_save_features(feature_dir, root_dir, model_check, batch_size):
-    dataset_names = ['Allen', 'CP', 'HPA']
+    dataset_names = []
+    if "_allen" in args.model_path or "_Allen" in args.model_path:
+            dataset_names = ["Allen"]
+    elif "_hpa" in args.model_path or "_HPA" in args.model_path:
+        dataset_names = ["HPA"]
+    elif "_cp" in args.model_path or "_CP" in args.model_path:
+        dataset_names = ["CP"]
+    else:
+        dataset_names = ['Allen', 'CP', 'HPA']
 
     if not os.path.exists(args.feat_dir):
         os.makedirs(args.feat_dir, exist_ok=True)
