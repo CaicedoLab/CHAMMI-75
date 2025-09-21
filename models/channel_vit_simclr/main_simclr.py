@@ -431,7 +431,7 @@ def train_simclr(args):
 
 
 
-    ddp_model = DDP(model, device_ids=[args.gpu])
+    ddp_model = DDP(model, device_ids=[args.gpu], find_unused_parameters=True)
 
     channel_ids_list = None  # [0] * b  ## list of channel ids for each image in the batch, used for channelViT simclr
     channel_masks = None

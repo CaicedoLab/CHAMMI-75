@@ -389,6 +389,7 @@ def train_simclr(args):
     
     # If guided cropping is enabled, we add the guided crops path and size to the config
     if args.guided_cropping:
+        print("WHY IN GUIDANCE?")
         config = dataset_config.DatasetConfig(
                 args.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
                 split_fns=[get_proc_split, randomize, split_for_workers],
@@ -404,7 +405,7 @@ def train_simclr(args):
     
     # Setup the num_epochs as 100
     dataset = IterableImageArchive(config)
-    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=args.num_workers, worker_init_fn=dataset.worker_init_fn, drop_last=True, prefetch_factor=2, pin_memory=True, persistent_workers=True)
+    data_loader = DataLoader(dataset=dataset, batch_size=args.batch_size_per_gpu, num_workers=args.num_workers, worker_init_fn=dataset.worker_init_fn, drop_last=True, prefetch_factor=8, pin_memory=True, persistent_workers=True)
 
     simclr_transform = SimCLRBatchTransform(image_size=(224, 224))
     
@@ -544,7 +545,7 @@ def train_simclr(args):
             print("-" * 50)
         
         # Save checkpoint
-        if (epoch + 1) % 1 == 0:  # Save every 1 epochs
+        if (epoch + 1) % 5 == 0:  # Save every 5 epochs
             checkpoint_path = os.path.join(args.output_dir, f"checkpoint_epoch_{epoch + 1}.pt")
             os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
             torch.save({

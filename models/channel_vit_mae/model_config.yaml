@@ -10,7 +10,7 @@ use_cls_head: False ## no need as we use proxy loss
 use_channel_tokens: True
 channel_tokens_init: orthogonal # choices: {random, orthogonal, zero}
 bag_of_channels_mode: False ## if True, treat each channel as a separate image (i.e., bag of single-channel images). If False, each sample is a multi-channel image 
-use_self_image_norm: False ## if True, apply self-normalization (InstanceNorm2d without learnable parameters) to each channel independently before feeding into the model. 
+use_self_image_norm: True ## if True, apply self-normalization (InstanceNorm2d without learnable parameters) to each channel independently before feeding into the model. 
 
 ########## LOSSES ##########
 ## proxy loss

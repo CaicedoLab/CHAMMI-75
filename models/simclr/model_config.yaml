@@ -1,5 +1,5 @@
 attention_cls: v2 ## choices: {regular, v1, v2} (default v2).  v1 and v2 is more efficient attention. 
-model_size: large  ## ViT-{tiny, small, base, large, huge}
+model_size: small  ## ViT-{tiny, small, base, large, huge}
 patch_size: 16
 channel_sample: ~ # do channel sampling during training. choices: {hcs, hcs_symmetric ~}
 init_values: ~ # choices {~, a float number (e.g., 1.0)}. Used for LayerScale in DINOv2. Set to ~ to disable this layer. Refer to https://github.com/facebookresearch/dinov2/blob/main/dinov2/layers/layer_scale.py
@@ -10,7 +10,7 @@ use_cls_head: False ## no need as we do pretraining
 use_channel_tokens: False ## set to True for channelViT style; False for BoC
 channel_tokens_init: orthogonal # used when use_channel_tokens is True. choices: {random, orthogonal, zero}
 bag_of_channels_mode: True ## if True, treat each channel as a separate image (i.e., bag of single-channel images). If False, each sample is a multi-channel image 
-use_self_image_norm: False ## if True, apply self-normalization (InstanceNorm2d without learnable parameters) to each channel independently before feeding into the model. 
+use_self_image_norm: True ## if True, apply self-normalization (InstanceNorm2d without learnable parameters) to each channel independently before feeding into the model. 
 
 
 ########## LOSSES ##########

@@ -7,7 +7,7 @@ pretrained: ~ # default ~ to train from scratch.
 ## it supports dinov2 (https://github.com/facebookresearch/dinov2?tab=readme-ov-file#pretrained-models), and timm models (add "timm--" before the model name, e.g., timm--vit_small_patch16_224.augreg_in21k)
 ## choices: {~, dinov2_vits14, dinov2_vitb14, timm--vit_small_patch16_224.augreg_in21k,...}
 use_cls_head: False ## no need as we do pretraining
-use_channel_tokens: False ## set to True for channelViT style; False for BoC
+use_channel_tokens: True ## set to True for channelViT style; False for BoC
 channel_tokens_init: orthogonal # used when use_channel_tokens is True. choices: {random, orthogonal, zero}
 bag_of_channels_mode: False ## if True, treat each channel as a separate image (i.e., bag of single-channel images). If False, each sample is a multi-channel image 
 use_self_image_norm: False ## if True, apply self-normalization (InstanceNorm2d without learnable parameters) to each channel independently before feeding into the model. 

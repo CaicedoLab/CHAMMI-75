@@ -64,7 +64,7 @@ class IterableImageArchive(IterableDataset):
             # Handle single data path (original behavior)
             self.archive = zipfile.ZipFile(self.config.data_path, "r")
             self.image_paths = [file for file in self.archive.infolist() 
-                            if not file.is_dir() and file.filename.endswith(self.config.img_type)]
+                            if not file.is_dir() and file.filename.endswith(self.config.img_type)]# and any(ds in file.filename for ds in DS10)]
             print(f"Loaded {len(self.image_paths)} images from {self.config.data_path}")
 
     def return_sample(self, file_list: list):

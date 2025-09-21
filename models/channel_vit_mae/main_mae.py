@@ -274,9 +274,9 @@ def get_args_parser():
 
     parser.add_argument('--output_dir', default='./output_dir', type=str, help='path where to save, empty for no saving')
 
-    parser.add_argument('--lr', default=5e-5, type=float, help='learning rate')
+    parser.add_argument('--lr', default=5e-6, type=float, help='learning rate')
 
-    parser.add_argument('--warmup_epoch', default=10, type=int, help='number of warmup epochs')
+    parser.add_argument('--warmup_epoch', default=20, type=int, help='number of warmup epochs')
 
     parser.add_argument('--gradient_accumulation_steps', default=1, type=int, help='number of gradient accumulation steps')
 
@@ -528,7 +528,7 @@ def train_mae(args):
             print("-" * 50)
         
         # Save checkpoint
-        if (epoch + 1) % 20 == 0:  # Save every 1 epochs
+        if (epoch + 1) % 5 == 0:  # Save every 1 epochs
             checkpoint_path = os.path.join(args.output_dir, f"checkpoint_epoch_{epoch + 1}.pt")
             os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
             torch.save({
