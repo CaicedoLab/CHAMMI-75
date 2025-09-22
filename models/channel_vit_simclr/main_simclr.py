@@ -490,7 +490,7 @@ def train_simclr(args):
             # Pad channel IDs to max_channels length
             padded_channel_ids = []
             for channel_ids in simclr_channel_ids:
-                padded_ids = channel_ids + [-1] * (max_channels - len(channel_ids))  # Use -1 as padding
+                padded_ids = channel_ids + [0] * (max_channels - len(channel_ids))  # Use -1 as padding
                 padded_channel_ids.append(padded_ids)
             
             # Convert to tensors and move to GPU
