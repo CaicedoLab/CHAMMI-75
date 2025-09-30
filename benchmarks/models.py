@@ -770,9 +770,11 @@ class ChannelVIT:
             else:
                 self.dataset_channels = ['microtubules', 'protein', 'nucleus', 'er']
         elif dataset_name == "neuron":
-            self.dataset_channels = ['protein' for _ in range(14)]
+            self.dataset_channels = ['nucleus', 'protein','protein','protein','protein','protein','protein','protein','protein','protein','protein', 'RNA', 'endoplasmic reticulum', 'golgi body']
         elif dataset_name == "idr17":
             self.dataset_channels = ['nucleus', 'cytoskeleton']
+        elif dataset_name == 'mini-HPA':
+            self.dataset_channels = ['microtubules', 'endoplasmic reticulum', 'nucleus', 'protein']
         else:
             raise ValueError("Dataset name supplied is not supported. This class only supports CHAMMIv1 benchmarking.")
     

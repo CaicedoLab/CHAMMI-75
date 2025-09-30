@@ -89,10 +89,15 @@ def main():
             f"--num_workers {config['HPA_NUM_WORKERS']} "
             f"--output_folder {config['HPA_FEATURES_PATH']}"
         )
-        run_command(hpa_cmd, cwd=hpa_dir)
+        # run_command(hpa_cmd, cwd=hpa_dir)
 
         train_cmd = (
-            f"python train_classification.py -f {config['HPA_SCORE_PATH']} -cc locations -uc challenge_cats"
+            f"python train_classification.py -f {config['HPA_FEATURES_PATH']} -cc locations -uc challenge_cats"
+        )
+        run_command(train_cmd, cwd=hpa_dir)
+        
+        train_cmd = (
+            f"python train_classification.py -f {config['HPA_FEATURES_PATH']} -cc locations -uc unique_cats"
         )
         run_command(train_cmd, cwd=hpa_dir)
 
@@ -107,7 +112,7 @@ def main():
             f"--output_folder {config['NEURON_FEATURES_PATH']} "
             f"--num_workers {config['NEURON_NUM_WORKERS']}"
         )
-        run_command(neuron_cmd, cwd=neuron_dir)
+        # run_command(neuron_cmd, cwd=neuron_dir)
 
         classifier_cmd = (
             f"python classifier.py --embedding_path {config['NEURON_FEATURES_PATH']}"

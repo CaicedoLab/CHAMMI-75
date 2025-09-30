@@ -51,18 +51,24 @@ def run_classifier(embedding_path):
 
     pca_embeddings_train = None
     pca_embeddings_test = None
-    for chan_num in range(14):
-        channel_embeddings = train_embeddings[:, chan_num*384:(chan_num+1)*384]
-        pca = PCA(n_components=20)
-        pca_model = pca.fit(channel_embeddings)
-        train_channel_pca = pca_model.transform(channel_embeddings)
-        test_channel_pca = pca_model.transform(test_embeddings[:, chan_num*384:(chan_num+1)*384])
-        if pca_embeddings_train is None:
-            pca_embeddings_train = train_channel_pca
-            pca_embeddings_test = test_channel_pca
-        else:
-            pca_embeddings_train = np.concatenate((pca_embeddings_train, train_channel_pca), axis=1)
-            pca_embeddings_test = np.concatenate((pca_embeddings_test, test_channel_pca), axis=1)
+    # print(train_embeddings.shape, "SHAPE OF TRAIN EMBED")
+    # for chan_num in range(14):
+    #     channel_embeddings = train_embeddings[:, chan_num*384:(chan_num+1)*384]
+    #     pca = PCA(n_components=20)
+    #     pca_model = pca.fit(channel_embeddings)
+    #     train_channel_pca = pca_model.transform(channel_embeddings)
+    #     test_channel_pca = pca_model.transform(test_embeddings[:, chan_num*384:(chan_num+1)*384])
+    #     if pca_embeddings_train is None:
+    #         pca_embeddings_train = train_channel_pca
+    #         pca_embeddings_test = test_channel_pca
+    #     else:
+    #         pca_embeddings_train = np.concatenate((pca_embeddings_train, train_channel_pca), axis=1)
+    #         pca_embeddings_test = np.concatenate((pca_embeddings_test, test_channel_pca), axis=1)
+    pca = PCA(n_components=20)
+    pca_model = pca.fit(train_embeddings)
+
+    pca_embeddings_train = pca_model.transform(train_embeddings)
+    pca_embeddings_test = pca_model.transform(test_embeddings)
 
     train_labels = [gene[0] for gene in train_genes]
     test_labels = [gene[0] for gene in test_genes]

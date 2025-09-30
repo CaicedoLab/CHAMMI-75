@@ -288,7 +288,7 @@ if __name__ == "__main__":
     save_folder = (
         f"{features_folder}/classification"
     )
-    shutil.rmtree(save_folder, ignore_errors=True)
+    # shutil.rmtree(save_folder, ignore_errors=True)
     os.makedirs(save_folder, exist_ok=True)
 
     features = torch.load(

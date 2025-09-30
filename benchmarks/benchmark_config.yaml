@@ -1,20 +1,21 @@
 # Master Config file to change variables around
-MODEL_TYPE: chanvit_mae   # Model Types available - vit, mae, dinov2, dinov3, openphenom, subcell, chanvit_simclr in some cases
-MODEL_PATH: /scr/vidit/Foundation_Models/iclr_model_weights/MAE_CHANViT_CHAMMI/checkpoint_epoch_100.pt
+MODEL_TYPE: channelvit   # Model Types available - vit, mae, dinov2, dinov3, openphenom, subcell, chanvit_simclr in some cases
+MODEL_PATH: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models/0f6fa51_75ds_guarded/checkpoint.pth
 MODEL_SIZE: small
+NUM_GPUS: 8
+MODEL_MODE: null
 
 # CHAMMI Benchmark
-CHAMMI: True  # Enable CHAMMI benchmark
+CHAMMI: False  # Enable CHAMMI benchmark
 CHAMMI_IMAGES_PATH: /scr/data/CHAMMI/dataset
 CHAMMI_FEATURES_PATH: /scr/jpeters/chammi_75_benchmarks/chammi_features
 CHAMMI_SCORE_PATH: /scr/jpeters/chammi_75_benchmarks/chammi_scores
 CHAMMI_BATCH_SIZE: 8
 
 # HPA Benchmark
-HPA: False  # Enable HPA benchmark
+HPA: True  # Enable HPA benchmark
 HPA_IMAGES_PATH: /scr/data/75ds_test/mini-hpa
-HPA_FEATURES_PATH: /scr/jpeters/chammi_75_benchmarks/hpa_features
-HPA_SCORE_PATH: /scr/jpeters/chammi_75_benchmarks/hpa_scores
+HPA_FEATURES_PATH: /scr/jpeters/chammi_75_benchmarks/hpa_features_test
 HPA_BATCH_SIZE: 16
 HPA_NUM_WORKERS: 8
 
@@ -33,7 +34,7 @@ IDR_NUM_WORKERS: 8
 IDR_THREADS: 16
 
 # Neuron Features Benchmark
-NEURON_FEATURES: True  # Enable Neuron Features benchmark
+NEURON_FEATURES: False  # Enable Neuron Features benchmark
 NEURON_IMAGES_PATH: /scr/data/75ds_test/neuron-features
 NEURON_FEATURES_PATH: /scr/jpeters/chammi_75_benchmarks/neron_features
 NEURON_SCORE_PATH: /scr/jpeters/chammi_75_benchmarks/neron_scores

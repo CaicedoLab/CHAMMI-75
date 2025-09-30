@@ -37,43 +37,6 @@ def cleanup_resources():
 # Register cleanup function
 atexit.register(cleanup_resources)
 
-
-
-
-
-'''
-def get_subcell_model(config, model_path=None):
-    model = ViTPoolModel(config["model_config"]["vit_model"], config["model_config"]["pool_model"])
-    state_dict = torch.load(model_path, map_location="cpu")
-
-    msg = model.load_state_dict(state_dict)
-    print(msg)
-    return model
-
-def preprocess_input_subcell(images, per_channel=False):
-    min_val = torch.amin(images, dim=(1, 2, 3), keepdims=True)
-    max_val = torch.amax(images, dim=(1, 2, 3), keepdims=True)
-
-    images = (images - min_val) / (max_val - min_val + 1e-6)
-    return images
-
-class SubcellClass():
-    def __init__(self, device, config_path):
-        self.device = device
-        
-        # Load config for subcell model
-        with open(config_path, 'r') as f:
-            self.config = yaml.safe_load(f)
-        
-        # Load subcell model
-        self.model = get_subcell_model(self.config, config_path.replace('.yaml', '.pth'))
-        self.model.eval()
-        self.model.to(self.device)
-
-    def get_model(self):
-        return self.model
-'''
-
 def custom_collate_fn(batch):
     """Custom collate function to handle None values"""
     # Filter out None values
@@ -171,7 +134,7 @@ def extract_features(dataloader: torch.utils.data.DataLoader, model_instance: ob
 
     all_features = []
     all_rows = []
-    
+    idx = 0
     with torch.no_grad():
         for batch_data in tqdm(dataloader, desc=f"Extracting features on GPU {accelerator.local_process_index}", disable=not accelerator.is_local_main_process):
             if batch_data[0] is None:
@@ -200,6 +163,7 @@ def extract_features(dataloader: torch.utils.data.DataLoader, model_instance: ob
         
         # Wait for all processes to finish saving
         accelerator.wait_for_everyone()
+        accelerator.end_training()
         
         # Main process combines all files
         if accelerator.is_main_process:
@@ -232,7 +196,6 @@ def extract_features(dataloader: torch.utils.data.DataLoader, model_instance: ob
             
             return all_rows_combined, all_features_combined
         
-        accelerator.wait_for_everyone()
         return None, None
 
 def main():
@@ -267,7 +230,7 @@ def main():
     model, transform = model_instance.get_model()
     
     if args.model == "channelvit":
-        model_instance.set_dataset("HPA", args.model_path)
+        model_instance.set_dataset("mini-HPA", args.model_path)
     
     dataset = UnZippedImageArchive(
         root_dir=args.image_folder, 
@@ -303,11 +266,8 @@ def main():
         if feature_data is not None:
             print(f"Feature tensor shape: {feature_data.shape}")
     
-    accelerator.wait_for_everyone()
-    accelerator.end_training()
     #print(f"Process {accelerator.process_index} finished")
 
 if __name__ == "__main__":
     main()
-    # Force exit to ensure all processes terminate
     sys.exit(0)

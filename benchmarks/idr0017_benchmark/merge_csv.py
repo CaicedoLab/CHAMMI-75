@@ -69,7 +69,7 @@ def merge_csv_files(
 if __name__ == "__main__":    
     parser = argparse.ArgumentParser(description="Merge CSV files in subdirectories.")
     parser.add_argument('--root_dir', type=str, default='/scr/jpeters/idr17_scores', help='Root directory containing CSV files')
-    parser.add_argument('--csv_file_name', type=str, default='recall_50_scores.csv', help='CSV file name to merge')
+    parser.add_argument('--csv_file_name', type=str, default='auc_roc_scores.csv', help='CSV file name to merge')
     args = parser.parse_args()
     root_dir = args.root_dir
     csv_file_name = args.csv_file_name
