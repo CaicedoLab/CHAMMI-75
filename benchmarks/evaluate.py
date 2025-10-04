@@ -129,5 +129,21 @@ def main():
         )
         run_command(snakemake_cmd, cwd=workflow_dir)
 
+    # JUMPCP Features
+    if config.get('JUMPCP', False):
+        jumpcp_dir = os.path.join(BENCHMARKS_DIR, 'jumpcp1')
+        feature_conversion_cmd = (
+            f"python feature_extraction.py f --root_dir {config['JUMPCP_IMAGES_PATH']} --model_path {config['MODEL_PATH']} --feat_dir {config['JUMPCP_FEATURES_PATH']} --model {config['MODEL_TYPE']}"
+        )
+        feature_aggregation_normalization_cmd = (
+            f"python well_level_aggregation.py --features_path {config['JUMPCP_FEATURES_PATH']}/{config['MODEL_TYPE']} --model {config['MODEL_TYPE']}"
+        )
+        benchmark_cmd = (
+            f"python run_evaluation.py --model {config['MODEL_TYPE']}"
+        )
+        run_command(classifier_cmd, cwd=jumpcp_dir)
+        run_command(feature_aggregation_normalization_cmd, cwd=jumpcp_dir)
+        run_command(benchmark_cmd, cwd=jumpcp_dir)
+
 if __name__ == "__main__":
     main()

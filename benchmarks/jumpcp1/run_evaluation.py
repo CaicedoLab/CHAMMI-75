@@ -1,82 +1,151 @@
-import pandas as pd
-import utils
 import numpy as np
-import pipelines
-from tqdm import tqdm
+import pandas as pd
+import os
+from copairs import map
+from copairs.matching import assign_reference_index
+import argparse
+import utils
+import itertools
 
-
-def get_downstream_result(feature_extractor):
-    replicate_feature = "Metadata_broad_sample"
-    batch = "2020_11_04_CPJUMP1"
-    experiment_df = (
-        pd.read_csv("metadata/experiment-metadata.tsv", sep="\t")
-        .query("Batch==@batch")
-        .query("Density==100")
-        .query('Antibiotics=="absent"')
+def run_phenotypic_activity(profiles, model, null_size, batch_size, fdr):
+    reference_col = "Metadata_reference_index"
+    profiles_activity = assign_reference_index(
+        profiles,
+        "Metadata_control_type == 'negcon'",  # condition to get reference profiles (neg controls)
+        reference_col=reference_col,
+        default_value=-1,
     )
-
-    experiment_df.drop(
-        experiment_df[
-            (experiment_df.Perturbation == "compound") & (experiment_df.Cell_line == "Cas9")
-        ].index,
-        inplace=True,
-    )
-
-    target1_metadata = pd.read_csv(
-        "metadata/JUMP-Target-1_compound_metadata_additional_annotations.tsv",
-        sep="\t",
-        usecols=["broad_sample", "target_list"],
-    ).rename(
-        columns={
-            "broad_sample": "Metadata_broad_sample",
-            "target_list": "Metadata_target_list",
-        }
-    )
-
-    perturbation_types = ['compound', 'crispr', 'orf']
-    replicability_map_df = pd.DataFrame()
-    replicability_fr_df = pd.DataFrame()
-    matching_map_df = pd.DataFrame()
-    matching_fr_df = pd.DataFrame()
-    gene_compound_matching_map_df = pd.DataFrame()
-    gene_compound_matching_fr_df = pd.DataFrame()
-    compound_consensus_profiles = {}
-
-    if feature_extractor == 'cellprofiler':
-        data_inputs = ['bygroupfilt_cellpaint_spherized_featsel_0.001']
+    pos_sameby = ["Metadata_broad_sample"]
+    pos_diffby = []
+    neg_sameby = ["Metadata_Plate"]
+    neg_diffby = [reference_col]
+    metadata = profiles_activity.filter(regex="^Metadata")
+    if model == 'cellprofiler':
+        brightfield_features = [i for i in profiles_activity.columns if 'ZBF' in i or 'Brightfield' in i]
+        profiles_activity = profiles_activity.drop(columns = brightfield_features)
+        profiles_features_only = profiles_activity.filter(regex="^(?!Metadata)").values
     else:
-        data_inputs = ['bygroupfilt_spherized_0.001']
+        profiles_features_only = profiles_activity.filter(regex="^emb").values
 
-    for data_input in data_inputs:
-        for cell_type in ["U2OS", "A549"]:
-            cell_df = experiment_df.query("Cell_type==@cell_type")
-            compound_consensus_profiles = {}
-            for perturbation_type in perturbation_types:
-                perturbation_df = cell_df.query("Perturbation==@perturbation_type")
-                for timepoint in perturbation_df.Time.unique():
-                    timepoint_df = perturbation_df.query(
-                        "Time==@timepoint"
-                    )
-                    well_level_data = pipelines.load_data(timepoint_df, perturbation_type, feature_extractor, data_input)
-                    replicability_map_df, replicability_fr_df = pipelines.replicability_pipeline(replicability_map_df, replicability_fr_df, well_level_data, perturbation_type, cell_type, timepoint, data_input)
-                    if perturbation_type == 'compound':
-                        matching_map_df, matching_fr_df, consensus_profiles = pipelines.matching_pipeline_compound(well_level_data, matching_map_df, matching_fr_df, replicability_map_df, perturbation_type, cell_type, timepoint, replicate_feature, data_input, target1_metadata)
-                        compound_consensus_profiles[timepoint] = consensus_profiles
-                    elif perturbation_type == 'crispr':
-                        matching_map_df, matching_fr_df, gene_compound_matching_map_df, gene_compound_matching_fr_df = pipelines.matching_pipeline_gene_compound(well_level_data, gene_compound_matching_map_df, gene_compound_matching_fr_df, matching_map_df, matching_fr_df, replicability_map_df, perturbation_type, cell_type, timepoint, replicate_feature, data_input, compound_consensus_profiles)
-                    elif perturbation_type == 'orf':
-                        gene_compound_matching_map_df, gene_compound_matching_fr_df = pipelines.matching_pipeline_gene_compound(well_level_data, gene_compound_matching_map_df, gene_compound_matching_fr_df, matching_map_df, matching_fr_df, replicability_map_df, perturbation_type, cell_type, timepoint, replicate_feature, data_input, compound_consensus_profiles)
+    activity_ap = map.average_precision(
+        meta = metadata, 
+        feats = profiles_features_only,
+        pos_sameby = pos_sameby, 
+        pos_diffby = pos_diffby,
+        neg_sameby = neg_sameby,
+        neg_diffby = neg_diffby,
+        batch_size = batch_size
+    )
+    activity_ap = activity_ap.query("Metadata_control_type != 'negcon'")  # remove DMSO
+    activity_map = map.mean_average_precision(
+        activity_ap, pos_sameby, null_size=null_size, threshold=fdr, seed=0
+    )
+    os.makedirs(f'./results/{model}/', exist_ok=True)
+    activity_map["-log10(p-value)"] = -activity_map["corrected_p_value"].apply(np.log10)    
+    activity_map.to_csv(f"results/{model}/phenotypic_activity_all_map.csv")
+    active_ratio = activity_map.below_corrected_p.mean()
+    mean_map = activity_map[activity_map.below_corrected_p]['mean_average_precision'].sum() / len(activity_map)
+    activity_map.to_csv(f'results/{model}/phenotypic_activity_map.csv')
+    pd.DataFrame(columns = ['Active fraction', 'mean mAP (all - non-active = 0)', 'mean mAP (all)', 'mean mAP (active only)'], 
+                 data = [[active_ratio, mean_map, activity_map['mean_average_precision'].mean(), 
+                         activity_map[activity_map.below_corrected_p]['mean_average_precision'].mean()]]).to_csv(
+                     f'results/{model}/phenotypic_activity_result.csv',
+                index=False)
+    print(f"Phenotypic activity: fraction: {active_ratio}, mean mAP {mean_map}")
+    return activity_map
 
 
-    replicability_fr_df.to_csv(f'./output/fr_replicability_{feature_extractor}_results.csv', index = False)
-    replicability_map_df.to_csv(f'./output/map_replicability_{feature_extractor}_results.csv', index = False)
-    matching_fr_df.to_csv(f'./output/fr_matching_{feature_extractor}_results.csv', index = False)
-    matching_map_df.to_csv(f'./output/map_matching_{feature_extractor}_results.csv', index = False)
-    gene_compound_matching_fr_df.to_csv(f'./output/fr_genecompoundmatching_{feature_extractor}_results.csv', index = False)
-    gene_compound_matching_map_df.to_csv(f'./output/map_genecompoundmatching_{feature_extractor}_results.csv', index = False)
+def run_phenotypic_consistency(profiles, activity_map, model, null_size, batch_size, fdr):
+    multi_label_col = "Metadata_matching_target"
+    active_compounds = activity_map.query("below_corrected_p")["Metadata_broad_sample"]
+    consensus_profiles = profiles.query("Metadata_broad_sample in @active_compounds")
+    if model == 'cellprofiler':
+        brightfield_features = [i for i in consensus_profiles.columns if 'ZBF' in i or 'Brightfield' in i]
+        feature_columns = [i for i in consensus_profiles.columns if 'Metadata' not in i]
+    else:
+        feature_columns = [i for i in consensus_profiles.columns if 'emb_' in i]
+    
+    columns = ["Metadata_broad_sample"] + feature_columns
+    consensus_profiles = consensus_profiles[columns]
+    consensus_profiles = consensus_profiles.groupby(["Metadata_broad_sample"], as_index=False)[feature_columns].median()
+
+    total_targets = (
+        profiles.merge(
+            utils.read_metadata(), on="Metadata_broad_sample", how="left"
+        )
+        .assign(
+            Metadata_matching_target=lambda x: x.Metadata_target_list.str.split("|")
+        )
+        .drop(["Metadata_target_list"], axis=1)
+    ).Metadata_matching_target
+    total_targets = len(set(list(itertools.chain.from_iterable(total_targets[total_targets.notna()].to_numpy()))))
+
+    consensus_profiles = (
+        consensus_profiles.merge(
+            utils.read_metadata(), on="Metadata_broad_sample", how="left"
+        )
+        .assign(
+            Metadata_matching_target=lambda x: x.Metadata_target_list.str.split("|")
+        )
+        .drop(["Metadata_target_list", "col"], axis=1)
+    )
+
+    metadata_df = consensus_profiles.filter(regex="^(Metadata)")
+    if model == 'cellprofiler':
+        brightfield_features = [i for i in consensus_profiles.columns if 'ZBF' in i or 'Brightfield' in i]
+        consensus_profiles = consensus_profiles.drop(columns = brightfield_features)
+        feature_values = consensus_profiles.filter(regex="^(?!Metadata)").values
+    else:
+        feature_values = consensus_profiles.filter(regex="^(emb)").values
+
+    pos_sameby = [multi_label_col]
+    pos_diffby = []
+    neg_sameby = []
+    neg_diffby = [multi_label_col]
+
+    result = map.multilabel.average_precision(
+        meta = metadata_df,
+        feats = feature_values,
+        pos_sameby = pos_sameby,
+        pos_diffby = pos_diffby,
+        neg_sameby = neg_sameby,
+        neg_diffby = neg_diffby,
+        batch_size=batch_size,
+        multilabel_col=multi_label_col,
+    )
+
+    agg_result = map.mean_average_precision(
+        result, pos_sameby, null_size, threshold=fdr, seed=0
+    )
+    consistent_ratio = agg_result.below_corrected_p.mean()
+    consistent_true_fraction = agg_result.below_corrected_p.sum() / total_targets
+    consistent_map = agg_result[agg_result.below_corrected_p]['mean_average_precision'].mean()
+    overall_map = agg_result[agg_result.below_corrected_p]['mean_average_precision'].sum() / total_targets
+    print(f"Phenotypic consistency: fraction: {consistent_ratio}, mean mAP for consistent passed targets {agg_result.mean_average_precision.mean()}, Overall mAP where not-passed and non-consistent targets mAP = 0 {overall_map}")
+
+    pd.DataFrame(columns = ['Consistent fraction', 'Consistent fraction true', 'mean mAP for consistent passed targets', 'mean mAP for passed targets', 'mean mAP all; targets non-consistent and non-present = 0 '], 
+                data = [[consistent_ratio, consistent_true_fraction, consistent_map, agg_result['mean_average_precision'].mean(), overall_map]]).to_csv(
+                    f'results/{model}/phenotypic_consistency_result.csv',
+                index=False)
+
+    agg_result.to_csv(f'results/{model}/phenotypic_consistency_map.csv')
 
 
-if __name__ == "__main__":
-    feature_extractors = ['cpcnn']#, 'dino4cells','openphenom_comp_chmean', 'openphenom_comp_allch'] #cellprofiler evaluated 
-    for feature_extractor in feature_extractors:
-        get_downstream_result(feature_extractor)
+def get_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--feat_dir", type=str, default="./features/aggregated/", help="The directory that contains the aggregated features", required=False)
+    parser.add_argument("--model", type=str, help="The type of model that is being trained and evaluated (mae, openphenom, dinov2 or vit)", required=True)
+    parser.add_argument("--postfix", type=str, default="group_spherized_0.001", help="Postfix for aggregated features name", required=False)
+    parser.add_argument("--fdr", default = 0.05, type=float, help="P-value threshold", required=False)
+    parser.add_argument("--batch_size", default = 100000, type=int, help = "Batch size for copairs", required=False)
+    parser.add_argument("--null_size_pa", default = 100000, type=int, help = "Null distribution sample size", required=False)
+    parser.add_argument("--null_size_pc", default=20000, type=int, required=False)
+    return parser
+
+
+if __name__ == '__main__':
+    parser = get_parser()
+    args = parser.parse_args()
+    profiles = utils.load_aggregated_profiles(args.feat_dir, args.postfix, args.model)
+    activity_map = run_phenotypic_activity(profiles, args.model, args.null_size_pa, args.batch_size, args.fdr)
+    run_phenotypic_consistency(profiles, activity_map, args.model, args.null_size_pc, args.batch_size, args.fdr)

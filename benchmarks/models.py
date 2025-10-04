@@ -324,7 +324,6 @@ class DINOv3(Model):
 
         self.repo_dir = repo_dir
         self.weights = weights
-        import torch
         self.model = torch.hub.load(self.repo_dir, 'dinov3_vits16', source='local', weights=self.weights)
         self.model.eval()
         self.model = self.model.to(device)  # Move model to GPU
@@ -343,7 +342,7 @@ class DINOv3(Model):
     
     def _scale(self, patches: torch.Tensor): 
         max_vals = torch.amax(patches.to(torch.float32), dim=(1,2,3)).view(patches.shape[0], 1, 1 ,1)
-        normalized_patches = patches/max_vals        
+        normalized_patches = patches/max_vals
         return normalized_patches
     
     def to(self, device):

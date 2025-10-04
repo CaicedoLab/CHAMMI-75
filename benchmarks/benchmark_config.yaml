@@ -20,7 +20,12 @@ HPA_BATCH_SIZE: 16
 HPA_NUM_WORKERS: 8
 
 #JUMP-CP Benchmark
-
+JUMPCP: False  # Enable JUMP-CP1 benchmark
+JUMPCP_IMAGES_PATH: /path/to/jumpcp/images
+JUMPCP_FEATURES_PATH: ./benchmarks/jumpcp1/features
+JUMPCP_SCORE_PATH: ./benchmarks/jumpcp1/results
+JUMPCP_BATCH_SIZE: 16
+JUMPCP_NUM_WORKERS: 8
 
 #IDR-17 Benchmark
 IDR-17: False # Enable/disable IDR-17 benchmark
