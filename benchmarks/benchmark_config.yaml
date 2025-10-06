@@ -1,8 +1,8 @@
 # Master Config file to change variables around
 
 
-MODEL_TYPE: vit   # Model Types available - vit, mae, dinov2, dinov3, openphenom, subcell, chanvit_simclr in some cases
-MODEL_PATH: /scr/vidit/Foundation_Models/iclr_model_weights/SimCLR_CHANViT_Allen
+MODEL_TYPE: simclr   # Model Types available - vit, mae, dinov2, dinov3, openphenom, subcell, chanvit_simclr in some cases
+MODEL_PATH: /mnt/cephfs/mir/jcaicedo/projects/interpretability/benchmarking/models/simclr/SimCLR_BoC_10ds_lr_change #/scr/vidit/Foundation_Models/CHAMMI_confusion/SimCLR_CHANViT_CHAMMI
 NUM_GPUS: 1
 MODEL_MODE: None
 MODEL_SIZE: small
@@ -11,7 +11,7 @@ MODEL_SIZE: small
 CHAMMI: True  # Enable CHAMMI benchmark
 CHAMMI_IMAGES_PATH: /scr/vidit/Foundation_Models/CHAMMI
 CHAMMI_FEATURES_PATH: /scr/vidit/chammi_chanvit_simclr_features
-CHAMMI_SCORE_PATH: /scr/vidit/CHAMMI_scores/SimCLR_1ds
+CHAMMI_SCORE_PATH: /scr/vidit/CHAMMI_scores/SimCLR_10ds_100_lr_change
 CHAMMI_BATCH_SIZE: 64
 
 # HPA Benchmark
@@ -40,8 +40,8 @@ IDR_THREADS: 16
 
 # Neuron Features Benchmark
 NEURON_FEATURES: False  # Enable Neuron Features benchmark
-NEURON_IMAGES_PATH: /scr/vidit/neural_features/
-NEURON_FEATURES_PATH: /scr/vidit/neural_features/neuron_feature_extraction/DINO_IDRCell
-NEURON_SCORE_PATH: /scr/vidit/neural_features/neuron_feature_extraction/DINO_IDRCell
-NEURON_BATCH_SIZE: 16
-NEURON_NUM_WORKERS: 8
+NEURON_IMAGES_PATH: /scr/data/75ds_test/neuron-features
+NEURON_FEATURES_PATH: /scr/vidit/neural_features/SubCELL
+NEURON_SCORE_PATH: /scr/vidit/neural_features/SubCELL
+NEURON_BATCH_SIZE: 32
+NEURON_NUM_WORKERS: 10
