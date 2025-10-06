@@ -59,7 +59,15 @@ def create_pad(images, patch_width, patch_height): # new method for vit model
 
 
 def get_save_features(feature_dir, root_dir, model_check, batch_size):
-    dataset_names = ['Allen', 'CP', 'HPA']
+    dataset_names = []
+    if "_allen" in args.model_path or "_Allen" in args.model_path:
+            dataset_names = ["Allen"]
+    elif "_hpa" in args.model_path or "_HPA" in args.model_path:
+        dataset_names = ["HPA"]
+    elif "_cp" in args.model_path or "_CP" in args.model_path:
+        dataset_names = ["CP"]
+    else:
+        dataset_names = ['Allen', 'CP', 'HPA']
 
     if not os.path.exists(args.feat_dir):
         os.makedirs(args.feat_dir, exist_ok=True)
@@ -78,9 +86,11 @@ def get_save_features(feature_dir, root_dir, model_check, batch_size):
         # Post crops and processing getting the transforms
         dataset = configure_dataset(root_dir, dataset_name, transform=transform)
         train_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        if model_check == "channelvit":
+            model_instance.set_dataset(dataset_name, args.model_path)
         
         all_feat = []
-
+        
         if model_check == 'chanvit_simclr':
             model_instance.set_dataset(dataset_name, args.model_path)
         elif model_check == 'chanvit_mae':
@@ -103,7 +113,8 @@ def get_save_features(feature_dir, root_dir, model_check, batch_size):
             all_feat = all_feat.squeeze()
 
         
-        feature_path = feature_path = f'{feature_dir}/{dataset_name}/{feature_file}'
+        feature_path  = f'{feature_dir}/{dataset_name}/pretrained_vit_features.npy'
+        os.makedirs(feature_path, exist_ok=True)
         np.save(feature_path, all_feat)
         torch.cuda.empty_cache() # new line
         

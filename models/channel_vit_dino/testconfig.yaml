@@ -1,0 +1,25 @@
+dataset:
+  metadata: /scr/data/CHAMMI-75_small_metadata.csv
+  guided_crops_path: /scr/data/CHAMMI-75_guidance
+  guided_cropping: True 
+  dataset_filter: 10ds
+train:
+  name: 0f6fa51_10ds_0.0001_lr_8_gpu
+  data_path: /scr/data/CHAMMI-75_small.zip
+  output_dir: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models
+  num_workers: 5
+  saveckp_freq: 5
+  # wandb: disabled
+optim:
+  batch_size_per_gpu: 18
+
+# dataset:
+#   metadata: /mnt/cephfs/mir/jcaicedo/morphem/dataset/sampling/multi_channel_chammi_metadata.csv
+# train:
+#   name: chammi_test
+#   data_path: /scr/data/CHAMMI/chammi_train.zip
+#   output_dir: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models
+#   wandb: disabled
+#   num_workers: 5
+# optim:
+#   batch_size_per_gpu: 7

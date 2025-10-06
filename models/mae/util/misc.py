@@ -15,8 +15,6 @@ import os
 import time
 from collections import defaultdict, deque
 from pathlib import Path
-import glob
-import re
 
 import torch
 import torch.distributed as dist
@@ -215,83 +213,6 @@ def save_on_master(*args, **kwargs):
         torch.save(*args, **kwargs)
 
 
-def find_latest_checkpoint(output_dir):
-    """
-    Find the latest checkpoint in the output directory.
-    Returns the path to the latest checkpoint or None if no checkpoints exist.
-    """
-    output_path = Path(output_dir)
-    if not output_path.exists():
-        return None
-    
-    # First check if there's a latest checkpoint symlink
-    latest_symlink = output_path / "checkpoint-latest.pth"
-    if latest_symlink.exists():
-        return str(latest_symlink)
-    
-    # Look for checkpoint files with pattern checkpoint-*.pth
-    checkpoint_pattern = output_path / "checkpoint-*.pth"
-    checkpoint_files = glob.glob(str(checkpoint_pattern))
-    
-    if not checkpoint_files:
-        return None
-    
-    # Extract epoch numbers and find the latest one
-    latest_epoch = -1
-    latest_checkpoint = None
-    
-    for checkpoint_file in checkpoint_files:
-        # Extract epoch number from filename like "checkpoint-199.pth"
-        match = re.search(r'checkpoint-(\d+)\.pth', checkpoint_file)
-        if match:
-            epoch = int(match.group(1))
-            if epoch > latest_epoch:
-                latest_epoch = epoch
-                latest_checkpoint = checkpoint_file
-    
-    return latest_checkpoint
-
-
-def cleanup_old_checkpoints(output_dir, keep_checkpoints):
-    """
-    Remove old checkpoint files, keeping only the most recent ones.
-    
-    Args:
-        output_dir: Path to output directory
-        keep_checkpoints: Number of checkpoints to keep (0 means keep all)
-    """
-    if keep_checkpoints <= 0:
-        return
-    
-    output_path = Path(output_dir)
-    if not output_path.exists():
-        return
-    
-    # Find all checkpoint files
-    checkpoint_files = []
-    for checkpoint_file in glob.glob(str(output_path / "checkpoint-*.pth")):
-        # Skip the latest symlink
-        if "latest" in checkpoint_file:
-            continue
-        
-        match = re.search(r'checkpoint-(\d+)\.pth', checkpoint_file)
-        if match:
-            epoch = int(match.group(1))
-            checkpoint_files.append((epoch, checkpoint_file))
-    
-    # Sort by epoch number and remove old ones
-    checkpoint_files.sort(key=lambda x: x[0])
-    
-    if len(checkpoint_files) > keep_checkpoints:
-        files_to_remove = checkpoint_files[:-keep_checkpoints]
-        for epoch, filepath in files_to_remove:
-            try:
-                os.remove(filepath)
-                print(f"Removed old checkpoint: {filepath}")
-            except OSError as e:
-                print(f"Failed to remove checkpoint {filepath}: {e}")
-
-
 def init_distributed_mode(args):
     if args.dist_on_itp:
         args.rank = int(os.environ['OMPI_COMM_WORLD_RANK'])
@@ -386,24 +307,6 @@ def save_model(args, epoch, model, model_without_ddp, optimizer, loss_scaler):
             }
 
             save_on_master(to_save, checkpoint_path)
-            
-            # Create a symlink to the latest checkpoint for easier access
-            if is_main_process():
-                latest_path = output_dir / 'checkpoint-latest.pth'
-                if latest_path.exists() or latest_path.is_symlink():
-                    latest_path.unlink()
-                try:
-                    # Create relative symlink
-                    relative_path = checkpoint_path.name
-                    latest_path.symlink_to(relative_path)
-                except OSError:
-                    # If symlink creation fails, copy the file instead
-                    import shutil
-                    shutil.copy2(checkpoint_path, latest_path)
-                
-                # Clean up old checkpoints if requested
-                if hasattr(args, 'keep_checkpoints') and args.keep_checkpoints > 0:
-                    cleanup_old_checkpoints(output_dir, args.keep_checkpoints)
     else:
         client_state = {'epoch': epoch}
         model.save_checkpoint(save_dir=args.output_dir, tag="checkpoint-%s" % epoch_name, client_state=client_state)
@@ -416,31 +319,14 @@ def load_model(args, model_without_ddp, optimizer, loss_scaler):
                 args.resume, map_location='cpu', check_hash=True)
         else:
             checkpoint = torch.load(args.resume, map_location='cpu')
-        
-        # Load model state
         model_without_ddp.load_state_dict(checkpoint['model'])
         print("Resume checkpoint %s" % args.resume)
-        
-        # Load training state if available and not in eval mode
         if 'optimizer' in checkpoint and 'epoch' in checkpoint and not (hasattr(args, 'eval') and args.eval):
             optimizer.load_state_dict(checkpoint['optimizer'])
             args.start_epoch = checkpoint['epoch'] + 1
             if 'scaler' in checkpoint:
                 loss_scaler.load_state_dict(checkpoint['scaler'])
-            print(f"Resuming training from epoch {args.start_epoch} (checkpoint epoch: {checkpoint['epoch']})")
-            print("Loaded optimizer and loss scaler state!")
-        else:
-            print("Only loaded model weights (no optimizer/epoch info available or in eval mode)")
-        
-        # Validate checkpoint contents
-        print("Checkpoint contains:")
-        for key in checkpoint.keys():
-            if key == 'args':
-                print(f"  - {key}: (training arguments)")
-            else:
-                print(f"  - {key}")
-    else:
-        print("No checkpoint to resume from. Starting training from scratch.")
+            print("With optim & sched!")
 
 
 def all_reduce_mean(x):

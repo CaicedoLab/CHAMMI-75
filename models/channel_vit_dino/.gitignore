@@ -1,0 +1,8 @@
+
+# pixi environments
+.pixi
+*.egg-info
+
+*wandb
+wandb
+./wandb

@@ -9,11 +9,13 @@ from feat_models.vision_transformer import vit_small, vit_base, vit_large
 from feat_models.models_mae import mae_vit_base_patch16, mae_vit_small_patch16, mae_vit_large_patch16
 from feat_models.multi_channel_vit import get_multi_channel_vit
 from feat_models.vit_pool import ViTPoolModel
+from feat_models.channelvit.vision_transformer import channelvit_base, channelvit_small
 import numpy as np
 from transformers import AutoModel
 import torch
 import os
 import yaml
+import json
 import torchvision
 from torchvision.transforms import v2
 import json
@@ -154,7 +156,7 @@ class ViTClass:
         remove_prefixes = ["module.backbone.", "module.", "module.head."]
 
         # Load model weights
-        student_model = torch.load(os.path.join(weights_path, "checkpoint.pth"), weights_only=False)["student"]
+        student_model = torch.load(weights_path, weights_only=False)["student"]
         # Remove unwanted prefixes
         cleaned_state_dict = {}
         for k, v in student_model.items():
@@ -216,7 +218,7 @@ class MAEModel:
             )
         
         state_dict = torch.load(
-            os.path.join(weights_path, "checkpoint-latest.pth"),
+            weights_path,
             map_location=f"{self.device}" if torch.cuda.is_available() else "cpu",
             weights_only=False
         )
@@ -322,7 +324,6 @@ class DINOv3(Model):
 
         self.repo_dir = repo_dir
         self.weights = weights
-        import torch
         self.model = torch.hub.load(self.repo_dir, 'dinov3_vits16', source='local', weights=self.weights)
         self.model.eval()
         self.model = self.model.to(device)  # Move model to GPU
@@ -341,7 +342,7 @@ class DINOv3(Model):
     
     def _scale(self, patches: torch.Tensor): 
         max_vals = torch.amax(patches.to(torch.float32), dim=(1,2,3)).view(patches.shape[0], 1, 1 ,1)
-        normalized_patches = patches/max_vals        
+        normalized_patches = patches/max_vals
         return normalized_patches
     
     def to(self, device):
@@ -504,7 +505,7 @@ class SimCLR(Model):
         self.model = get_multi_channel_vit(**model_cfg)
         
         state_dict = torch.load(
-            os.path.join(weights_path, "checkpoint_epoch_100.pt"),
+            weights_path,
             map_location=f"{self.device}" if torch.cuda.is_available() else "cpu",
             weights_only=False
         )
@@ -551,8 +552,8 @@ class ChannelVITSimCLR(Model):
             model_cfg = yaml.safe_load(f)
         self.model_path = model_path
 
-        
-        with open(os.path.join(model_path, 'channel_map.json'), 'r') as f:
+
+        with open(os.path.join(os.path.dirname(model_path), 'channel_map.json'), 'r') as f:
             channel_map_file = f.read()
         self.channel_map = json.loads(channel_map_file)
 
@@ -560,7 +561,7 @@ class ChannelVITSimCLR(Model):
         self.model = get_multi_channel_vit(**model_cfg)
 
         state_dict = torch.load(
-            os.path.join(model_path, "checkpoint_epoch_100.pt"),
+            model_path,
             map_location=f"{self.device}" if torch.cuda.is_available() else "cpu",
             weights_only=False
         )
@@ -630,8 +631,7 @@ class ChannelVITMAE(Model):
             model_cfg = yaml.safe_load(f)
         self.model_path = model_path
 
-        
-        with open(os.path.join(model_path, 'channel_map.json'), 'r') as f:
+        with open(os.path.join(os.path.dirname(model_path), 'channel_map.json'), 'r') as f:
             channel_map_file = f.read()
         self.channel_map = json.loads(channel_map_file)
 
@@ -639,7 +639,7 @@ class ChannelVITMAE(Model):
         self.model = get_multi_channel_vit(**model_cfg)
 
         state_dict = torch.load(
-            os.path.join(model_path, "checkpoint_epoch_100.pt"),
+            model_path,
             map_location=f"{self.device}" if torch.cuda.is_available() else "cpu",
             weights_only=False
         )
@@ -701,6 +701,97 @@ class ChannelVITMAE(Model):
 
 
 
+class ChannelVIT:
+    def __init__(self, model_path, model_size, device):
+        self.device = device
+        self.dataset_channels = None # will be a list 
+        self.model_path = model_path
+        
+        with open(os.path.join(os.path.dirname(model_path), 'channel_map.json'), 'r') as f:
+            channel_map_file = f.read()
+        self.channel_map = json.loads(channel_map_file)
+
+        self.feature_file = "pretrained_vit_features.npy"
+        # Create model with in_chans=1 to match training setup
+        if model_size == "base":
+            self.model = channelvit_base(in_chans=len(self.channel_map))
+        elif model_size == "small":
+            self.model = channelvit_small(in_chans=len(self.channel_map))
+        else:
+            raise ValueError(
+                f"Models of base and small are supported, not {model_size}"
+            )
+
+        remove_prefixes = ["module.backbone.", "module.", "module.head."]
+
+        # Load model weights
+        student_model = torch.load(model_path, weights_only=False)["student"]
+        # Remove unwanted prefixes
+        cleaned_state_dict = {}
+        for k, v in student_model.items():
+            new_key = k
+            for prefix in remove_prefixes:
+                if new_key.startswith(prefix):
+                    new_key = new_key[len(prefix) :]  # Remove prefix
+            if not new_key.startswith("head.mlp") and not new_key.startswith(
+                "head.last_layer"
+            ):
+                cleaned_state_dict[new_key] = v  # Keep only valid keys
+        self.model.load_state_dict(cleaned_state_dict, strict=False)
+        self.model.eval()
+        self.model.to(self.device)
+        
+        self.transform = torchvision.transforms.Compose([PerImageNormalize(), v2.Resize(size=(224, 224), antialias=True)])
+    
+    def to(self, device):
+        self.model = self.model.to(device)
+        
+    def get_patch_info(self):
+        patch_embed = self.model.patch_embed
+        # Access the Conv2d layer within PatchEmbed
+        conv_layer = patch_embed.proj
+        
+        # Extract kernel size (patch size)
+        patch_size = conv_layer.kernel_size
+        patch_height, patch_width = patch_size[1:]
+        return patch_height, patch_width
+        
+    def get_model(self):
+        return self.model, self.transform
+    
+    def set_dataset(self, dataset_name, model_path):
+        if dataset_name == "Allen":
+            if '_75ds' in model_path or '_10ds' in model_path:
+                self.dataset_channels = ['nucleus', 'cell body', 'protein']
+            else:
+                self.dataset_channels = ['nucleus', 'membrane', 'protein']
+        elif dataset_name == "CP":
+            if '_75ds' in model_path or '_10ds' in model_path:
+                self.dataset_channels = ['nucleus', 'endoplasmic reticulum', 'RNA', 'golgi body', 'mitochondria']
+            else:
+                self.dataset_channels = ['nucleus', 'cp2', 'er', 'cp4', 'cp5']
+        elif dataset_name == "HPA":
+            if '_75ds' in model_path or '_10ds' in model_path:
+                self.dataset_channels = ['microtubules', 'protein', 'nucleus', 'endoplasmic reticulum']
+            else:
+                self.dataset_channels = ['microtubules', 'protein', 'nucleus', 'er']
+        elif dataset_name == "neuron":
+            self.dataset_channels = ['nucleus', 'protein','protein','protein','protein','protein','protein','protein','protein','protein','protein', 'RNA', 'endoplasmic reticulum', 'golgi body']
+        elif dataset_name == "idr17":
+            self.dataset_channels = ['nucleus', 'cytoskeleton']
+        elif dataset_name == 'mini-HPA':
+            self.dataset_channels = ['microtubules', 'endoplasmic reticulum', 'nucleus', 'protein']
+        else:
+            raise ValueError("Dataset name supplied is not supported. This class only supports CHAMMIv1 benchmarking.")
+    
+    def __call__(self, images):
+        channel_ids = [[self.channel_map[chan] if chan in self.dataset_channels else 0 for chan in self.dataset_channels]] * len(images)
+        channel_masks = [[True for _ in range(images.shape[1])]]*len(images)
+        with torch.no_grad():
+            images = images.to(self.device)
+            return self.model(images, channel_ids, channel_masks).cpu().detach().numpy()
+
+
 '''
 Uniform get model function which can be called from any of the benchmarks!
 '''
@@ -718,6 +809,8 @@ def get_model(model_name: str = None, device: torch.device = None, model_path: s
         model = DINOv3(device=device)
     elif model_name == "subcell":
         model = SubCell_Neuron_Feat(device=device, config_path="/mnt/cephfs/mir/jcaicedo/morphem/dataset/models/subcell_models/DNA-Protein_ViT-ProtS-Pool.yaml")
+    elif model_name == 'channelvit':
+        model = ChannelVIT(device=device, model_path=model_path, model_size=model_size)
     elif model_name == "simclr":
         model = SimCLR(device=device, weights_path=model_path, model_size=model_size)
     elif model_name == "chanvit_simclr":

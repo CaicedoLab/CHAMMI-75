@@ -1,14 +1,14 @@
-cache: /scr/vidit/cache
+cache: /scr/jpeters/chammi_75_benchmarks/17cache
 feature_extraction:
   crop: 100
   feature_agg: true
-  model: vit
+  model: channelvit
   model_mode: None
-  model_path: /scr/vidit/Foundation_Models/iclr_model_weights/DINO_CHAMMI-75_LARGE
+  model_path: /mnt/cephfs/mir/jcaicedo/projects/channel_vit_dinov1/models/0f6fa51_75ds_guarded/checkpoint.pth
   resize: 224
   resources:
     batch_size: 2048
-    num_gpus: 2
+    num_gpus: 3
     num_workers: 8
     threads: 16
   subcell_channel_map:

@@ -28,13 +28,21 @@ import torchvision.datasets as datasets
 import sys
 from timm.optim import create_optimizer_v2
 from timm.optim.optim_factory import param_groups_weight_decay
+<<<<<<< HEAD
+<<<<<<< HEAD:mae/main_pretrain.py
+sys.path.append('/scr/vidit/FoundationModels/FoundationModels')
+=======
+sys.path.append('../../')
+>>>>>>> origin/main:models/mae/main_pretrain.py
+=======
 sys.path.append('../')
+>>>>>>> origin/main
 from dataset.dataset import IterableImageArchive
 from dataset import dataset_config
 from dataset.dataset_functions import randomize, split_for_workers, get_proc_split
 from torch.utils.data import DataLoader
 from torchvision.transforms import v2
-sys.path.append('utils')
+sys.path.append('/scr/vidit/FoundationModels/FoundationModels/mae/utils')
 
 import timm
 #assert timm.__version__ == "0.3.2"  # version check
@@ -163,7 +171,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser('MAE pre-training', add_help=False)
     parser.add_argument('--batch_size', default=256, type=int,
                         help='Batch size per GPU (effective batch size is batch_size * accum_iter * # gpus')
-    parser.add_argument('--epochs', default=300, type=int)
+    parser.add_argument('--epochs', default=400, type=int)
     parser.add_argument('--accum_iter', default=1, type=int,
                         help='Accumulate gradient iterations (for increasing the effective batch size under memory constraints)')
 
@@ -208,10 +216,6 @@ def get_args_parser():
     parser.add_argument('--seed', default=0, type=int)
     parser.add_argument('--resume', default='',
                         help='resume from checkpoint')
-    parser.add_argument('--auto_resume', action='store_true',
-                        help='automatically resume from the latest checkpoint in output_dir')
-    parser.add_argument('--no_auto_resume', action='store_false', dest='auto_resume')
-    parser.set_defaults(auto_resume=True)
 
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                         help='start epoch')
@@ -233,6 +237,8 @@ def get_args_parser():
     parser.add_argument('--dist_on_itp', action='store_true')
     parser.add_argument('--dist_url', default='env://',
                         help='url used to set up distributed training')
+<<<<<<< HEAD
+=======
     parser.add_argument('--use_fp32', action='store_true', default=True,
                         help='Use float32 for images')
     parser.add_argument('--guided_cropping', action='store_true',
@@ -248,6 +254,7 @@ def get_args_parser():
                         help='number of recent checkpoints to keep (0 to keep all)')
     parser.add_argument('--dataset_size', default='full', type=str,
                         help='Size of the dataset to use. Options: full, medium, small, tiny')
+>>>>>>> origin/main
 
     return parser
 
@@ -267,6 +274,18 @@ def main(args):
 
     cudnn.benchmark = True
 
+<<<<<<< HEAD
+    config = dataset_config.DatasetConfig(
+            args.data_path, # args.data_path, /scr/data/CHAMMIv2m.zip
+            split_fns=[get_proc_split, randomize, split_for_workers],
+            num_procs = misc.get_world_size(), # maybe works? brother needs to check!
+            proc = misc.get_rank(), # This is the global rank generally? Print out later? Look at multinode?
+            #guided_crops_path = "/scr/vidit/content_filters.zip",
+            #guided_crops_size = (256, 256),
+            transform=TensorAugmentationDINO(),
+            seed=seed
+            )
+=======
     # Handle data_path: if single path provided, keep as string; if multiple paths, keep as list
     if len(args.data_path) == 1:
         args.data_path = args.data_path[0]  # Convert single-item list to string for backward compatibility
@@ -300,6 +319,7 @@ def main(args):
                 dataset_size=args.dataset_size,
                 seed=seed,
                 )
+>>>>>>> origin/main
     dataset_train = IterableImageArchive(config)
 
 
@@ -316,6 +336,8 @@ def main(args):
         sampler_train = None
 
     print("Sampler_train = %s" % str(sampler_train))
+    if misc.is_main_process():
+        wandb.init(project="Morphem-Foundation-Model", config=vars(args), name="Mae_small_75ds_Baseline")
 
    # if global_rank == 0 and args.log_dir is not None:
         #os.makedirs(args.log_dir, exist_ok=True)
@@ -358,20 +380,7 @@ def main(args):
     optimizer    = torch.optim.AdamW(param_groups, lr=args.lr, betas=(0.9, 0.95))
     loss_scaler = NativeScaler()
 
-    # Check for existing checkpoints in output directory and auto-resume from latest
-    if args.output_dir and not args.resume and args.auto_resume:
-        latest_checkpoint = misc.find_latest_checkpoint(args.output_dir)
-        if latest_checkpoint:
-            args.resume = latest_checkpoint
-            print(f"Found existing checkpoint: {latest_checkpoint}. Auto-resuming from it.")
-
     misc.load_model(args=args, model_without_ddp=model_without_ddp, optimizer=optimizer, loss_scaler=loss_scaler)
-
-    print(f"Checkpoint settings:")
-    print(f"  - Auto-resume: {args.auto_resume}")
-    print(f"  - Save frequency: every {args.save_freq} epochs")
-    print(f"  - Keep checkpoints: {args.keep_checkpoints if args.keep_checkpoints > 0 else 'all'}")
-    print(f"  - Output directory: {args.output_dir}")
 
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
@@ -385,12 +394,14 @@ def main(args):
             optimizer, device, epoch, loss_scaler, 
             args=args
         )
-        if args.output_dir and (epoch % args.save_freq == 0 or epoch + 1 == args.epochs):
+        if args.output_dir and (epoch % 20 == 0 or epoch + 1 == args.epochs):
             misc.save_model(
                 args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer,
                 loss_scaler=loss_scaler, epoch=epoch)
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                         'epoch': epoch,}
+        if misc.is_main_process():
+            wandb.log(log_stats, step=epoch)
 
         if args.output_dir and misc.is_main_process():
             with open(os.path.join(args.output_dir, "log.txt"), mode="a", encoding="utf-8") as f:

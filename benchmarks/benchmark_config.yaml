@@ -1,11 +1,9 @@
 # Master Config file to change variables around
-
-
 MODEL_TYPE: simclr   # Model Types available - vit, mae, dinov2, dinov3, openphenom, subcell, chanvit_simclr in some cases
-MODEL_PATH: /mnt/cephfs/mir/jcaicedo/projects/interpretability/benchmarking/models/simclr/SimCLR_BoC_10ds_lr_change #/scr/vidit/Foundation_Models/CHAMMI_confusion/SimCLR_CHANViT_CHAMMI
-NUM_GPUS: 1
-MODEL_MODE: None
+MODEL_PATH: /mnt/cephfs/mir/jcaicedo/projects/interpretability/benchmarking/models/simclr/SimCLR_BoC_10ds_lr_change 
 MODEL_SIZE: small
+NUM_GPUS: 8
+MODEL_MODE: null
 
 # CHAMMI Benchmark
 CHAMMI: True  # Enable CHAMMI benchmark
@@ -15,23 +13,25 @@ CHAMMI_SCORE_PATH: /scr/vidit/CHAMMI_scores/SimCLR_10ds_100_lr_change
 CHAMMI_BATCH_SIZE: 64
 
 # HPA Benchmark
-HPA: False  # Enable HPA benchmark
-HPA_IMAGES_PATH: /scr/data/mini-hpa
-HPA_FEATURES_PATH: /scr/vidit/mini-hpa-scores/DINO-IDRCell
-HPA_SCORE_PATH: /scr/vidit/mini-hpa-scores/DINO-IDRCell
+HPA: True  # Enable HPA benchmark
+HPA_IMAGES_PATH: /scr/data/75ds_test/mini-hpa
+HPA_FEATURES_PATH: /scr/jpeters/chammi_75_benchmarks/hpa_features_test
 HPA_BATCH_SIZE: 16
 HPA_NUM_WORKERS: 8
 
 #JUMP-CP Benchmark
-
-
-
+JUMPCP: False  # Enable JUMP-CP1 benchmark
+JUMPCP_IMAGES_PATH: /path/to/jumpcp/images
+JUMPCP_FEATURES_PATH: ./benchmarks/jumpcp1/features
+JUMPCP_SCORE_PATH: ./benchmarks/jumpcp1/results
+JUMPCP_BATCH_SIZE: 16
+JUMPCP_NUM_WORKERS: 8
 
 #IDR-17 Benchmark
 IDR-17: False # Enable/disable IDR-17 benchmark
 # Paths and directories used for all rules
 IDR_DATA_FOLDER: /scr/data/75ds_test/idr0017_mini
-IDR_CACHE: /scr/vidit/cache # location where it will temporarily unzip things
+IDR_CACHE: /scr/jpeters/chammi_75_benchmarks/17cache # location where it will temporarily unzip things
 IDR_CROP: 100 # Size of the single cell crop
 IDR_RESIZE: 224 # Resized each patch to what
 IDR_BATCH_SIZE: 2048

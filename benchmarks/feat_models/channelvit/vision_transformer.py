@@ -1,0 +1,356 @@
+# Copyright (c) Insitro, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import math
+from functools import partial
+from typing import List
+
+import torch
+import torch.distributed as dist
+import torch.nn as nn
+
+from .vit import Block
+from .optim import trunc_normal_
+from typing import Optional
+from torch import Tensor
+
+class PatchEmbedPerChannel(nn.Module):
+    def __init__(
+        self,
+        img_size: tuple[int, int] = (224, 224),
+        patch_size: int = 16,
+        in_chans: int = 3,
+        embed_dim: int = 768,
+        channel_tokens_init: str = "orthogonal",
+    ):
+        super().__init__()
+        num_patches = (img_size // patch_size) * (img_size // patch_size) * in_chans
+        self.img_size = img_size
+        self.patch_size = patch_size
+        self.num_patches = num_patches
+        self.embed_dim = embed_dim
+
+        self.proj = nn.Conv3d(
+            1,
+            embed_dim,
+            kernel_size=(1, patch_size, patch_size),
+            stride=(1, patch_size, patch_size),
+        )
+
+        self.channel_tokens = nn.parameter.Parameter(torch.zeros(1, embed_dim, in_chans, 1, 1))
+        if channel_tokens_init == "orthogonal":
+            orthogonal_tensor = torch.empty(embed_dim, in_chans)
+            nn.init.orthogonal_(orthogonal_tensor)  # produces orthogonal columns
+            with torch.no_grad():
+                self.channel_tokens[:, :, :, 0, 0].copy_(orthogonal_tensor)
+        elif channel_tokens_init == "random":
+            trunc_normal_(self.channel_tokens, std=0.02)
+        elif channel_tokens_init == "zero":
+            trunc_normal_(self.channel_tokens, std=0.02) / 1000  ## close to zero
+            # pass  ## already initialized to zero
+        else:
+            raise ValueError(f"Unknown channel_tokens_init: {channel_tokens_init}")
+
+    def forward(self, x: Tensor, channel_ids_list: list[list[int]], channel_masks: Optional[Tensor] = None):
+        """
+        channel_ids: list of `batch_size` elements, each indicates channels of the img.  E.g., [[3,  5], [2]]
+        channel_masks: Attention mask (bool) with False at the end to indicate channel padding, e.g., [[True, True, False], [True, False, False]]
+        """
+        REGULAR_CASE = channel_ids_list is None and channel_masks is None
+        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = channel_ids_list is not None and channel_masks is None
+        DIFFERENT_CHANNELS_FOR_EACH_IMG = channel_ids_list is not None and channel_masks is not None
+
+        ## get channel tokens for this batch
+        if REGULAR_CASE:  ## Assume all images in the batch have the same channels, no masks.
+            channel_tokens = self.channel_tokens
+        elif SAME_SUBSET_CHANNELS_FOR_ALL_IMG:  ## E.g., each img has 8 channels, but only 5 channels are used for each image in the batch
+            channel_ids = channel_ids_list[0]  # type: ignore
+            channel_ids_tensor = torch.tensor(channel_ids, dtype=torch.long, device=self.channel_tokens.device)
+            channel_tokens = torch.index_select(self.channel_tokens, dim=2, index=channel_ids_tensor)
+        elif DIFFERENT_CHANNELS_FOR_EACH_IMG:  ## E.g., first image has 3 channels, second image has 5 channels, etc.
+            ## get corresponding channel tokens for each image in the batch
+            # 1. Flatten all indices and group size
+            flat_idxs = [i for group in channel_ids_list for i in group]  # type: ignore
+            flat_idxs_tensor = torch.tensor(flat_idxs, dtype=torch.long, device=self.channel_tokens.device)
+            group_sizes = [len(group) for group in channel_ids_list]  # type: ignore
+
+            # 2. Gather once along the channel token's dim (dim=2)
+            #    result shape = [B, d, sum(group_sizes), 1, 1]
+            selected_flat = torch.index_select(self.channel_tokens, dim=2, index=flat_idxs_tensor)
+
+            # 3. Split
+            channel_tokens = list(torch.split(selected_flat, group_sizes, dim=2))
+
+            # 4. padding to make channel_tokens the same size
+            max_num_channels = max(group_sizes)
+            dim = self.embed_dim
+            channel_tokens = [
+                torch.cat([ct, torch.zeros(1, dim, max_num_channels - ct.shape[2], 1, 1, device=ct.device)], dim=2) for ct in channel_tokens
+            ]
+            channel_tokens = torch.cat(channel_tokens, dim=0)  # B Cout Cin 1 1
+        else:
+            raise ValueError(f"Unknown case: channel_ids_list={channel_ids_list}, channel_masks={channel_masks}")
+
+        # shared projection layer across channels
+        x = self.proj(x.unsqueeze(1))  # B Cout Cin H W
+
+        # channel specific offsets
+        x += channel_tokens  # B Cout Cin H W
+
+        # preparing the output sequence
+        x = x.flatten(2)  # B Cout CinHW
+        x = x.transpose(1, 2)  # B CinHW Cout
+        return x
+
+
+class ChannelVisionTransformer(nn.Module):
+    """Channel Vision Transformer"""
+
+    def __init__(
+        self,
+        img_size=[224],
+        patch_size=16,
+        in_chans=3,
+        num_classes=0,
+        embed_dim=768,
+        depth=12,
+        num_heads=12,
+        mlp_ratio=4.0,
+        qkv_bias=False,
+        qk_scale=None,
+        drop_rate=0.0,
+        attn_drop_rate=0.0,
+        drop_path_rate=0.0,
+        norm_layer=nn.LayerNorm,
+        **kwargs,
+    ):
+        super().__init__()
+        self.num_features = self.embed_dim = self.out_dim = embed_dim
+        self.in_chans = in_chans
+
+        self.patch_embed = PatchEmbedPerChannel(
+            img_size=img_size[0],
+            patch_size=patch_size,
+            in_chans=in_chans,
+            embed_dim=embed_dim,
+        )
+        num_patches = self.patch_embed.num_patches
+
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+
+        self.num_extra_tokens = 1  # cls token
+
+        self.pos_embed = nn.Parameter(
+            torch.zeros(
+                1, num_patches // self.in_chans + self.num_extra_tokens, embed_dim
+            )
+        )
+
+        self.pos_drop = nn.Dropout(p=drop_rate)
+
+        dpr = [
+            x.item() for x in torch.linspace(0, drop_path_rate, depth)
+        ]  # stochastic depth decay rule
+        self.blocks = nn.ModuleList(
+            [
+                Block(
+                    dim=embed_dim,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=qkv_bias,
+                    qk_scale=qk_scale,
+                    drop=drop_rate,
+                    attn_drop=attn_drop_rate,
+                    drop_path=dpr[i],
+                    norm_layer=norm_layer,
+                )
+                for i in range(depth)
+            ]
+        )
+        self.norm = norm_layer(embed_dim)
+
+        # Classifier head
+        self.head = (
+            nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+        )
+
+        trunc_normal_(self.pos_embed, std=0.02)
+        trunc_normal_(self.cls_token, std=0.02)
+        self.apply(self._init_weights)
+
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            trunc_normal_(m.weight, std=0.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.LayerNorm):
+            nn.init.constant_(m.bias, 0)
+            nn.init.constant_(m.weight, 1.0)
+
+    def interpolate_pos_encoding(self, x, w, h, c):
+        # number of auxilary dimensions before the patches
+        if not hasattr(self, "num_extra_tokens"):
+            # backward compatibility
+            num_extra_tokens = 1
+        else:
+            num_extra_tokens = self.num_extra_tokens
+
+        npatch = x.shape[1] - num_extra_tokens
+        N = self.pos_embed.shape[1] - num_extra_tokens
+
+        if npatch == N and w == h:
+            return self.pos_embed
+
+        class_pos_embed = self.pos_embed[:, :num_extra_tokens]
+        patch_pos_embed = self.pos_embed[:, num_extra_tokens:]
+
+        dim = x.shape[-1]
+        w0 = w // self.patch_embed.patch_size
+        h0 = h // self.patch_embed.patch_size
+        # we add a small number to avoid floating point error in the interpolation
+        # see discussion at https://github.com/facebookresearch/dino/issues/8
+        w0, h0 = w0 + 0.1, h0 + 0.1
+        patch_pos_embed = nn.functional.interpolate(
+            patch_pos_embed.reshape(
+                1, int(math.sqrt(N)), int(math.sqrt(N)), dim
+            ).permute(0, 3, 1, 2),
+            scale_factor=(w0 / math.sqrt(N), h0 / math.sqrt(N)),
+            mode="bicubic",
+        )
+        assert (
+            int(w0) == patch_pos_embed.shape[-2]
+            and int(h0) == patch_pos_embed.shape[-1]
+        )
+        patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 1).view(1, 1, -1, dim)
+
+        # create copies of the positional embeddings for each channel
+        patch_pos_embed = patch_pos_embed.expand(1, c, -1, dim).reshape(1, -1, dim)
+
+        return torch.cat((class_pos_embed, patch_pos_embed), dim=1)
+
+    def prepare_tokens(self, x, channel_ids: list, channel_masks: list):
+        B, nc, w, h = x.shape
+        x = self.patch_embed(x, channel_ids, channel_masks)  # patch linear embedding
+
+        # add the [CLS] token to the embed patch tokens
+        cls_tokens = self.cls_token.expand(B, -1, -1)
+        x = torch.cat((cls_tokens, x), dim=1)
+
+        # add positional encoding to each token
+        x = x + self.interpolate_pos_encoding(x, w, h, nc)
+
+        return self.pos_drop(x)
+
+    def forward(self, x, channel_ids: list, channel_masks: list):
+        x = self.prepare_tokens(x, channel_ids, channel_masks)
+        for blk in self.blocks:
+            x = blk(x)
+        x = self.norm(x)
+        return x[:, 0]
+
+    def get_last_selfattention(self, x, extra_tokens={}):
+        x = self.prepare_tokens(x)
+        for i, blk in enumerate(self.blocks):
+            if i < len(self.blocks) - 1:
+                x = blk(x)
+            else:
+                # return attention of the last block
+                return blk(x, return_attention=True)
+
+    def get_intermediate_layers(self, x, extra_tokens={}, n=1):
+        x = self.prepare_tokens(x, extra_tokens)
+        # we return the output tokens from the `n` last blocks
+        output = []
+        for i, blk in enumerate(self.blocks):
+            x = blk(x)
+            if len(self.blocks) - i <= n:
+                output.append(self.norm(x))
+        return output
+
+class DINOHead(nn.Module):
+    def __init__(self, in_dim, out_dim, use_bn=False, norm_last_layer=True, nlayers=3, hidden_dim=2048, bottleneck_dim=256):
+        super().__init__()
+        nlayers = max(nlayers, 1)
+        if nlayers == 1:
+            self.mlp = nn.Linear(in_dim, bottleneck_dim)
+        else:
+            layers = [nn.Linear(in_dim, hidden_dim)]
+            if use_bn:
+                layers.append(nn.BatchNorm1d(hidden_dim))
+            layers.append(nn.GELU())
+            for _ in range(nlayers - 2):
+                layers.append(nn.Linear(hidden_dim, hidden_dim))
+                if use_bn:
+                    layers.append(nn.BatchNorm1d(hidden_dim))
+                layers.append(nn.GELU())
+            layers.append(nn.Linear(hidden_dim, bottleneck_dim))
+            self.mlp = nn.Sequential(*layers)
+        self.apply(self._init_weights)
+        self.last_layer = nn.utils.weight_norm(nn.Linear(bottleneck_dim, out_dim, bias=False))
+        self.last_layer.weight_g.data.fill_(1)
+        if norm_last_layer:
+            self.last_layer.weight_g.requires_grad = False
+
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            trunc_normal_(m.weight, std=.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        x = self.mlp(x)
+        x = nn.functional.normalize(x, dim=-1, p=2)
+        x = self.last_layer(x)
+        return x
+
+
+def channelvit_tiny(patch_size=16, **kwargs):
+    model = ChannelVisionTransformer(
+        patch_size=patch_size,
+        embed_dim=192,
+        depth=12,
+        num_heads=3,
+        mlp_ratio=4,
+        qkv_bias=True,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        **kwargs,
+    )
+    return model
+
+
+def channelvit_small(patch_size=16, **kwargs):
+    model = ChannelVisionTransformer(
+        patch_size=patch_size,
+        embed_dim=384,
+        depth=12,
+        num_heads=6,
+        mlp_ratio=4,
+        qkv_bias=True,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        **kwargs,
+    )
+    return model
+
+
+def channelvit_base(patch_size=16, **kwargs):
+    model = ChannelVisionTransformer(
+        patch_size=patch_size,
+        embed_dim=768,
+        depth=12,
+        num_heads=12,
+        mlp_ratio=4,
+        qkv_bias=True,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        **kwargs,
+    )
+    return model

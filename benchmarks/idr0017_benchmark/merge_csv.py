@@ -1,6 +1,7 @@
 import pandas as pd
 import glob
 import os
+import argparse
 
 def merge_csv_files(
     csv_files,
@@ -65,12 +66,10 @@ def merge_csv_files(
     return merged_df
 
 
-if __name__ == "__main__":
-    
-    import argparse
+if __name__ == "__main__":    
     parser = argparse.ArgumentParser(description="Merge CSV files in subdirectories.")
-    parser.add_argument('--root_dir', type=str, default='/scr/vidit/idr17_scores/dino_idr_cell_features/early_fusion', help='Root directory containing CSV files')
-    parser.add_argument('--csv_file_name', type=str, default='recall_50_scores.csv', help='CSV file name to merge')
+    parser.add_argument('--root_dir', type=str, default='/scr/jpeters/idr17_scores', help='Root directory containing CSV files')
+    parser.add_argument('--csv_file_name', type=str, default='auc_roc_scores.csv', help='CSV file name to merge')
     args = parser.parse_args()
     root_dir = args.root_dir
     csv_file_name = args.csv_file_name
@@ -83,6 +82,9 @@ if __name__ == "__main__":
 
     # Merge CSV Files
     print(f"Found {len(input_files)} files to merge.")
+    if len(input_files) == 0:
+        raise FileNotFoundError("No csvs found to merge.")
+    
     merged_df = merge_csv_files(csv_files = input_files,
                                 common_column = "Mutation",
                                 include_columns=["Effect Size"],

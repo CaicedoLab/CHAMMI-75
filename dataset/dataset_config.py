@@ -25,7 +25,8 @@ class DatasetConfig:
     img_type: str = ".png" # .png or .jpg or .jpeg. What torchvision.io.decode_image will support.
     test: bool = False # Set this to true, and the indexes of the files will be returned as the "classes"
     small_list_path: str = None  # Path to the small image list file, if using a small dataset.
-    use_fp32: bool = False  # If true, images will be loaded as float32 tensors, otherwise float16.
+    dataset_filter: str = None
+    output_dir: str = './'
 
     def __post_init__(self):
         if isinstance(self.data_path, list):
