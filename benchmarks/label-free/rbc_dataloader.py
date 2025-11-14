@@ -4,6 +4,7 @@ import numpy as np
 import os
 import glob
 import skimage.io as io
+from torchvision.transforms import v2
 
 class ToTensorNormalize(object):
     """Convert ndarrays in sample to Tensors."""
@@ -49,7 +50,7 @@ class RBC_Dataloader(Dataset):
         
         # Default transform chain
         if transform is None:
-            self.transform = lambda img: PerImageNormalize()(ToTensorNormalize()(img))
+            self.transform = lambda img: PerImageNormalize()(ToTensorNormalize()(v2.Resize(224)(img)))
         else:
             self.transform = transform
 
