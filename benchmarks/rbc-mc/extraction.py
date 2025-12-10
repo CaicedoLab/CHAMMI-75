@@ -84,7 +84,7 @@ def main():
                         help='Path to config file for subcell model (required when using subcell)')
     parser.add_argument('--image_folder', type=str, default="",
                         help='Path to image folder')
-    parser.add_argument('--output_folder', type=str, default="/scr/vidit/label_free_benchmark",
+    parser.add_argument('--output_folder', type=str, default="/scr/vidit/label-free-features/iclr_model",
                         help='Output folder for features')
     parser.add_argument('--num_workers', type=int, default=8,
                         help='Number of workers for data loading')

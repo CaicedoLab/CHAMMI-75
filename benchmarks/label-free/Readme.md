@@ -1,2 +1,0 @@
-
-## CUDA_VISIBLE_DEVICES=0,1 accelerate launch --multi_gpu --num_processes=2 extraction.py --model dinov2 --image_folder /scr/data/CHAMMI-75_test/BKD001/Training_Canada_Swiss --output_folder /scr/vidit/label_free_benchmark/dinov2

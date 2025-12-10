@@ -44,8 +44,7 @@ class PerImageNormalize(object):
 
 class RBC_Dataloader(Dataset):
     def __init__(self, datadir: str, transform=None):
-        self.swiss_image_paths = glob.glob(os.path.join(datadir, "Swiss", "**", "*.ome.tif"), recursive=True) + \
-                                  glob.glob(os.path.join(datadir, "Swiss_additional", "**", "*.ome.tif"), recursive=True)
+        self.swiss_image_paths = glob.glob(os.path.join(datadir, "Swiss", "**", "*.ome.tif"), recursive=True)
         self.canadian_image_paths = glob.glob(os.path.join(datadir, "Canadian", "**", "*.ome.tif"), recursive=True)
         
         # Default transform chain
