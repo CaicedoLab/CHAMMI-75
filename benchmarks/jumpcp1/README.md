@@ -30,7 +30,9 @@ python feature_extraction.py
 ### Output
 
 The script generates feature files containing embeddings extracted from the model. These features are saved in `--feat_dir` and used in subsequent aggregation and evaluation steps.
+
 ---
+
 ## Well-Level Profile Aggregation
 
 ### Command
@@ -53,6 +55,7 @@ python well_level_aggregation.py
 ### Purpose
 
 Well-level aggregation combines per-image features into representative profiles for each well in the plate. This aggregation step pools information across multiple images within a well to create robust cellular phenotype representations.
+
 ---
 
 ## Evaluation on Jump-CP Benchmark

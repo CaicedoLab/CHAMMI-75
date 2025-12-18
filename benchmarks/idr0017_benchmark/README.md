@@ -7,7 +7,9 @@ The framework performs statistical analysis on extracted feature embeddings from
 
 ### Command for feature extraction
 
+```bash 
 python feature_extraction.py --model_path /scr/vidit/DINO_CHAMMI-75_LARGE_DATASET/checkpoint.pth --model_type vit --batch_size 2048 --images_folder /scr/data/idr0017 --output_folder /scr/vidit/idr17_features/dino --num_workers 4
+```
 
 ### **ROC Test**
 The ROC test evaluates the ability of model embeddings to distinguish **HITs** from **Non-HITs**.
