@@ -13,16 +13,15 @@
 # limitations under the License.
 import math
 from functools import partial
-from typing import List
 
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 
 from .vit import Block
 from .optim import trunc_normal_
 from typing import Optional
 from torch import Tensor
+
 
 class PatchEmbedPerChannel(nn.Module):
     def __init__(
@@ -47,7 +46,9 @@ class PatchEmbedPerChannel(nn.Module):
             stride=(1, patch_size, patch_size),
         )
 
-        self.channel_tokens = nn.parameter.Parameter(torch.zeros(1, embed_dim, in_chans, 1, 1))
+        self.channel_tokens = nn.parameter.Parameter(
+            torch.zeros(1, embed_dim, in_chans, 1, 1)
+        )
         if channel_tokens_init == "orthogonal":
             orthogonal_tensor = torch.empty(embed_dim, in_chans)
             nn.init.orthogonal_(orthogonal_tensor)  # produces orthogonal columns
@@ -61,32 +62,53 @@ class PatchEmbedPerChannel(nn.Module):
         else:
             raise ValueError(f"Unknown channel_tokens_init: {channel_tokens_init}")
 
-    def forward(self, x: Tensor, channel_ids_list: list[list[int]], channel_masks: Optional[Tensor] = None):
+    def forward(
+        self,
+        x: Tensor,
+        channel_ids_list: list[list[int]],
+        channel_masks: Optional[Tensor] = None,
+    ):
         """
         channel_ids: list of `batch_size` elements, each indicates channels of the img.  E.g., [[3,  5], [2]]
         channel_masks: Attention mask (bool) with False at the end to indicate channel padding, e.g., [[True, True, False], [True, False, False]]
         """
         REGULAR_CASE = channel_ids_list is None and channel_masks is None
-        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = channel_ids_list is not None and channel_masks is None
-        DIFFERENT_CHANNELS_FOR_EACH_IMG = channel_ids_list is not None and channel_masks is not None
+        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = (
+            channel_ids_list is not None and channel_masks is None
+        )
+        DIFFERENT_CHANNELS_FOR_EACH_IMG = (
+            channel_ids_list is not None and channel_masks is not None
+        )
 
         ## get channel tokens for this batch
-        if REGULAR_CASE:  ## Assume all images in the batch have the same channels, no masks.
+        if (
+            REGULAR_CASE
+        ):  ## Assume all images in the batch have the same channels, no masks.
             channel_tokens = self.channel_tokens
         elif SAME_SUBSET_CHANNELS_FOR_ALL_IMG:  ## E.g., each img has 8 channels, but only 5 channels are used for each image in the batch
             channel_ids = channel_ids_list[0]  # type: ignore
-            channel_ids_tensor = torch.tensor(channel_ids, dtype=torch.long, device=self.channel_tokens.device)
-            channel_tokens = torch.index_select(self.channel_tokens, dim=2, index=channel_ids_tensor)
-        elif DIFFERENT_CHANNELS_FOR_EACH_IMG:  ## E.g., first image has 3 channels, second image has 5 channels, etc.
+            channel_ids_tensor = torch.tensor(
+                channel_ids, dtype=torch.long, device=self.channel_tokens.device
+            )
+            channel_tokens = torch.index_select(
+                self.channel_tokens, dim=2, index=channel_ids_tensor
+            )
+        elif (
+            DIFFERENT_CHANNELS_FOR_EACH_IMG
+        ):  ## E.g., first image has 3 channels, second image has 5 channels, etc.
             ## get corresponding channel tokens for each image in the batch
             # 1. Flatten all indices and group size
             flat_idxs = [i for group in channel_ids_list for i in group]  # type: ignore
-            flat_idxs_tensor = torch.tensor(flat_idxs, dtype=torch.long, device=self.channel_tokens.device)
+            flat_idxs_tensor = torch.tensor(
+                flat_idxs, dtype=torch.long, device=self.channel_tokens.device
+            )
             group_sizes = [len(group) for group in channel_ids_list]  # type: ignore
 
             # 2. Gather once along the channel token's dim (dim=2)
             #    result shape = [B, d, sum(group_sizes), 1, 1]
-            selected_flat = torch.index_select(self.channel_tokens, dim=2, index=flat_idxs_tensor)
+            selected_flat = torch.index_select(
+                self.channel_tokens, dim=2, index=flat_idxs_tensor
+            )
 
             # 3. Split
             channel_tokens = list(torch.split(selected_flat, group_sizes, dim=2))
@@ -95,11 +117,27 @@ class PatchEmbedPerChannel(nn.Module):
             max_num_channels = max(group_sizes)
             dim = self.embed_dim
             channel_tokens = [
-                torch.cat([ct, torch.zeros(1, dim, max_num_channels - ct.shape[2], 1, 1, device=ct.device)], dim=2) for ct in channel_tokens
+                torch.cat(
+                    [
+                        ct,
+                        torch.zeros(
+                            1,
+                            dim,
+                            max_num_channels - ct.shape[2],
+                            1,
+                            1,
+                            device=ct.device,
+                        ),
+                    ],
+                    dim=2,
+                )
+                for ct in channel_tokens
             ]
             channel_tokens = torch.cat(channel_tokens, dim=0)  # B Cout Cin 1 1
         else:
-            raise ValueError(f"Unknown case: channel_ids_list={channel_ids_list}, channel_masks={channel_masks}")
+            raise ValueError(
+                f"Unknown case: channel_ids_list={channel_ids_list}, channel_masks={channel_masks}"
+            )
 
         # shared projection layer across channels
         x = self.proj(x.unsqueeze(1))  # B Cout Cin H W
@@ -277,8 +315,18 @@ class ChannelVisionTransformer(nn.Module):
                 output.append(self.norm(x))
         return output
 
+
 class DINOHead(nn.Module):
-    def __init__(self, in_dim, out_dim, use_bn=False, norm_last_layer=True, nlayers=3, hidden_dim=2048, bottleneck_dim=256):
+    def __init__(
+        self,
+        in_dim,
+        out_dim,
+        use_bn=False,
+        norm_last_layer=True,
+        nlayers=3,
+        hidden_dim=2048,
+        bottleneck_dim=256,
+    ):
         super().__init__()
         nlayers = max(nlayers, 1)
         if nlayers == 1:
@@ -296,14 +344,16 @@ class DINOHead(nn.Module):
             layers.append(nn.Linear(hidden_dim, bottleneck_dim))
             self.mlp = nn.Sequential(*layers)
         self.apply(self._init_weights)
-        self.last_layer = nn.utils.weight_norm(nn.Linear(bottleneck_dim, out_dim, bias=False))
+        self.last_layer = nn.utils.weight_norm(
+            nn.Linear(bottleneck_dim, out_dim, bias=False)
+        )
         self.last_layer.weight_g.data.fill_(1)
         if norm_last_layer:
             self.last_layer.weight_g.requires_grad = False
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
-            trunc_normal_(m.weight, std=.02)
+            trunc_normal_(m.weight, std=0.02)
             if isinstance(m, nn.Linear) and m.bias is not None:
                 nn.init.constant_(m.bias, 0)
 

@@ -1,9 +1,7 @@
-# Code borrowed from https://github.com/CellProfiling/subcell-analysis/blob/main/train_classification.py 
+# Code borrowed from https://github.com/CellProfiling/subcell-analysis/blob/main/train_classification.py
 # Simplified for evaluation
 import argparse
-import glob
 import os
-import shutil
 import random
 
 import colorcet as cc
@@ -12,28 +10,24 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import torch
-import umap
-import yaml
 
 from sklearn.metrics import (
     average_precision_score,
-    classification_report,
     coverage_error,
     label_ranking_average_precision_score,
-    precision_recall_curve,
     roc_auc_score,
 )
-from tqdm import tqdm
 
 plt.switch_backend("agg")
 import sys
+
 sys.path.append("../utils")
 from train_mlp import train_mlp, eval_model
 
 UNIQUE_CATS = np.array(
     [
         cat
-        for cat in pd.read_csv("annotations/location_group_mapping.tsv", sep='\t')[
+        for cat in pd.read_csv("annotations/location_group_mapping.tsv", sep="\t")[
             "Original annotation"
         ]
         .unique()
@@ -107,15 +101,15 @@ def get_atlas_name_classes(df):
 
 
 def get_train_val_test_idx(df, feature_data, unique_cats=UNIQUE_CATS):
-    train_antibodies = pd.read_csv(
-        "annotations/train_antibodies.txt", header=None
-    )[0].to_list()
-    val_antibodies = pd.read_csv(
-        "annotations/valid_antibodies.txt", header=None
-    )[0].to_list()
-    test_antibodies = pd.read_csv(
-        "annotations/test_antibodies.txt", header=None
-    )[0].to_list()
+    train_antibodies = pd.read_csv("annotations/train_antibodies.txt", header=None)[
+        0
+    ].to_list()
+    val_antibodies = pd.read_csv("annotations/valid_antibodies.txt", header=None)[
+        0
+    ].to_list()
+    test_antibodies = pd.read_csv("annotations/test_antibodies.txt", header=None)[
+        0
+    ].to_list()
     train_idxs = df[df["antibody"].isin(train_antibodies)].index.to_list()
     val_idxs = df[df["antibody"].isin(val_antibodies)].index.to_list()
     test_idxs = df[df["antibody"].isin(test_antibodies)].index.to_list()
@@ -236,7 +230,10 @@ def str2bool(v):
 
 
 def get_challenge_data(features_folder, df, unique_cats):
-    challenge_df, challenge_feature_data = torch.load(os.path.join(features_folder, "challenge_features", "all_features.pth"), map_location="cpu")
+    challenge_df, challenge_feature_data = torch.load(
+        os.path.join(features_folder, "challenge_features", "all_features.pth"),
+        map_location="cpu",
+    )
     intersection = list(
         set(df["antibody"].unique()).intersection(
             set(challenge_df["antibody"].unique())
@@ -258,7 +255,10 @@ def get_challenge_data(features_folder, df, unique_cats):
 
 
 def get_bridge2ai_data(features_folder, unique_cats):
-    bridge2ai_df, bridge2ai_feature_data = torch.load(os.path.join(features_folder, "bridge2ai_features", "all_features.pth"), map_location="cpu")
+    bridge2ai_df, bridge2ai_feature_data = torch.load(
+        os.path.join(features_folder, "bridge2ai_features", "all_features.pth"),
+        map_location="cpu",
+    )
     bridge2ai_x = bridge2ai_feature_data
     bridge2ai_y = bridge2ai_df[unique_cats].values
     non_zero_idx = np.where(bridge2ai_y.sum(axis=1) > 0)[0]
@@ -271,7 +271,10 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("-f", "--features_folder", type=str)
     argparser.add_argument(
-        "-cc", "--classification_cats", type=str, default="locations"  # "atlas_name"
+        "-cc",
+        "--classification_cats",
+        type=str,
+        default="locations",  # "atlas_name"
     )
     argparser.add_argument("-uc", "--unique_cats", type=str, default="all_unique_cats")
 
@@ -285,33 +288,35 @@ if __name__ == "__main__":
 
     print(f"Parameters: {args}")
 
-    save_folder = (
-        f"{features_folder}/classification"
-    )
+    save_folder = f"{features_folder}/classification"
     # shutil.rmtree(save_folder, ignore_errors=True)
     os.makedirs(save_folder, exist_ok=True)
 
-    features = torch.load(
-        f"{features_folder}/all_features.pth", map_location="cpu"
-    )
+    features = torch.load(f"{features_folder}/all_features.pth", map_location="cpu")
     df = pd.DataFrame(features[0])
     feature_data = features[1]
 
     if classification_cats == "locations":
         df.loc[df["locations"].isna(), "locations"] = "Negative"
         unique_cats = (
-            UNIQUE_CATS if unique_cats_name == "all_unique_cats" else CHALLENGE_CATS # Basically unique_cats_name being all_unique_cats is for HPAv23 whereas CHALLENGE_Cats is for the Kaggle stuff.
+            UNIQUE_CATS
+            if unique_cats_name == "all_unique_cats"
+            else CHALLENGE_CATS  # Basically unique_cats_name being all_unique_cats is for HPAv23 whereas CHALLENGE_Cats is for the Kaggle stuff.
         )
         df, feature_data = filter_classes(df, feature_data, unique_cats=unique_cats)
 
-        if os.path.exists(os.path.join(features_folder, "challenge_features", "all_features.pth")):
+        if os.path.exists(
+            os.path.join(features_folder, "challenge_features", "all_features.pth")
+        ):
             challenge_x, challenge_y = get_challenge_data(
                 features_folder, df, unique_cats
             )
-        if os.path.exists(os.path.join(features_folder, "bridge2ai_features", "all_features.pth")):
+        if os.path.exists(
+            os.path.join(features_folder, "bridge2ai_features", "all_features.pth")
+        ):
             bridge2ai_x, bridge2ai_y = get_bridge2ai_data(features_folder, unique_cats)
-        #challenge_x, challenge_y = get_challenge_data(features_folder, df, unique_cats)
-        #bridge2ai_x, bridge2ai_y = get_bridge2ai_data(features_folder, unique_cats)
+        # challenge_x, challenge_y = get_challenge_data(features_folder, df, unique_cats)
+        # bridge2ai_x, bridge2ai_y = get_bridge2ai_data(features_folder, unique_cats)
 
     elif classification_cats == "atlas_name":
         unique_cats = df["atlas_name"].unique()
@@ -365,33 +370,33 @@ if __name__ == "__main__":
             get_metrics(
                 cls_save_folder, test_results, tag="test", unique_cats=unique_cats
             )
-            #if classification_cats == "locations":
-                #hidden_test_results = eval_model(
-                #    challenge_x, challenge_y, unique_cats, model, seed=i, device=device
-                #)
-                #hidden_test_results.to_csv(
-                #   f"{cls_save_folder}/hidden_test_preds.csv", index=False
-                #)
+            # if classification_cats == "locations":
+            # hidden_test_results = eval_model(
+            #    challenge_x, challenge_y, unique_cats, model, seed=i, device=device
+            # )
+            # hidden_test_results.to_csv(
+            #   f"{cls_save_folder}/hidden_test_preds.csv", index=False
+            # )
 
-                #bridge2ai_results = eval_model(
-                #    bridge2ai_x, bridge2ai_y, unique_cats, model, seed=i, device=device
-                #)
-                #bridge2ai_results.to_csv(
-                #    f"{cls_save_folder}/bridge2ai_preds.csv", index=False
-                #)
+            # bridge2ai_results = eval_model(
+            #    bridge2ai_x, bridge2ai_y, unique_cats, model, seed=i, device=device
+            # )
+            # bridge2ai_results.to_csv(
+            #    f"{cls_save_folder}/bridge2ai_preds.csv", index=False
+            # )
 
-                #get_metrics(
-                #    cls_save_folder,
-                #    hidden_test_results,
-                #    tag="hidden_test",
-                #   unique_cats=unique_cats,
-                #)
-                #get_metrics(
-                #    cls_save_folder,
-                #    bridge2ai_results,
-                #    tag="bridge2ai",
-                #    unique_cats=unique_cats,
-                #)
+            # get_metrics(
+            #    cls_save_folder,
+            #    hidden_test_results,
+            #    tag="hidden_test",
+            #   unique_cats=unique_cats,
+            # )
+            # get_metrics(
+            #    cls_save_folder,
+            #    bridge2ai_results,
+            #    tag="bridge2ai",
+            #    unique_cats=unique_cats,
+            # )
 
         else:
             val_results = pd.read_csv(f"{cls_save_folder}/val_preds.csv")
@@ -399,7 +404,7 @@ if __name__ == "__main__":
             hidden_test_results = pd.read_csv(
                 f"{cls_save_folder}/hidden_test_preds.csv"
             )
-            #bridge2ai_results = pd.read_csv(f"{cls_save_folder}/bridge2ai_preds.csv")
+            # bridge2ai_results = pd.read_csv(f"{cls_save_folder}/bridge2ai_preds.csv")
 
             get_metrics(
                 cls_save_folder, val_results, tag="val", unique_cats=unique_cats
@@ -407,15 +412,15 @@ if __name__ == "__main__":
             get_metrics(
                 cls_save_folder, test_results, tag="test", unique_cats=unique_cats
             )
-            #get_metrics(
+            # get_metrics(
             #    cls_save_folder,
             #    hidden_test_results,
             #    tag="hidden_test",
             #    unique_cats=unique_cats,
-            #)
-            #get_metrics(
+            # )
+            # get_metrics(
             #    cls_save_folder,
             #    bridge2ai_results,
             #    tag="bridge2ai",
             #    unique_cats=unique_cats,
-            #)
+            # )

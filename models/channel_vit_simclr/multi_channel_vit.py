@@ -28,7 +28,9 @@ class PatchEmbedPerChannel(nn.Module):
         super().__init__()
         self.img_size = img_size
         self.patch_size = patch_size
-        self.num_patches = (img_size[0] // patch_size) * (img_size[1] // patch_size) * max_in_channels
+        self.num_patches = (
+            (img_size[0] // patch_size) * (img_size[1] // patch_size) * max_in_channels
+        )
         self.embed_dim = embed_dim
 
         self.proj = nn.Conv3d(
@@ -39,7 +41,9 @@ class PatchEmbedPerChannel(nn.Module):
         )
 
         if use_channel_tokens:
-            self.channel_tokens = nn.parameter.Parameter(torch.zeros(1, embed_dim, max_in_channels, 1, 1))
+            self.channel_tokens = nn.parameter.Parameter(
+                torch.zeros(1, embed_dim, max_in_channels, 1, 1)
+            )
             if channel_tokens_init == "orthogonal":
                 orthogonal_tensor = torch.empty(embed_dim, max_in_channels)
                 nn.init.orthogonal_(orthogonal_tensor)  # produces orthogonal columns
@@ -56,14 +60,20 @@ class PatchEmbedPerChannel(nn.Module):
             self.channel_tokens = None
 
     def forward(
-        self, x: Tensor, channel_ids_list: list[list[int]] | None, channel_masks: Optional[Tensor] = None, bag_of_channels_mode: bool = False
+        self,
+        x: Tensor,
+        channel_ids_list: list[list[int]] | None,
+        channel_masks: Optional[Tensor] = None,
+        bag_of_channels_mode: bool = False,
     ):
         if bag_of_channels_mode:
             return self.forward_single_channel(x, channel_ids_list)
         else:
             return self.forward_multi_channel(x, channel_ids_list, channel_masks)
 
-    def forward_single_channel(self, x: Tensor, channel_ids_list: list[list[int]] | None = None):
+    def forward_single_channel(
+        self, x: Tensor, channel_ids_list: list[list[int]] | None = None
+    ):
         """Bag of channels mode.
         "channel_ids_list": list of channel_ids for each image.
             during training, each image has 1 channel E.g., channel_ids_list= [[3], [5], [2]...]
@@ -85,9 +95,15 @@ class PatchEmbedPerChannel(nn.Module):
             ## extract channel tokens for each channel based on channel_ids_list
             assert channel_ids_list is not None
             flat_idxs = [i for group in channel_ids_list for i in group]
-            flat_idxs_tensor = torch.tensor(flat_idxs, dtype=torch.long, device=x.device)
-            channel_tokens = torch.index_select(self.channel_tokens, dim=2, index=flat_idxs_tensor)
-            channel_tokens = rearrange(channel_tokens, "1 d b 1 1 -> b d 1 1 1", b=flat_idxs_tensor.shape[0])
+            flat_idxs_tensor = torch.tensor(
+                flat_idxs, dtype=torch.long, device=x.device
+            )
+            channel_tokens = torch.index_select(
+                self.channel_tokens, dim=2, index=flat_idxs_tensor
+            )
+            channel_tokens = rearrange(
+                channel_tokens, "1 d b 1 1 -> b d 1 1 1", b=flat_idxs_tensor.shape[0]
+            )
             x += channel_tokens  # B Cout 1 H W
 
         # preparing the output sequence
@@ -95,35 +111,56 @@ class PatchEmbedPerChannel(nn.Module):
         x = x.transpose(1, 2)  # B HW Cout
         return x
 
-    def forward_multi_channel(self, x: Tensor, channel_ids_list: list[list[int]] | None, channel_masks: Optional[Tensor] = None):
+    def forward_multi_channel(
+        self,
+        x: Tensor,
+        channel_ids_list: list[list[int]] | None,
+        channel_masks: Optional[Tensor] = None,
+    ):
         """
         channel_ids: list of `batch_size` elements, each indicates channels of the img.  E.g., [[3,  5], [2]]
         channel_masks: Attention mask (bool) with False at the end to indicate channel padding, e.g., [[True, True, False], [True, False, False]]
         """
         REGULAR_CASE = channel_ids_list is None and channel_masks is None
-        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = channel_ids_list is not None and channel_masks is None
-        DIFFERENT_CHANNELS_FOR_EACH_IMG = channel_ids_list is not None and channel_masks is not None
+        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = (
+            channel_ids_list is not None and channel_masks is None
+        )
+        DIFFERENT_CHANNELS_FOR_EACH_IMG = (
+            channel_ids_list is not None and channel_masks is not None
+        )
 
         device = x.device
 
         ## get channel tokens for this batch
         if self.channel_tokens is not None:
-            if REGULAR_CASE:  ## Assume all images in the batch have the same channels, no masks.
+            if (
+                REGULAR_CASE
+            ):  ## Assume all images in the batch have the same channels, no masks.
                 channel_tokens = self.channel_tokens
             elif SAME_SUBSET_CHANNELS_FOR_ALL_IMG:  ## E.g., each img has 8 channels, but only 5 channels are used for each image in the batch
                 channel_ids = channel_ids_list[0]  # type: ignore
-                channel_ids_tensor = torch.tensor(channel_ids, dtype=torch.long, device=device)
-                channel_tokens = torch.index_select(self.channel_tokens, dim=2, index=channel_ids_tensor)
-            elif DIFFERENT_CHANNELS_FOR_EACH_IMG:  ## E.g., first image has 3 channels, second image has 5 channels, etc.
+                channel_ids_tensor = torch.tensor(
+                    channel_ids, dtype=torch.long, device=device
+                )
+                channel_tokens = torch.index_select(
+                    self.channel_tokens, dim=2, index=channel_ids_tensor
+                )
+            elif (
+                DIFFERENT_CHANNELS_FOR_EACH_IMG
+            ):  ## E.g., first image has 3 channels, second image has 5 channels, etc.
                 ## get corresponding channel tokens for each image in the batch
                 # 1. Flatten all indices and group size
                 flat_idxs = [i for group in channel_ids_list for i in group]  # type: ignore
-                flat_idxs_tensor = torch.tensor(flat_idxs, dtype=torch.long, device=device)
+                flat_idxs_tensor = torch.tensor(
+                    flat_idxs, dtype=torch.long, device=device
+                )
                 group_sizes = [len(group) for group in channel_ids_list]  # type: ignore
 
                 # 2. Gather once along the channel token's dim (dim=2)
                 #    result shape = [B, d, sum(group_sizes), 1, 1]
-                selected_flat = torch.index_select(self.channel_tokens, dim=2, index=flat_idxs_tensor)
+                selected_flat = torch.index_select(
+                    self.channel_tokens, dim=2, index=flat_idxs_tensor
+                )
 
                 # 3. Split
                 channel_tokens = list(torch.split(selected_flat, group_sizes, dim=2))
@@ -132,11 +169,27 @@ class PatchEmbedPerChannel(nn.Module):
                 max_num_channels = max(group_sizes)
                 dim = self.embed_dim
                 channel_tokens = [
-                    torch.cat([ct, torch.zeros(1, dim, max_num_channels - ct.shape[2], 1, 1, device=device)], dim=2) for ct in channel_tokens
+                    torch.cat(
+                        [
+                            ct,
+                            torch.zeros(
+                                1,
+                                dim,
+                                max_num_channels - ct.shape[2],
+                                1,
+                                1,
+                                device=device,
+                            ),
+                        ],
+                        dim=2,
+                    )
+                    for ct in channel_tokens
                 ]
                 channel_tokens = torch.cat(channel_tokens, dim=0)  # B Cout Cin 1 1
             else:
-                raise ValueError(f"Unknown case: channel_ids_list={channel_ids_list}, channel_masks={channel_masks}")
+                raise ValueError(
+                    f"Unknown case: channel_ids_list={channel_ids_list}, channel_masks={channel_masks}"
+                )
         else:
             channel_tokens = None
 
@@ -194,7 +247,9 @@ class MultiChannelViT(nn.Module):
         self.proxy_orthogonal_init = proxy_orthogonal_init
 
         if use_self_image_norm:
-            self.image_norm = nn.InstanceNorm2d(None, affine=False, track_running_stats=False, eps=1e-5)
+            self.image_norm = nn.InstanceNorm2d(
+                None, affine=False, track_running_stats=False, eps=1e-5
+            )
         else:
             self.image_norm = None
 
@@ -206,17 +261,25 @@ class MultiChannelViT(nn.Module):
             use_channel_tokens=use_channel_tokens,
             channel_tokens_init=channel_tokens_init,
         )
-        self.num_patches_per_channel = self.patch_embed.num_patches // self.max_in_channels
+        self.num_patches_per_channel = (
+            self.patch_embed.num_patches // self.max_in_channels
+        )
         self.num_heads = num_heads
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
 
         self.num_extra_tokens = 1  # cls token
 
-        self.pos_embed = nn.Parameter(torch.zeros(1, self.num_patches_per_channel + self.num_extra_tokens, embed_dim))
+        self.pos_embed = nn.Parameter(
+            torch.zeros(
+                1, self.num_patches_per_channel + self.num_extra_tokens, embed_dim
+            )
+        )
 
         self.pos_drop = nn.Dropout(p=drop_rate)
 
-        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
+        dpr = [
+            x.item() for x in torch.linspace(0, drop_path_rate, depth)
+        ]  # stochastic depth decay rule
         self.blocks = nn.ModuleList(
             [
                 Block(
@@ -256,18 +319,24 @@ class MultiChannelViT(nn.Module):
         ## Proxy loss
         if self.use_proxy_loss:
             num_proxies = num_classes
-            self.output_proxies = torch.nn.Parameter((torch.randn(num_proxies, embed_dim) / 8))
+            self.output_proxies = torch.nn.Parameter(
+                (torch.randn(num_proxies, embed_dim) / 8)
+            )
             if self.proxy_orthogonal_init:
                 nn.init.orthogonal_(self.output_proxies)  ## initlaize orthogonally
             self.proxy_scale = np.sqrt(1.0 / proxy_temperature)
 
         ## Supervised Contrastive Loss
         if self.use_supcon_loss:
-            self.compute_supcon_loss = MultiPosConLoss(temperature=supervised_contrastive_temperature)
+            self.compute_supcon_loss = MultiPosConLoss(
+                temperature=supervised_contrastive_temperature
+            )
 
         ## SimCLR Loss
         if self.use_simclr_loss:
-            self.compute_simclr_loss = SimCLRContrastiveLoss(temperature=simclr_temperature)
+            self.compute_simclr_loss = SimCLRContrastiveLoss(
+                temperature=simclr_temperature
+            )
 
         trunc_normal_(self.pos_embed, std=0.02)
         trunc_normal_(self.cls_token, std=0.02)
@@ -292,7 +361,9 @@ class MultiChannelViT(nn.Module):
         if model_name.startswith("dinov2"):  ## e.g., dinov2_vits14
             pretrained_model = torch.hub.load("facebookresearch/dinov2", model_name)
         elif model_name.startswith("timm--"):
-            model_name = model_name.replace("timm--", "")  ## e.g., timm--vit_small_patch16_224.augreg_in21k
+            model_name = model_name.replace(
+                "timm--", ""
+            )  ## e.g., timm--vit_small_patch16_224.augreg_in21k
             pretrained_model = timm.create_model(model_name, pretrained=True)
         else:
             raise NotImplementedError(f"{model_name} is not valid!")
@@ -353,7 +424,9 @@ class MultiChannelViT(nn.Module):
             if "patch_embed.proj.weight" in name and len(pretrained_param.shape) == 4:
                 # DINO: [384, 3, 14, 14] → [384, 1, C, 14, 14]
                 with torch.no_grad():
-                    avg_weight = pretrained_param.mean(dim=1, keepdim=True)  # (384, 1, 14, 14)
+                    avg_weight = pretrained_param.mean(
+                        dim=1, keepdim=True
+                    )  # (384, 1, 14, 14)
                     my_param.copy_(avg_weight.unsqueeze(2))  #  (384, 1, 1, 14, 14)
                     loaded.append(name)
                 continue
@@ -363,7 +436,9 @@ class MultiChannelViT(nn.Module):
                 ##  we need to interpolate the pos_embed
                 with torch.no_grad():
                     w, h = self.patch_embed.img_size[0], self.patch_embed.img_size[1]
-                    my_param.copy_(self.interpolate_pos_encoding(pretrained_param, w, h, c=1))
+                    my_param.copy_(
+                        self.interpolate_pos_encoding(pretrained_param, w, h, c=1)
+                    )
                 loaded.append(name)
                 continue
 
@@ -375,12 +450,18 @@ class MultiChannelViT(nn.Module):
                     directly_loaded.append(name)
                 loaded.append(name)
             else:
-                print(f"[SKIP] Shape mismatch: {name}, {my_param.shape} (our model) vs. {pretrained_param.shape} ({pretrained_name})")
+                print(
+                    f"[SKIP] Shape mismatch: {name}, {my_param.shape} (our model) vs. {pretrained_param.shape} ({pretrained_name})"
+                )
                 missing.append(name)
 
-        print(f"\n Loaded {len(loaded)} parameters from {pretrained_name} into MultiChannelViT.")
+        print(
+            f"\n Loaded {len(loaded)} parameters from {pretrained_name} into MultiChannelViT."
+        )
         print(f" Loaded keys: {loaded}")
-        print(f" Missing {len(missing)} parameters from {pretrained_name} into MultiChannelViT.")
+        print(
+            f" Missing {len(missing)} parameters from {pretrained_name} into MultiChannelViT."
+        )
         print(f" Missing parameters: {missing}")
         print("-" * 50)
 
@@ -410,11 +491,16 @@ class MultiChannelViT(nn.Module):
         # see discussion at https://github.com/facebookresearch/dino/issues/8
         w0, h0 = w0 + 0.1, h0 + 0.1
         patch_pos_embed = nn.functional.interpolate(
-            patch_pos_embed.reshape(1, int(math.sqrt(N)), int(math.sqrt(N)), dim).permute(0, 3, 1, 2),
+            patch_pos_embed.reshape(
+                1, int(math.sqrt(N)), int(math.sqrt(N)), dim
+            ).permute(0, 3, 1, 2),
             scale_factor=(w0 / math.sqrt(N), h0 / math.sqrt(N)),
             mode="bicubic",
         )
-        assert int(w0) == patch_pos_embed.shape[-2] and int(h0) == patch_pos_embed.shape[-1]
+        assert (
+            int(w0) == patch_pos_embed.shape[-2]
+            and int(h0) == patch_pos_embed.shape[-1]
+        )
         patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 1).view(1, 1, -1, dim)
 
         # create copies of the positional embeddings for each channel
@@ -431,20 +517,35 @@ class MultiChannelViT(nn.Module):
         E.g., Assume `num_patches_per_channel`=2, output for the example input above would be
                     [[True, True, True, True, True, False False], [True, True, True, False, False, False, False]]
         """
-        patch_masks = repeat(channel_masks, "b j -> b (j c)", c=self.num_patches_per_channel)
+        patch_masks = repeat(
+            channel_masks, "b j -> b (j c)", c=self.num_patches_per_channel
+        )
 
         ## add masks for the cls token
-        cls_mask = torch.ones((patch_masks.shape[0], 1), dtype=patch_masks.dtype, device=patch_masks.device)
+        cls_mask = torch.ones(
+            (patch_masks.shape[0], 1),
+            dtype=patch_masks.dtype,
+            device=patch_masks.device,
+        )
         patch_masks = torch.cat([cls_mask, patch_masks], dim=1)
         B, L = patch_masks.shape
         patch_masks = patch_masks.view(B, 1, 1, L).bool()
         return patch_masks
 
     def prepare_tokens(
-        self, x: Tensor, channel_ids_list: list[list[int]] | None, channel_masks: Optional[Tensor], bag_of_channels_mode: bool = False
+        self,
+        x: Tensor,
+        channel_ids_list: list[list[int]] | None,
+        channel_masks: Optional[Tensor],
+        bag_of_channels_mode: bool = False,
     ):
         B, nc, w, h = x.shape
-        x = self.patch_embed(x, channel_ids_list, channel_masks, bag_of_channels_mode=bag_of_channels_mode)
+        x = self.patch_embed(
+            x,
+            channel_ids_list,
+            channel_masks,
+            bag_of_channels_mode=bag_of_channels_mode,
+        )
 
         # add the [CLS] token to the embed patch tokens
         cls_tokens = self.cls_token.expand(B, -1, -1)
@@ -455,26 +556,44 @@ class MultiChannelViT(nn.Module):
 
         return self.pos_drop(x)
 
-    def sample_channels(self, x, channel_ids_list: list[list[int]] | None, channel_masks: Optional[Tensor]) -> dict[str, Tensor | list]:
-
+    def sample_channels(
+        self,
+        x,
+        channel_ids_list: list[list[int]] | None,
+        channel_masks: Optional[Tensor],
+    ) -> dict[str, Tensor | list]:
         REGULAR_CASE = channel_ids_list is None and channel_masks is None
-        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = channel_ids_list is not None and channel_masks is None
-        DIFFERENT_CHANNELS_FOR_EACH_IMG = channel_ids_list is not None and channel_masks is not None
+        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = (
+            channel_ids_list is not None and channel_masks is None
+        )
+        DIFFERENT_CHANNELS_FOR_EACH_IMG = (
+            channel_ids_list is not None and channel_masks is not None
+        )
 
         res = {"x": None, "channel_ids_list": None, "channel_masks": None}
 
         Cin = x.shape[1]
-        if REGULAR_CASE:  ##  all images have the same channels, use all channels, no masks.
+        if (
+            REGULAR_CASE
+        ):  ##  all images have the same channels, use all channels, no masks.
             if self.channel_sample.lower() == "hcs":
                 Cin_new = random.randint(1, Cin)
-                channel_indices = torch.tensor(random.sample(range(Cin), k=Cin_new), device=x.device, dtype=torch.long)
+                channel_indices = torch.tensor(
+                    random.sample(range(Cin), k=Cin_new),
+                    device=x.device,
+                    dtype=torch.long,
+                )
                 res["x"] = x[:, channel_indices]
                 return res
             else:
-                raise ValueError(f"Unknown channel sampling method: {self.channel_sample}")
+                raise ValueError(
+                    f"Unknown channel sampling method: {self.channel_sample}"
+                )
         elif SAME_SUBSET_CHANNELS_FOR_ALL_IMG:
             ## TODO: work on this later
-            raise NotImplementedError("Channel sampling is not implemented for this case.")
+            raise NotImplementedError(
+                "Channel sampling is not implemented for this case."
+            )
         elif DIFFERENT_CHANNELS_FOR_EACH_IMG:
             #### E.g., first image has 3 channels, second image has 5 channels, etc.
             ## get Cin_new for each image in the batch
@@ -483,8 +602,12 @@ class MultiChannelViT(nn.Module):
             ### thus one option is to do channel sampling consistently for both samples in the pair
             ## (i.e., do channel sampling for one view, and use the same channel indices for the other view)
             if self.channel_sample.lower() == "hcs_symmetric":
-                assert self.use_simclr_loss or self.use_supcon_loss, "hcs_symmetric only works with simclr or supcon loss!"
-                channel_ids_list = channel_ids_list[0 : len(channel_ids_list) // 2]  ## only take the first half
+                assert self.use_simclr_loss or self.use_supcon_loss, (
+                    "hcs_symmetric only works with simclr or supcon loss!"
+                )
+                channel_ids_list = channel_ids_list[
+                    0 : len(channel_ids_list) // 2
+                ]  ## only take the first half
 
             channel_ids_list_new = []
             channel_indices_list_new = []
@@ -492,23 +615,39 @@ class MultiChannelViT(nn.Module):
                 if self.channel_sample.lower().startswith("hcs"):
                     Cin = len(channel_ids)
                     Cin_new = random.randint(1, Cin)
-                    channel_indices_new = torch.tensor(random.sample(range(Cin), k=Cin_new), device=x.device, dtype=torch.long)
+                    channel_indices_new = torch.tensor(
+                        random.sample(range(Cin), k=Cin_new),
+                        device=x.device,
+                        dtype=torch.long,
+                    )
                     channel_indices_list_new.append(channel_indices_new)
-                    channel_ids_new = [channel_ids[i] for i in channel_indices_new.tolist()]
+                    channel_ids_new = [
+                        channel_ids[i] for i in channel_indices_new.tolist()
+                    ]
                     channel_ids_list_new.append(channel_ids_new)
 
             if self.channel_sample.lower() == "hcs_symmetric":
                 channel_ids_list_new = channel_ids_list_new + channel_ids_list_new
-                channel_indices_list_new = channel_indices_list_new + channel_indices_list_new
+                channel_indices_list_new = (
+                    channel_indices_list_new + channel_indices_list_new
+                )
 
             ## get the new images and masks
-            max_Cin_new = max([len(channel_ids) for channel_ids in channel_ids_list_new])
-            images_new = torch.zeros((x.shape[0], max_Cin_new, x.shape[2], x.shape[3]), device=x.device)
-            channel_masks_new = torch.zeros((x.shape[0], max_Cin_new), dtype=torch.bool, device=x.device)
+            max_Cin_new = max(
+                [len(channel_ids) for channel_ids in channel_ids_list_new]
+            )
+            images_new = torch.zeros(
+                (x.shape[0], max_Cin_new, x.shape[2], x.shape[3]), device=x.device
+            )
+            channel_masks_new = torch.zeros(
+                (x.shape[0], max_Cin_new), dtype=torch.bool, device=x.device
+            )
 
             for i, channel_ids in enumerate(channel_ids_list_new):
                 channel_indices = channel_indices_list_new[i]
-                images_new[i, : len(channel_indices), :, :] = x[i, channel_indices, :, :]
+                images_new[i, : len(channel_indices), :, :] = x[
+                    i, channel_indices, :, :
+                ]
                 channel_masks_new[i, : len(channel_ids)] = True
 
             res = {
@@ -518,7 +657,9 @@ class MultiChannelViT(nn.Module):
             }
             return res
         else:
-            raise ValueError(f"Unknown case: channel_ids_list={channel_ids_list}, channel_masks={channel_masks}")
+            raise ValueError(
+                f"Unknown case: channel_ids_list={channel_ids_list}, channel_masks={channel_masks}"
+            )
 
     def forward(
         self,
@@ -533,9 +674,18 @@ class MultiChannelViT(nn.Module):
 
         if self.training and self.channel_sample is not None:
             sample_res = self.sample_channels(x, channel_ids_list, channel_masks)
-            x, channel_ids_list, channel_masks = sample_res["x"], sample_res["channel_ids_list"], sample_res["channel_masks"]
+            x, channel_ids_list, channel_masks = (
+                sample_res["x"],
+                sample_res["channel_ids_list"],
+                sample_res["channel_masks"],
+            )
 
-        x = self.prepare_tokens(x, channel_ids_list, channel_masks, bag_of_channels_mode=bag_of_channels_mode)
+        x = self.prepare_tokens(
+            x,
+            channel_ids_list,
+            channel_masks,
+            bag_of_channels_mode=bag_of_channels_mode,
+        )
 
         if not bag_of_channels_mode and channel_masks is not None:
             patch_masks = self.generate_patch_masks(channel_masks)
@@ -565,7 +715,12 @@ class MultiChannelViT(nn.Module):
         if self.training:
             ## compute proxy loss
             if self.use_proxy_loss:
-                proxy_loss = compute_proxy_loss(proxies=self.output_proxies, img_emb=out, gt_imgs=y, scale=self.proxy_scale)
+                proxy_loss = compute_proxy_loss(
+                    proxies=self.output_proxies,
+                    img_emb=out,
+                    gt_imgs=y,
+                    scale=self.proxy_scale,
+                )
                 res["proxy_loss"] = proxy_loss
             else:
                 res["proxy_loss"] = torch.tensor(0.0)
@@ -586,7 +741,9 @@ class MultiChannelViT(nn.Module):
 
             ## final loss
             res["loss"] = (
-                self.proxy_loss_lambda * res["proxy_loss"] + self.supcon_lambda * res["supcon_loss"] + self.simclr_lambda * res["simclr_loss"]
+                self.proxy_loss_lambda * res["proxy_loss"]
+                + self.supcon_lambda * res["supcon_loss"]
+                + self.simclr_lambda * res["simclr_loss"]
             )
 
         return res
@@ -598,8 +755,17 @@ class MultiChannelViT(nn.Module):
         channel_masks: Optional[Tensor] = None,
         bag_of_channels_mode: bool = False,
     ):
-        x = self.prepare_tokens(x, channel_ids_list, channel_masks, bag_of_channels_mode=bag_of_channels_mode)
-        patch_masks = self.generate_patch_masks(channel_masks) if channel_masks is not None else None
+        x = self.prepare_tokens(
+            x,
+            channel_ids_list,
+            channel_masks,
+            bag_of_channels_mode=bag_of_channels_mode,
+        )
+        patch_masks = (
+            self.generate_patch_masks(channel_masks)
+            if channel_masks is not None
+            else None
+        )
 
         for i, blk in enumerate(self.blocks):
             if i < len(self.blocks) - 1:
@@ -616,8 +782,17 @@ class MultiChannelViT(nn.Module):
         n=1,
         bag_of_channels_mode: bool = False,
     ):
-        x = self.prepare_tokens(x, channel_ids_list, channel_masks, bag_of_channels_mode=bag_of_channels_mode)
-        patch_masks = self.generate_patch_masks(channel_masks) if channel_masks is not None else None
+        x = self.prepare_tokens(
+            x,
+            channel_ids_list,
+            channel_masks,
+            bag_of_channels_mode=bag_of_channels_mode,
+        )
+        patch_masks = (
+            self.generate_patch_masks(channel_masks)
+            if channel_masks is not None
+            else None
+        )
 
         # we return the output tokens from the `n` last blocks
         output = []

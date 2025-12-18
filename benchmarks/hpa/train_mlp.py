@@ -51,7 +51,6 @@ def balanced_weights(train_y):
 def train_mlp(
     train_x, train_y, val_x, val_y, test_x, test_y, device, unique_cats, save_folder
 ):
-
     model_path = f"{save_folder}/mlp_best_map_final.pth"
 
     train_dataloader = DataLoader(
@@ -131,7 +130,7 @@ def _train_epoch(model, train_dataloader, optimizer, criterion, epoch):
         loss = criterion(out, y)
         loss.backward()
         optimizer.step()
-        print(f"Epoch: {epoch} Batch: {i+1} Loss: {loss.item():.5f}", flush=True)
+        print(f"Epoch: {epoch} Batch: {i + 1} Loss: {loss.item():.5f}", flush=True)
 
 
 def _val_epoch(model, val_dataloader, criterion, epoch):

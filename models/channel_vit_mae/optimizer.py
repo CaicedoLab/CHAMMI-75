@@ -44,7 +44,9 @@ def get_optimizer(
 
             torchao.__version__
         except ImportError:
-            raise ImportError("To use optimizers from torchao, please install the torchao library: `USE_CPP=0 pip install torchao`.")
+            raise ImportError(
+                "To use optimizers from torchao, please install the torchao library: `USE_CPP=0 pip install torchao`."
+            )
 
     if not use_torchao and use_4bit:
         raise ValueError("4-bit Optimizers are only supported with torchao.")
@@ -58,19 +60,25 @@ def get_optimizer(
         optimizer_name = "adamw"
 
     if (use_8bit or use_4bit) and optimizer_name not in ["adam", "adamw"]:
-        raise ValueError("`use_8bit` and `use_4bit` can only be used with the Adam and AdamW optimizers.")
+        raise ValueError(
+            "`use_8bit` and `use_4bit` can only be used with the Adam and AdamW optimizers."
+        )
 
     if use_8bit:
         try:
             import bitsandbytes as bnb
         except ImportError:
-            raise ImportError("To use 8-bit Adam, please install the bitsandbytes library: `pip install bitsandbytes`.")
+            raise ImportError(
+                "To use 8-bit Adam, please install the bitsandbytes library: `pip install bitsandbytes`."
+            )
 
     if optimizer_name == "adamw":
         if use_torchao:
             from torchao.prototype.low_bit_optim import AdamW4bit, AdamW8bit
 
-            optimizer_class = AdamW8bit if use_8bit else AdamW4bit if use_4bit else torch.optim.AdamW
+            optimizer_class = (
+                AdamW8bit if use_8bit else AdamW4bit if use_4bit else torch.optim.AdamW
+            )
         else:
             optimizer_class = bnb.optim.AdamW8bit if use_8bit else torch.optim.AdamW
 
@@ -84,7 +92,9 @@ def get_optimizer(
         if use_torchao:
             from torchao.prototype.low_bit_optim import Adam4bit, Adam8bit
 
-            optimizer_class = Adam8bit if use_8bit else Adam4bit if use_4bit else torch.optim.Adam
+            optimizer_class = (
+                Adam8bit if use_8bit else Adam4bit if use_4bit else torch.optim.Adam
+            )
         else:
             optimizer_class = bnb.optim.Adam8bit if use_8bit else torch.optim.Adam
 
@@ -98,12 +108,16 @@ def get_optimizer(
         try:
             import prodigyopt
         except ImportError:
-            raise ImportError("To use Prodigy, please install the prodigyopt library: `pip install prodigyopt`")
+            raise ImportError(
+                "To use Prodigy, please install the prodigyopt library: `pip install prodigyopt`"
+            )
 
         optimizer_class = prodigyopt.Prodigy
 
         if learning_rate <= 0.1:
-            logger.warning("Learning rate is too low. When using prodigy, it's generally better to set learning rate around 1.0")
+            logger.warning(
+                "Learning rate is too low. When using prodigy, it's generally better to set learning rate around 1.0"
+            )
 
         init_kwargs = {
             "lr": learning_rate,
@@ -120,7 +134,9 @@ def get_optimizer(
         try:
             import came_pytorch
         except ImportError:
-            raise ImportError("To use CAME, please install the came-pytorch library: `pip install came-pytorch`")
+            raise ImportError(
+                "To use CAME, please install the came-pytorch library: `pip install came-pytorch`"
+            )
 
         optimizer_class = came_pytorch.CAME
 

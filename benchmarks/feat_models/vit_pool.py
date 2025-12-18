@@ -2,9 +2,8 @@ from dataclasses import dataclass
 from typing import Optional, Tuple, Dict
 
 import torch
-import torch.nn.functional as F
 from torch import nn, Tensor
-from transformers import PretrainedConfig, ViTConfig, ViTMAEConfig, ViTModel
+from transformers import ViTConfig, ViTModel
 from transformers.utils import ModelOutput
 
 

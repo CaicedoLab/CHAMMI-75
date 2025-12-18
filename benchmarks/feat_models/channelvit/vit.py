@@ -19,12 +19,14 @@ minor changes:
     changing the forward api for the vision transformer to support taking extra input
     arguments (covariates of the input images)
 """
+
 import math
 from functools import partial
 
 import torch
 import torch.nn as nn
 from .vit_utils import trunc_normal_
+
 
 def drop_path(x, drop_prob: float = 0.0, training: bool = False):
     if drop_prob == 0.0 or not training:
@@ -98,7 +100,11 @@ class Attention(nn.Module):
 
     def forward(self, x, mask=None):
         B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        qkv = (
+            self.qkv(x)
+            .reshape(B, N, 3, self.num_heads, C // self.num_heads)
+            .permute(2, 0, 3, 1, 4)
+        )
         q, k, v = qkv[0], qkv[1], qkv[2]
 
         sim = (q @ k.transpose(-2, -1)) * self.scale
@@ -117,6 +123,7 @@ class Attention(nn.Module):
         x = self.proj(x)
         x = self.proj_drop(x)
         return x, attn
+
 
 class Block(nn.Module):
     def __init__(
@@ -201,7 +208,7 @@ class VisionTransformer(nn.Module):
         drop_path_rate=0.0,
         norm_layer=nn.LayerNorm,
         input_drop=0.0,
-        **kwargs
+        **kwargs,
     ):
         super().__init__()
         self.num_features = self.embed_dim = self.out_dim = embed_dim
@@ -359,7 +366,7 @@ def vit_tiny(patch_size=16, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     return model
 
@@ -373,7 +380,7 @@ def vit_small(patch_size=16, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     return model
 
@@ -387,6 +394,6 @@ def vit_base(patch_size=16, **kwargs):
         mlp_ratio=4,
         qkv_bias=True,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs
+        **kwargs,
     )
     return model

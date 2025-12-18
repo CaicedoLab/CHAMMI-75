@@ -14,8 +14,7 @@
 """
 adapted from Dinov1 and Dinov2: https://github.com/facebookresearch/dino/blob/main/vision_transformer.py
 """
-import math
-from functools import partial
+
 import torch.nn.functional as F
 from torch import Tensor
 import torch
@@ -27,12 +26,6 @@ from einops import rearrange
 from torch.nn.attention import SDPBackend, sdpa_kernel
 
 
-from model_utils import trunc_normal_
-
-
-
-
-
 def exists(val):
     return val is not None
 
@@ -41,7 +34,9 @@ def drop_path(x, drop_prob: float = 0.0, training: bool = False):
     if drop_prob == 0.0 or not training:
         return x
     keep_prob = 1 - drop_prob
-    shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
+    shape = (x.shape[0],) + (1,) * (
+        x.ndim - 1
+    )  # work with diff dim tensors, not just 2D ConvNets
     random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
     random_tensor.floor_()  # binarize
     output = x.div(keep_prob) * random_tensor
@@ -123,7 +118,11 @@ class Attention(nn.Module):
 
     def forward(self, x, mask=None):
         B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        qkv = (
+            self.qkv(x)
+            .reshape(B, N, 3, self.num_heads, C // self.num_heads)
+            .permute(2, 0, 3, 1, 4)
+        )
         q, k, v = qkv[0], qkv[1], qkv[2]
 
         sim = (q @ k.transpose(-2, -1)) * self.scale
@@ -157,7 +156,9 @@ class MemEffAttention(Attention):
         q, k, v = unbind(qkv, 2)
         if attn_mask is not None:
             L, S = q.size(1), k.size(1)
-            attn_bias = torch.zeros(B, self.num_heads, L, S, dtype=q.dtype, device=q.device)
+            attn_bias = torch.zeros(
+                B, self.num_heads, L, S, dtype=q.dtype, device=q.device
+            )
             attn_bias.masked_fill_(attn_mask.logical_not(), float("-inf"))
         else:
             attn_bias = None
@@ -174,7 +175,13 @@ class MemEffAttentionV2(Attention):
     def forward(self, x: Tensor, mask=None) -> tuple[Tensor, None]:
         B, N, C = x.shape
 
-        q, k, v = rearrange(self.qkv(x), "b n (l h d) -> l b h n d", l=3, h=self.num_heads, d=C // self.num_heads)
+        q, k, v = rearrange(
+            self.qkv(x),
+            "b n (l h d) -> l b h n d",
+            l=3,
+            h=self.num_heads,
+            d=C // self.num_heads,
+        )
         ## NOTE: shape of q, k, v: [head, num_tokens, dim]
 
         with sdpa_kernel(
@@ -184,7 +191,9 @@ class MemEffAttentionV2(Attention):
                 SDPBackend.MATH,
             ],
         ):
-            x = F.scaled_dot_product_attention(q, k, v, attn_mask=mask)  ## output, x: [B, num_heads, N, dim_per_head]
+            x = F.scaled_dot_product_attention(
+                q, k, v, attn_mask=mask
+            )  ## output, x: [B, num_heads, N, dim_per_head]
 
         x = rearrange(x, "b h n d -> b n (h d)")
 
@@ -249,8 +258,12 @@ class Block(nn.Module):
         )
 
         ## add LayerScale ls1 and ls2, followed DINOv2: https://github.com/facebookresearch/dinov2/blob/e1277af2ba9496fbadf7aec6eba56e8d882d1e35/dinov2/layers/block.py#L89
-        self.ls1 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
-        self.ls2 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
+        self.ls1 = (
+            LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
+        )
+        self.ls2 = (
+            LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
+        )
 
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.norm2 = norm_layer(dim)

@@ -1,55 +1,62 @@
-import argparse
 import os
 import subprocess
-import numpy as np
 import sys
 from omegaconf import OmegaConf
-sys.path.append('../../')
+
+sys.path.append("../../")
 
 from config import *
 
-default_path = '/home/jgpeters3/configs'
+default_path = "/home/jgpeters3/configs"
 
-def submit_command(command:str):
+
+def submit_command(command: str):
     result = subprocess.run(
-                    command,
-                    shell=True,
-                    # capture_output=True,
-                    check=True,
-                    text=True
+        command,
+        shell=True,
+        # capture_output=True,
+        check=True,
+        text=True,
     )
-    
+
+
 def run_command(config: DINOV1Config):
     conf = OmegaConf.create(config)
-    OmegaConf.save(config=conf, f=os.path.join(default_path, f'{config.train.name}.yaml'))
-    
-    command = ' '.join([
-                        "condor_submit", 
-                        f"wandb_key={os.environ.get('WANDB_API_KEY')}",
-                        f'config_name={config.train.name}.yaml',
-                        f"config_path={os.path.join(default_path, f'{config.train.name}.yaml')}",
-                        "chtc_job.sh"
-                    ])
+    OmegaConf.save(
+        config=conf, f=os.path.join(default_path, f"{config.train.name}.yaml")
+    )
+
+    command = " ".join(
+        [
+            "condor_submit",
+            f"wandb_key={os.environ.get('WANDB_API_KEY')}",
+            f"config_name={config.train.name}.yaml",
+            f"config_path={os.path.join(default_path, f'{config.train.name}.yaml')}",
+            "chtc_job.sh",
+        ]
+    )
     submit_command(command=command)
 
-def main():    
+
+def main():
     config = DINOV1Config()
     config.train.name = "0f6fa51_allen"
     config.optim.batch_size_per_gpu = 48
-    config.dataset.dataset_filter = 'allen'
+    config.dataset.dataset_filter = "allen"
     run_command(config)
-    
+
     config = DINOV1Config()
     config.train.name = "0f6fa51_cp"
     config.optim.batch_size_per_gpu = 24
-    config.dataset.dataset_filter = 'cp'
+    config.dataset.dataset_filter = "cp"
     run_command(config)
-    
+
     config = DINOV1Config()
     config.train.name = "0f6fa51_hpa"
     config.optim.batch_size_per_gpu = 32
-    config.dataset.dataset_filter = 'hpa'
+    config.dataset.dataset_filter = "hpa"
     run_command(config)
- 
+
+
 if __name__ == "__main__":
     main()

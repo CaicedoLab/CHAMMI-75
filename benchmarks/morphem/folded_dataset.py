@@ -4,53 +4,40 @@ import skimage.io
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, utils
+from torch.utils.data import Dataset
+from torchvision import transforms
 import torchvision
+
 t = torchvision.transforms.ToTensor()
-from collections.abc import Sequence
-from torch import Tensor
-from typing import Tuple, List, Optional
-import math
 
 # Ignore warnings
 import warnings
+
 warnings.filterwarnings("ignore")
-import os
-import torch
-import skimage.io
 
-import pandas as pd
-import numpy as np
 
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, utils
 import torchvision
-t = torchvision.transforms.ToTensor()
-from collections.abc import Sequence
-from torch import Tensor
-from typing import Tuple, List, Optional
-import math
 
-import random
-from torchvision.transforms import v2
+t = torchvision.transforms.ToTensor()
+
 
 ########################################################
 ## Scale normalization functions for CHAMMI images
 ########################################################
 
+
 def normalize_scale_for_test(im):
-    sizes = {160:160, 238:238, 512:512}
+    sizes = {160: 160, 238: 238, 512: 512}
     t = transforms.functional.center_crop(im, sizes[im.shape[-2]])
-    t = transforms.functional.resize(t, (224,224))
+    t = transforms.functional.resize(t, (224, 224))
     return t
 
 
 ########################################################
 ## Re-arrange channels from tape format to stack tensor
 ########################################################
+
 
 def fold_channels(image, channel_width, mode="ignore"):
     # Expected input image shape: (h, w * c)
@@ -75,8 +62,10 @@ def fold_channels(image, channel_width, mode="ignore"):
 ## Dataset Class
 ########################################################
 
+
 class SingleCellDataset(Dataset):
     """Single cell dataset."""
+
     def __init__(self, csv_file, root_dir, target_labels=None, transform=None):
         """
         Args:
@@ -94,28 +83,28 @@ class SingleCellDataset(Dataset):
         return len(self.metadata)
 
     def prepare(self, idx, image, label, norm_func, mixup=False):
-        #c = self.metadata.loc[idx, "channel"]
-        #image = image[c,...]
-        #image = image[np.newaxis,...]
+        # c = self.metadata.loc[idx, "channel"]
+        # image = image[c,...]
+        # image = image[np.newaxis,...]
         image = norm_func(image)
- 
+
         if mixup:
             other_idx = np.random.randint(0, self.metadata.shape[0])
             other_img, other_label = self.load_image(other_idx)
-            other_img, other_label = self.prepare(other_idx, other_img, other_label, False)
-            alpha = 0.5*np.random.random()
-            image = (1 - alpha)*image + alpha*other_img
-            label = (1 - alpha)*label + alpha*other_label
+            other_img, other_label = self.prepare(
+                other_idx, other_img, other_label, False
+            )
+            alpha = 0.5 * np.random.random()
+            image = (1 - alpha) * image + alpha * other_img
+            label = (1 - alpha) * label + alpha * other_label
         return image, label
-
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        img_name = os.path.join(self.root_dir,
-                                self.metadata.loc[idx, "file_path"])
-        channel_width = self.metadata.loc[idx, 'channel_width']
+        img_name = os.path.join(self.root_dir, self.metadata.loc[idx, "file_path"])
+        channel_width = self.metadata.loc[idx, "channel_width"]
         image = skimage.io.imread(img_name)
         image = fold_channels(image, channel_width)
 
@@ -123,8 +112,10 @@ class SingleCellDataset(Dataset):
             labels = self.metadata.loc[idx, self.target_labels]
         else:
             labels = None
-        
-        image, labels = self.prepare(idx, image, labels, normalize_scale_for_test, False)
+
+        image, labels = self.prepare(
+            idx, image, labels, normalize_scale_for_test, False
+        )
 
         if self.transform:
             image = self.transform(image)

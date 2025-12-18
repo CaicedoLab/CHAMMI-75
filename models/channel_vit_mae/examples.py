@@ -1,7 +1,6 @@
 ###########################################################
 ########################  EXAMPLE USAGE ###################
 ###########################################################
-import os
 import yaml
 import torch
 import torch.distributed as dist
@@ -87,7 +86,9 @@ def run_multi_channel_vit_demo(rank, world_size):
     images = torch.randn(b, c, h, w, device=rank)
 
     channel_ids_list = [[0, 1], [13, 3, 4], [1, 2, 3]] * 2
-    channel_masks = torch.tensor([[True, True, False], [True, True, True], [True, True, True]] * 2)
+    channel_masks = torch.tensor(
+        [[True, True, False], [True, True, True], [True, True, True]] * 2
+    )
     labels = None
     bag_of_channels_mode = False
 
@@ -110,7 +111,9 @@ def run_multi_channel_vit_demo(rank, world_size):
 
 def multi_channel_vit_main():
     world_size = torch.cuda.device_count()
-    mp.spawn(run_multi_channel_vit_demo, args=(world_size,), nprocs=world_size, join=True)
+    mp.spawn(
+        run_multi_channel_vit_demo, args=(world_size,), nprocs=world_size, join=True
+    )
 
 
 if __name__ == "__main__":

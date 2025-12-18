@@ -13,7 +13,12 @@ import timm
 from vit import Block
 from model_utils import trunc_normal_, maybe_flatten_images
 from mae_modules import ChAMAEViTDecoder, CAMAEDecoder
-from loss_func import compute_proxy_loss, MultiPosConLoss, SimCLRContrastiveLoss, FourierLoss
+from loss_func import (
+    compute_proxy_loss,
+    MultiPosConLoss,
+    SimCLRContrastiveLoss,
+    FourierLoss,
+)
 
 
 class PatchEmbedPerChannel(nn.Module):
@@ -29,7 +34,9 @@ class PatchEmbedPerChannel(nn.Module):
         super().__init__()
         self.img_size = img_size
         self.patch_size = patch_size
-        self.num_patches = (img_size[0] // patch_size) * (img_size[1] // patch_size) * max_in_channels
+        self.num_patches = (
+            (img_size[0] // patch_size) * (img_size[1] // patch_size) * max_in_channels
+        )
         self.embed_dim = embed_dim
 
         self.proj = nn.Conv3d(
@@ -40,7 +47,9 @@ class PatchEmbedPerChannel(nn.Module):
         )
 
         if use_channel_tokens:
-            self.channel_tokens = nn.parameter.Parameter(torch.zeros(1, embed_dim, max_in_channels, 1, 1))
+            self.channel_tokens = nn.parameter.Parameter(
+                torch.zeros(1, embed_dim, max_in_channels, 1, 1)
+            )
             if channel_tokens_init == "orthogonal":
                 orthogonal_tensor = torch.empty(embed_dim, max_in_channels)
                 nn.init.orthogonal_(orthogonal_tensor)  # produces orthogonal columns
@@ -57,14 +66,20 @@ class PatchEmbedPerChannel(nn.Module):
             self.channel_tokens = None
 
     def forward(
-        self, x: Tensor, channel_ids_list: list[list[int]] | None, valid_channel_masks: Optional[Tensor] = None, bag_of_channels_mode: bool = False
+        self,
+        x: Tensor,
+        channel_ids_list: list[list[int]] | None,
+        valid_channel_masks: Optional[Tensor] = None,
+        bag_of_channels_mode: bool = False,
     ):  ## return x, channel_token_patches
         if bag_of_channels_mode:
             return self.forward_single_channel(x, channel_ids_list)
         else:
             return self.forward_multi_channel(x, channel_ids_list, valid_channel_masks)
 
-    def forward_single_channel(self, x: Tensor, channel_ids_list: list[list[int]] | None = None):
+    def forward_single_channel(
+        self, x: Tensor, channel_ids_list: list[list[int]] | None = None
+    ):
         """Bag of channels mode.
         "channel_ids_list": list of channel_ids for each image.
             during training, each image has 1 channel E.g., channel_ids_list= [[3], [5], [2]...]
@@ -86,9 +101,15 @@ class PatchEmbedPerChannel(nn.Module):
             ## extract channel tokens for each channel based on channel_ids_list
             assert channel_ids_list is not None
             flat_idxs = [i for group in channel_ids_list for i in group]
-            flat_idxs_tensor = torch.tensor(flat_idxs, dtype=torch.long, device=x.device)
-            channel_tokens = torch.index_select(self.channel_tokens, dim=2, index=flat_idxs_tensor)
-            channel_tokens = rearrange(channel_tokens, "1 d b 1 1 -> b d 1 1 1", b=flat_idxs_tensor.shape[0])
+            flat_idxs_tensor = torch.tensor(
+                flat_idxs, dtype=torch.long, device=x.device
+            )
+            channel_tokens = torch.index_select(
+                self.channel_tokens, dim=2, index=flat_idxs_tensor
+            )
+            channel_tokens = rearrange(
+                channel_tokens, "1 d b 1 1 -> b d 1 1 1", b=flat_idxs_tensor.shape[0]
+            )
             x += channel_tokens  # B Cout 1 H W
         else:
             channel_tokens = None
@@ -97,35 +118,56 @@ class PatchEmbedPerChannel(nn.Module):
         x = x.transpose(1, 2)  # B HW Cout
         return x, channel_tokens
 
-    def forward_multi_channel(self, x: Tensor, channel_ids_list: list[list[int]] | None, valid_channel_masks: Optional[Tensor] = None):
+    def forward_multi_channel(
+        self,
+        x: Tensor,
+        channel_ids_list: list[list[int]] | None,
+        valid_channel_masks: Optional[Tensor] = None,
+    ):
         """
         channel_ids: list of `batch_size` elements, each indicates channels of the img.  E.g., [[3,  5], [2]]
         valid_channel_masks: Attention mask (bool) with False at the end to indicate channel padding, e.g., [[True, True, False], [True, False, False]]
         """
         REGULAR_CASE = channel_ids_list is None and valid_channel_masks is None
-        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = channel_ids_list is not None and valid_channel_masks is None
-        DIFFERENT_CHANNELS_FOR_EACH_IMG = channel_ids_list is not None and valid_channel_masks is not None
+        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = (
+            channel_ids_list is not None and valid_channel_masks is None
+        )
+        DIFFERENT_CHANNELS_FOR_EACH_IMG = (
+            channel_ids_list is not None and valid_channel_masks is not None
+        )
 
         device = x.device
 
         ## get channel tokens for this batch
         if self.channel_tokens is not None:
-            if REGULAR_CASE:  ## Assume all images in the batch have the same channels, no masks.
+            if (
+                REGULAR_CASE
+            ):  ## Assume all images in the batch have the same channels, no masks.
                 channel_tokens = self.channel_tokens
             elif SAME_SUBSET_CHANNELS_FOR_ALL_IMG:  ## E.g., each img has 8 channels, but only 5 channels are used for each image in the batch
                 channel_ids = channel_ids_list[0]  # type: ignore
-                channel_ids_tensor = torch.tensor(channel_ids, dtype=torch.long, device=device)
-                channel_tokens = torch.index_select(self.channel_tokens, dim=2, index=channel_ids_tensor)
-            elif DIFFERENT_CHANNELS_FOR_EACH_IMG:  ## E.g., first image has 3 channels, second image has 5 channels, etc.
+                channel_ids_tensor = torch.tensor(
+                    channel_ids, dtype=torch.long, device=device
+                )
+                channel_tokens = torch.index_select(
+                    self.channel_tokens, dim=2, index=channel_ids_tensor
+                )
+            elif (
+                DIFFERENT_CHANNELS_FOR_EACH_IMG
+            ):  ## E.g., first image has 3 channels, second image has 5 channels, etc.
                 ## get corresponding channel tokens for each image in the batch
                 # 1. Flatten all indices and group size
                 flat_idxs = [i for group in channel_ids_list for i in group]  # type: ignore
-                flat_idxs_tensor = torch.tensor(flat_idxs, dtype=torch.long, device=device)
+                flat_idxs_tensor = torch.tensor(
+                    flat_idxs, dtype=torch.long, device=device
+                )
                 group_sizes = [len(group) for group in channel_ids_list]  # type: ignore
 
                 # 2. Gather once along the channel token's dim (dim=2)
                 #    result shape = [B, d, sum(group_sizes), 1, 1]
-                selected_flat = torch.index_select(self.channel_tokens, dim=2, index=flat_idxs_tensor)
+                selected_flat = torch.index_select(
+                    self.channel_tokens, dim=2, index=flat_idxs_tensor
+                )
 
                 # 3. Split
                 channel_tokens = list(torch.split(selected_flat, group_sizes, dim=2))
@@ -134,11 +176,27 @@ class PatchEmbedPerChannel(nn.Module):
                 max_num_channels = max(group_sizes)
                 dim = self.embed_dim
                 channel_tokens = [
-                    torch.cat([ct, torch.zeros(1, dim, max_num_channels - ct.shape[2], 1, 1, device=device)], dim=2) for ct in channel_tokens
+                    torch.cat(
+                        [
+                            ct,
+                            torch.zeros(
+                                1,
+                                dim,
+                                max_num_channels - ct.shape[2],
+                                1,
+                                1,
+                                device=device,
+                            ),
+                        ],
+                        dim=2,
+                    )
+                    for ct in channel_tokens
                 ]
                 channel_tokens = torch.cat(channel_tokens, dim=0)  # B Cout Cin 1 1
             else:
-                raise ValueError(f"Unknown case: channel_ids_list={channel_ids_list}, valid_channel_masks={valid_channel_masks}")
+                raise ValueError(
+                    f"Unknown case: channel_ids_list={channel_ids_list}, valid_channel_masks={valid_channel_masks}"
+                )
         else:
             channel_tokens = None
 
@@ -197,12 +255,16 @@ class MultiChannelViT(nn.Module):
         super().__init__()
         self.num_features = self.embed_dim = self.out_dim = embed_dim
         self.max_in_channels = in_chans
-        self.training_sample = training_sample.upper() if training_sample is not None else None
+        self.training_sample = (
+            training_sample.upper() if training_sample is not None else None
+        )
         self.proxy_orthogonal_init = proxy_orthogonal_init
         self.patch_size = patch_size
 
         if use_self_image_norm:
-            self.image_norm = nn.InstanceNorm2d(None, affine=False, track_running_stats=False, eps=1e-5)
+            self.image_norm = nn.InstanceNorm2d(
+                None, affine=False, track_running_stats=False, eps=1e-5
+            )
         else:
             self.image_norm = None
 
@@ -214,15 +276,23 @@ class MultiChannelViT(nn.Module):
             use_channel_tokens=use_channel_tokens,
             channel_tokens_init=channel_tokens_init,
         )
-        self.num_patches_per_channel = self.patch_embed.num_patches // self.max_in_channels
+        self.num_patches_per_channel = (
+            self.patch_embed.num_patches // self.max_in_channels
+        )
         self.num_heads = num_heads
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
 
         self.num_extra_tokens = 1  # cls token
-        self.pos_embed = nn.Parameter(torch.zeros(1, self.num_patches_per_channel + self.num_extra_tokens, embed_dim))
+        self.pos_embed = nn.Parameter(
+            torch.zeros(
+                1, self.num_patches_per_channel + self.num_extra_tokens, embed_dim
+            )
+        )
         self.pos_drop = nn.Dropout(p=drop_rate)
 
-        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
+        dpr = [
+            x.item() for x in torch.linspace(0, drop_path_rate, depth)
+        ]  # stochastic depth decay rule
         self.blocks = nn.ModuleList(
             [
                 Block(
@@ -265,18 +335,24 @@ class MultiChannelViT(nn.Module):
         ## Proxy loss
         if self.use_proxy_loss:
             num_proxies = num_classes
-            self.output_proxies = torch.nn.Parameter((torch.randn(num_proxies, embed_dim) / 8))
+            self.output_proxies = torch.nn.Parameter(
+                (torch.randn(num_proxies, embed_dim) / 8)
+            )
             if self.proxy_orthogonal_init:
                 nn.init.orthogonal_(self.output_proxies)  ## initlaize orthogonally
             self.proxy_scale = np.sqrt(1.0 / proxy_temperature)
 
         ## Supervised Contrastive Loss
         if self.use_supcon_loss:
-            self.compute_supcon_loss = MultiPosConLoss(temperature=supervised_contrastive_temperature)
+            self.compute_supcon_loss = MultiPosConLoss(
+                temperature=supervised_contrastive_temperature
+            )
 
         ## SimCLR Loss
         if self.use_simclr_loss:
-            self.compute_simclr_loss = SimCLRContrastiveLoss(temperature=simclr_temperature)
+            self.compute_simclr_loss = SimCLRContrastiveLoss(
+                temperature=simclr_temperature
+            )
 
         ## MAE Loss
         if self.use_mae_loss:
@@ -288,7 +364,9 @@ class MultiChannelViT(nn.Module):
             self.mask_ratio_min = decoder["mask_ratio_min"]
             self.mask_ratio_max = decoder["mask_ratio_max"]
 
-            self.decoder_dim = decoder["embed_dim"] if decoder["embed_dim"] is not None else embed_dim
+            self.decoder_dim = (
+                decoder["embed_dim"] if decoder["embed_dim"] is not None else embed_dim
+            )
             self.decoder_type = decoder["decoder_type"]
             decoder["num_channels"] = in_chans
             if decoder["decoder_type"] == "chamaevit_decoder":
@@ -296,7 +374,9 @@ class MultiChannelViT(nn.Module):
                     depth=decoder["depth"],
                     embed_dim=self.decoder_dim,
                     mlp_ratio=decoder["mlp_ratio"],
-                    norm_layer=partial(nn.LayerNorm, eps=float(decoder["norm_layer"]["eps"])),
+                    norm_layer=partial(
+                        nn.LayerNorm, eps=float(decoder["norm_layer"]["eps"])
+                    ),
                     num_heads=decoder["num_heads"],
                     qkv_bias=decoder["qkv_bias"],
                     num_channels=decoder["num_channels"],
@@ -317,7 +397,9 @@ class MultiChannelViT(nn.Module):
                 raise ValueError(f"Unknown decoder type: {decoder.decoder_type}")
 
             # projection layer between the encoder and decoder
-            self.encoder_decoder_proj = nn.Linear(embed_dim, self.decoder_dim, bias=True)
+            self.encoder_decoder_proj = nn.Linear(
+                embed_dim, self.decoder_dim, bias=True
+            )
 
             # linear layer from decoder embedding to input dims
             decoder_out_dim = patch_size**2
@@ -350,7 +432,9 @@ class MultiChannelViT(nn.Module):
         if model_name.startswith("dinov2"):  ## e.g., dinov2_vits14
             pretrained_model = torch.hub.load("facebookresearch/dinov2", model_name)
         elif model_name.startswith("timm--"):
-            model_name = model_name.replace("timm--", "")  ## e.g., timm--vit_small_patch16_224.augreg_in21k
+            model_name = model_name.replace(
+                "timm--", ""
+            )  ## e.g., timm--vit_small_patch16_224.augreg_in21k
             pretrained_model = timm.create_model(model_name, pretrained=True)
         else:
             raise NotImplementedError(f"{model_name} is not valid!")
@@ -411,7 +495,9 @@ class MultiChannelViT(nn.Module):
             if "patch_embed.proj.weight" in name and len(pretrained_param.shape) == 4:
                 # DINO: [384, 3, 14, 14] → [384, 1, C, 14, 14]
                 with torch.no_grad():
-                    avg_weight = pretrained_param.mean(dim=1, keepdim=True)  # (384, 1, 14, 14)
+                    avg_weight = pretrained_param.mean(
+                        dim=1, keepdim=True
+                    )  # (384, 1, 14, 14)
                     my_param.copy_(avg_weight.unsqueeze(2))  #  (384, 1, 1, 14, 14)
                     loaded.append(name)
                 continue
@@ -423,7 +509,11 @@ class MultiChannelViT(nn.Module):
                     w, h = self.patch_embed.img_size[0], self.patch_embed.img_size[1]
                     total_tokens = pretrained_param.shape[1]
                     ## TODO: check on this
-                    my_param.copy_(self.interpolate_pos_encoding(total_tokens, pretrained_param.shape[-1], w, h, c=1))
+                    my_param.copy_(
+                        self.interpolate_pos_encoding(
+                            total_tokens, pretrained_param.shape[-1], w, h, c=1
+                        )
+                    )
                 loaded.append(name)
                 continue
 
@@ -435,12 +525,18 @@ class MultiChannelViT(nn.Module):
                     directly_loaded.append(name)
                 loaded.append(name)
             else:
-                print(f"[SKIP] Shape mismatch: {name}, {my_param.shape} (our model) vs. {pretrained_param.shape} ({pretrained_name})")
+                print(
+                    f"[SKIP] Shape mismatch: {name}, {my_param.shape} (our model) vs. {pretrained_param.shape} ({pretrained_name})"
+                )
                 missing.append(name)
 
-        print(f"\n Loaded {len(loaded)} parameters from {pretrained_name} into MultiChannelViT.")
+        print(
+            f"\n Loaded {len(loaded)} parameters from {pretrained_name} into MultiChannelViT."
+        )
         print(f" Loaded keys: {loaded}")
-        print(f" Missing {len(missing)} parameters from {pretrained_name} into MultiChannelViT.")
+        print(
+            f" Missing {len(missing)} parameters from {pretrained_name} into MultiChannelViT."
+        )
         print(f" Missing parameters: {missing}")
         print("-" * 50)
 
@@ -464,12 +560,23 @@ class MultiChannelViT(nn.Module):
         # see discussion at https://github.com/facebookresearch/dino/issues/8
         w0, h0 = w0 + 0.1, h0 + 0.1
         patch_pos_embed = nn.functional.interpolate(
-            patch_pos_embed.reshape(1, int(math.sqrt(n_patches_per_channel)), int(math.sqrt(n_patches_per_channel)), dim).permute(0, 3, 1, 2),
-            scale_factor=(w0 / math.sqrt(n_patches_per_channel), h0 / math.sqrt(n_patches_per_channel)),
+            patch_pos_embed.reshape(
+                1,
+                int(math.sqrt(n_patches_per_channel)),
+                int(math.sqrt(n_patches_per_channel)),
+                dim,
+            ).permute(0, 3, 1, 2),
+            scale_factor=(
+                w0 / math.sqrt(n_patches_per_channel),
+                h0 / math.sqrt(n_patches_per_channel),
+            ),
             mode="bicubic",
         )
 
-        assert int(w0) == patch_pos_embed.shape[-2] and int(h0) == patch_pos_embed.shape[-1]
+        assert (
+            int(w0) == patch_pos_embed.shape[-2]
+            and int(h0) == patch_pos_embed.shape[-1]
+        )
         patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 1).view(1, 1, -1, dim)
 
         # create copies of the positional embeddings for each channel
@@ -486,10 +593,16 @@ class MultiChannelViT(nn.Module):
         E.g., Assume `num_patches_per_channel`=2, output for the example input above would be
                     [[True, True, True, True, True, False False], [True, True, True, False, False, False, False]]
         """
-        patch_masks = repeat(valid_channel_masks, "b j -> b (j c)", c=self.num_patches_per_channel)
+        patch_masks = repeat(
+            valid_channel_masks, "b j -> b (j c)", c=self.num_patches_per_channel
+        )
 
         ## add masks for the cls token
-        cls_mask = torch.ones((patch_masks.shape[0], 1), dtype=patch_masks.dtype, device=patch_masks.device)
+        cls_mask = torch.ones(
+            (patch_masks.shape[0], 1),
+            dtype=patch_masks.dtype,
+            device=patch_masks.device,
+        )
         patch_masks = torch.cat([cls_mask, patch_masks], dim=1)
         B, L = patch_masks.shape
         patch_masks = patch_masks.view(B, 1, 1, L).bool()
@@ -497,7 +610,11 @@ class MultiChannelViT(nn.Module):
 
     def generate_patch_masks_from_patch_sampling(self, patch_masks: Tensor):
         ## add masks for the cls token
-        cls_mask = torch.ones((patch_masks.shape[0], 1), dtype=patch_masks.dtype, device=patch_masks.device)
+        cls_mask = torch.ones(
+            (patch_masks.shape[0], 1),
+            dtype=patch_masks.dtype,
+            device=patch_masks.device,
+        )
         patch_masks = torch.cat([cls_mask, patch_masks], dim=1)
         B, L = patch_masks.shape
         patch_masks = patch_masks.view(B, 1, 1, L).bool()
@@ -515,7 +632,12 @@ class MultiChannelViT(nn.Module):
         B, nc, w, h = x.shape
 
         ## patchify and embed
-        x, channel_tokens = self.patch_embed(x, channel_ids_list, valid_channel_masks, bag_of_channels_mode=bag_of_channels_mode)
+        x, channel_tokens = self.patch_embed(
+            x,
+            channel_ids_list,
+            valid_channel_masks,
+            bag_of_channels_mode=bag_of_channels_mode,
+        )
 
         ## add the [CLS] token to the embed patch tokens
         cls_tokens = self.cls_token.expand(B, -1, -1)
@@ -527,7 +649,9 @@ class MultiChannelViT(nn.Module):
         ## mask out some patches, resulting in fewer patches than x
         if tokens_to_keep is not None:
             tokens_to_keep = tokens_to_keep.unsqueeze(-1).repeat(1, 1, self.embed_dim)
-            x_masked = torch.gather(x[:, self.num_extra_tokens :, :], dim=1, index=tokens_to_keep)
+            x_masked = torch.gather(
+                x[:, self.num_extra_tokens :, :], dim=1, index=tokens_to_keep
+            )
             ## add class token (and potentially meta tokens) back
             x = torch.cat([x[:, : self.num_extra_tokens, :], x_masked], dim=1)
 
@@ -551,22 +675,35 @@ class MultiChannelViT(nn.Module):
         else:
             mask_ratio = mask_ratio_min
 
-        if valid_channel_masks is not None:  ### if each image has different number of channels, True is valid channels, False is paddings
+        if (
+            valid_channel_masks is not None
+        ):  ### if each image has different number of channels, True is valid channels, False is paddings
             ## set the noise of the masked channels to be large value, so that they are not selected
-            patch_masks = repeat(valid_channel_masks.bool(), "b c -> b (c n)", n=n_patches_per_channel)  ## B, L
+            patch_masks = repeat(
+                valid_channel_masks.bool(), "b c -> b (c n)", n=n_patches_per_channel
+            )  ## B, L
             ### `patch_padding_masks``: True is valid patches, False is paddings
 
         if training_sample == "PATCH_RANDOM":
-            n_patches_keep = int((1 - mask_ratio) * n_patches_per_channel * n_channels_origin)
+            n_patches_keep = int(
+                (1 - mask_ratio) * n_patches_per_channel * n_channels_origin
+            )
             ## generate `noise` to keep patches with smallest noise in each channel
             noise = torch.rand(B, L, device=device)
         elif training_sample == "PATCH_BY_CHANNEL":
             ## generate `noise` to keep patches with smallest noise in each channel
             constant_noise = torch.ones(B, L, device=device)
             keep_per_channel = int((1 - mask_ratio) * n_patches_per_channel)
-            noise = torch.rand(B, n_channels_origin, n_patches_per_channel, device=device)
+            noise = torch.rand(
+                B, n_channels_origin, n_patches_per_channel, device=device
+            )
             keep_idxs = torch.argsort(noise, dim=-1)[:, :, :keep_per_channel]
-            keep_idxs = keep_idxs + torch.arange(0, n_patches, n_patches_per_channel, device=device)[:, None]
+            keep_idxs = (
+                keep_idxs
+                + torch.arange(0, n_patches, n_patches_per_channel, device=device)[
+                    :, None
+                ]
+            )
             keep_idxs = rearrange(keep_idxs, "b c p -> b (c p)")
             constant_noise[torch.arange(B).unsqueeze(1), keep_idxs] = 0
             noise = constant_noise
@@ -576,26 +713,42 @@ class MultiChannelViT(nn.Module):
 
         if valid_channel_masks is not None:
             LARGE_VALUE = 1000000
-            noise += ~patch_masks * LARGE_VALUE  ## set noise of masked channels to be large value
+            noise += (
+                ~patch_masks * LARGE_VALUE
+            )  ## set noise of masked channels to be large value
 
         #### Create mask: 0 is keep (i.e., visible), 1 is remove (ie, mask out, used to compute reconstruction loss)
         shuffled_tokens = torch.argsort(noise, dim=1)  # shuffled index
         ind_restore = torch.argsort(shuffled_tokens, dim=1)  # unshuffled index
 
         #### get masked input
-        if valid_channel_masks is not None:  ## each image has different number of channels
-            n_patches_keep_list = [int((1 - mask_ratio) * n_patches_per_channel) * valid_channel_masks[i].sum().item() for i in range(B)]
-            tokens_to_keep = torch.zeros(B, max(n_patches_keep_list), dtype=torch.long, device=device)
+        if (
+            valid_channel_masks is not None
+        ):  ## each image has different number of channels
+            n_patches_keep_list = [
+                int((1 - mask_ratio) * n_patches_per_channel)
+                * valid_channel_masks[i].sum().item()
+                for i in range(B)
+            ]
+            tokens_to_keep = torch.zeros(
+                B, max(n_patches_keep_list), dtype=torch.long, device=device
+            )
 
             max_patches_keep = max(n_patches_keep_list)
-            mae_patch_masks = torch.zeros(B, max_patches_keep, dtype=torch.bool, device=device)  ## True is valid patches, False is paddings
+            mae_patch_masks = torch.zeros(
+                B, max_patches_keep, dtype=torch.bool, device=device
+            )  ## True is valid patches, False is paddings
 
             for i, n_patches_keep_i in enumerate(n_patches_keep_list):
-                tokens_to_keep[i, :n_patches_keep_i] = shuffled_tokens[i, :n_patches_keep_i]
+                tokens_to_keep[i, :n_patches_keep_i] = shuffled_tokens[
+                    i, :n_patches_keep_i
+                ]
                 mae_patch_masks[i, :n_patches_keep_i] = 1  ## valid patches
 
         else:
-            tokens_to_keep = shuffled_tokens[:, :n_patches_keep]  # keep the first n_patches_keep indices
+            tokens_to_keep = shuffled_tokens[
+                :, :n_patches_keep
+            ]  # keep the first n_patches_keep indices
             mae_patch_masks = None
         # x_masked = torch.gather(x, dim=1, index=tokens_to_keep.unsqueeze(-1).repeat(1, 1, D))
 
@@ -604,12 +757,20 @@ class MultiChannelViT(nn.Module):
         mask = torch.ones([B, L], device=device)
         if valid_channel_masks is not None:
             for i, n_patches_keep_i in enumerate(n_patches_keep_list):
-                mask[i, :n_patches_keep_i] = 0  ## we don't compute loss on the visible patches
-                padding_start = valid_channel_masks[i].sum().item() * n_patches_per_channel
-                mask[i, padding_start:] = 0  ## we don't compute loss on the padded patches either
+                mask[i, :n_patches_keep_i] = (
+                    0  ## we don't compute loss on the visible patches
+                )
+                padding_start = (
+                    valid_channel_masks[i].sum().item() * n_patches_per_channel
+                )
+                mask[i, padding_start:] = (
+                    0  ## we don't compute loss on the padded patches either
+                )
         else:
             mask[:, :n_patches_keep] = 0
-        mask = torch.gather(mask, dim=1, index=ind_restore)  # unshuffle to get the binary mask
+        mask = torch.gather(
+            mask, dim=1, index=ind_restore
+        )  # unshuffle to get the binary mask
 
         res = {
             "tokens_to_keep": tokens_to_keep,
@@ -622,27 +783,42 @@ class MultiChannelViT(nn.Module):
         return res
 
     def channel_dropout(
-        self, x, channel_sample: str, channel_ids_list: list[list[int]] | None, valid_channel_masks: Optional[Tensor]
+        self,
+        x,
+        channel_sample: str,
+        channel_ids_list: list[list[int]] | None,
+        valid_channel_masks: Optional[Tensor],
     ) -> dict[str, Tensor | list]:
-
         REGULAR_CASE = channel_ids_list is None and valid_channel_masks is None
-        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = channel_ids_list is not None and valid_channel_masks is None
-        DIFFERENT_CHANNELS_FOR_EACH_IMG = channel_ids_list is not None and valid_channel_masks is not None
+        SAME_SUBSET_CHANNELS_FOR_ALL_IMG = (
+            channel_ids_list is not None and valid_channel_masks is None
+        )
+        DIFFERENT_CHANNELS_FOR_EACH_IMG = (
+            channel_ids_list is not None and valid_channel_masks is not None
+        )
 
         res = {"x": None, "channel_ids_list": None, "patch_masks": None}
 
         Cin = x.shape[1]
-        if REGULAR_CASE:  ##  all images have the same channels, use all channels, no masks.
+        if (
+            REGULAR_CASE
+        ):  ##  all images have the same channels, use all channels, no masks.
             if channel_sample == "HCS":
                 Cin_new = random.randint(1, Cin)
-                channel_indices = torch.tensor(random.sample(range(Cin), k=Cin_new), device=x.device, dtype=torch.long)
+                channel_indices = torch.tensor(
+                    random.sample(range(Cin), k=Cin_new),
+                    device=x.device,
+                    dtype=torch.long,
+                )
                 res["x"] = x[:, channel_indices]
                 return res
             else:
                 raise ValueError(f"Unknown channel sampling method: {channel_sample}")
         elif SAME_SUBSET_CHANNELS_FOR_ALL_IMG:
             ## TODO: work on this later
-            raise NotImplementedError("Channel sampling is not implemented for this case.")
+            raise NotImplementedError(
+                "Channel sampling is not implemented for this case."
+            )
         elif DIFFERENT_CHANNELS_FOR_EACH_IMG:
             #### E.g., first image has 3 channels, second image has 5 channels, etc.
             ## get Cin_new for each image in the batch
@@ -651,8 +827,12 @@ class MultiChannelViT(nn.Module):
             ### thus one option is to do channel sampling consistently for both samples in the pair
             ## (i.e., do channel sampling for one view, and use the same channel indices for the other view)
             if channel_sample == "HCS_SYMMETRIC":
-                assert self.use_simclr_loss or self.use_supcon_loss, "HCS_SYMMETRIC only works with simclr or supcon loss!"
-                channel_ids_list = channel_ids_list[0 : len(channel_ids_list) // 2]  ## only take the first half
+                assert self.use_simclr_loss or self.use_supcon_loss, (
+                    "HCS_SYMMETRIC only works with simclr or supcon loss!"
+                )
+                channel_ids_list = channel_ids_list[
+                    0 : len(channel_ids_list) // 2
+                ]  ## only take the first half
 
             channel_ids_list_new = []
             channel_indices_list_new = []
@@ -660,23 +840,39 @@ class MultiChannelViT(nn.Module):
                 if channel_sample.startswith("HCS"):
                     Cin = len(channel_ids)
                     Cin_new = random.randint(1, Cin)
-                    channel_indices_new = torch.tensor(random.sample(range(Cin), k=Cin_new), device=x.device, dtype=torch.long)
+                    channel_indices_new = torch.tensor(
+                        random.sample(range(Cin), k=Cin_new),
+                        device=x.device,
+                        dtype=torch.long,
+                    )
                     channel_indices_list_new.append(channel_indices_new)
-                    channel_ids_new = [channel_ids[i] for i in channel_indices_new.tolist()]
+                    channel_ids_new = [
+                        channel_ids[i] for i in channel_indices_new.tolist()
+                    ]
                     channel_ids_list_new.append(channel_ids_new)
 
             if channel_sample == "HCS_SYMMETRIC":
                 channel_ids_list_new = channel_ids_list_new + channel_ids_list_new
-                channel_indices_list_new = channel_indices_list_new + channel_indices_list_new
+                channel_indices_list_new = (
+                    channel_indices_list_new + channel_indices_list_new
+                )
 
             ## get the new images and masks
-            max_Cin_new = max([len(channel_ids) for channel_ids in channel_ids_list_new])
-            images_new = torch.zeros((x.shape[0], max_Cin_new, x.shape[2], x.shape[3]), device=x.device)
-            channel_masks_new = torch.zeros((x.shape[0], max_Cin_new), dtype=torch.bool, device=x.device)
+            max_Cin_new = max(
+                [len(channel_ids) for channel_ids in channel_ids_list_new]
+            )
+            images_new = torch.zeros(
+                (x.shape[0], max_Cin_new, x.shape[2], x.shape[3]), device=x.device
+            )
+            channel_masks_new = torch.zeros(
+                (x.shape[0], max_Cin_new), dtype=torch.bool, device=x.device
+            )
 
             for i, channel_ids in enumerate(channel_ids_list_new):
                 channel_indices = channel_indices_list_new[i]
-                images_new[i, : len(channel_indices), :, :] = x[i, channel_indices, :, :]
+                images_new[i, : len(channel_indices), :, :] = x[
+                    i, channel_indices, :, :
+                ]
                 channel_masks_new[i, : len(channel_ids)] = True
 
             res = {
@@ -686,7 +882,9 @@ class MultiChannelViT(nn.Module):
             }
             return res
         else:
-            raise ValueError(f"Unknown case: channel_ids_list={channel_ids_list}, patch_masks={valid_channel_masks}")
+            raise ValueError(
+                f"Unknown case: channel_ids_list={channel_ids_list}, patch_masks={valid_channel_masks}"
+            )
 
     def _norm_pix_loss(self, target: Tensor):
         mean = target.mean(dim=-1, keepdim=True)
@@ -705,26 +903,34 @@ class MultiChannelViT(nn.Module):
         num_channels = img.shape[1]
         if self.mae_loss_norm == "norm_pix_loss":
             ## flat first, then norm per patch (based on MAE original paper)
-            target_flattened = maybe_flatten_images(img, patch_size=self.patch_size, channel_agnostic=True)
+            target_flattened = maybe_flatten_images(
+                img, patch_size=self.patch_size, channel_agnostic=True
+            )
             target_flattened = self._norm_pix_loss(target_flattened)
         # elif self.mae_loss_norm == "instance_norm":  ## norm first, then flat (based on CAMAE paper)
         #     img = self.image_norm(img) ## check to initialize this
         #     target_flattened = maybe_flatten_images(img, patch_size=self.patch_size, channel_agnostic=True)
         elif self.mae_loss_norm is None:
-            target_flattened = maybe_flatten_images(img, patch_size=self.patch_size, channel_agnostic=True)
+            target_flattened = maybe_flatten_images(
+                img, patch_size=self.patch_size, channel_agnostic=True
+            )
 
         ## img: b c h p1 w p2
         ## target_flattened: b (c p1 p2) (h w), where p1=p2=#patches, h=w=patch_size. h*w is the #pixels in a patch (ie, patch dim)
         ## e.g., for jumpcp, target_flattened shape = torch.Size([128, 8*14*14, 16*16])
         ## Should be with MSE or MAE (L1) with reduction='none'
         loss = self.reconstruct_loss_fn(reconstruction, target_flattened)
-        loss = loss.mean(dim=-1)  # average over embedding dim -> mean loss per patch (N,L)
+        loss = loss.mean(
+            dim=-1
+        )  # average over embedding dim -> mean loss per patch (N,L)
 
         loss = (loss * mask).sum() / mask.sum()  # mean loss on masked patches only
         mae_loss_dict["mae_img_loss"] = loss
         # compute fourier loss
         if self.mae_recon_fourier_lambda > 0:
-            floss = self.recon_fourier_loss_fn(reconstruction, target_flattened, num_channels)  ## B, L, C
+            floss = self.recon_fourier_loss_fn(
+                reconstruction, target_flattened, num_channels
+            )  ## B, L, C
             if not self.mask_recon_fourier_loss:
                 floss = floss.mean()
             else:
@@ -770,8 +976,12 @@ class MultiChannelViT(nn.Module):
         else:
             raise ValueError(f"Unknown decoder type: {self.decoder_type}")
 
-        predicted_reconstruction = self.decoder_pred(decoder_tokens)  # linear projection to input
-        reconstruction = predicted_reconstruction[:, cur_num_extra_tokens:, :]  # drop class token and meta tokens
+        predicted_reconstruction = self.decoder_pred(
+            decoder_tokens
+        )  # linear projection to input
+        reconstruction = predicted_reconstruction[
+            :, cur_num_extra_tokens:, :
+        ]  # drop class token and meta tokens
 
         return reconstruction
 
@@ -783,7 +993,6 @@ class MultiChannelViT(nn.Module):
         y: Optional[Tensor] = None,
         bag_of_channels_mode: bool = False,
     ):
-
         if self.image_norm is not None:
             x = self.image_norm(x)
 
@@ -796,13 +1005,22 @@ class MultiChannelViT(nn.Module):
         ### channel dropout, used in ChannelViT
         if self.training and self.training_sample in ["HCS", "HCS_SYMMETRIC"]:
             sample_res = self.channel_dropout(
-                x, channel_sample=self.training_sample, channel_ids_list=channel_ids_list, valid_channel_masks=valid_channel_masks
+                x,
+                channel_sample=self.training_sample,
+                channel_ids_list=channel_ids_list,
+                valid_channel_masks=valid_channel_masks,
             )
-            x, channel_ids_list, valid_channel_masks = sample_res["x"], sample_res["channel_ids_list"], sample_res["channel_masks"]
+            x, channel_ids_list, valid_channel_masks = (
+                sample_res["x"],
+                sample_res["channel_ids_list"],
+                sample_res["channel_masks"],
+            )
 
         ### generate patch masks from channel masks if any
         if valid_channel_masks is not None:
-            full_patch_masks = self.generate_patch_masks_from_channel_masks(valid_channel_masks)
+            full_patch_masks = self.generate_patch_masks_from_channel_masks(
+                valid_channel_masks
+            )
         else:
             full_patch_masks = None
 
@@ -841,7 +1059,9 @@ class MultiChannelViT(nn.Module):
         if not bag_of_channels_mode and self.training:
             if sample_strategy in ["PATCH_RANDOM", "PATCH_BY_CHANNEL"]:
                 ## if we do patch sampling, we have the patch masks for visible patches
-                forward_patch_masks = self.generate_patch_masks_from_patch_sampling(mae_patch_masks)
+                forward_patch_masks = self.generate_patch_masks_from_patch_sampling(
+                    mae_patch_masks
+                )
                 ## other cases, we use the full patch masks (if any)
 
         for blk in self.blocks:
@@ -852,13 +1072,21 @@ class MultiChannelViT(nn.Module):
         ############## Pass into a decoder if any (e.g., for MAE reconstruction)
         if self.training and self.use_mae_loss:
             if channel_tokens is not None:
-                channel_token_patches = repeat(channel_tokens, "b d c 1 1 -> b d c p", p=self.num_patches_per_channel)
-                channel_token_patches = rearrange(channel_token_patches, "b d c p -> b (c p) d")  ## b, c*p1*p2, d
+                channel_token_patches = repeat(
+                    channel_tokens,
+                    "b d c 1 1 -> b d c p",
+                    p=self.num_patches_per_channel,
+                )
+                channel_token_patches = rearrange(
+                    channel_token_patches, "b d c p -> b (c p) d"
+                )  ## b, c*p1*p2, d
             else:
                 channel_token_patches = None
             reconstruction = self.forward_decoder(
                 x_latent=x,
-                position_embeddings=self.interpolate_pos_encoding(total_tokens, self.embed_dim, w, h, c),
+                position_embeddings=self.interpolate_pos_encoding(
+                    total_tokens, self.embed_dim, w, h, c
+                ),
                 ind_restore=sample_res["ind_restore"],
                 channel_indices=channel_ids_list,
                 each_img_has_different_channels=valid_channel_masks is not None,
@@ -886,7 +1114,12 @@ class MultiChannelViT(nn.Module):
         if self.training:
             ## compute proxy loss
             if self.use_proxy_loss:
-                proxy_loss = compute_proxy_loss(proxies=self.output_proxies, img_emb=out, gt_imgs=y, scale=self.proxy_scale)
+                proxy_loss = compute_proxy_loss(
+                    proxies=self.output_proxies,
+                    img_emb=out,
+                    gt_imgs=y,
+                    scale=self.proxy_scale,
+                )
                 res["proxy_loss"] = proxy_loss
             else:
                 res["proxy_loss"] = torch.tensor(0.0)
@@ -911,12 +1144,15 @@ class MultiChannelViT(nn.Module):
                 ## reconstruction: (b, c * n_patches, patch_size**2)
                 ## x_origin: (b, c, h, w),    (b, d, c, n_pathes)
 
-                recon_loss_dict = self.compute_mae_loss(reconstruction, x_origin.float(), sample_res["mask"])
+                recon_loss_dict = self.compute_mae_loss(
+                    reconstruction, x_origin.float(), sample_res["mask"]
+                )
                 lambda_f = self.mae_recon_fourier_lambda
-                recon_loss_dict["mae_loss"] = (1 - lambda_f) * recon_loss_dict["mae_img_loss"] + lambda_f * recon_loss_dict["mae_fourier_loss"]
+                recon_loss_dict["mae_loss"] = (1 - lambda_f) * recon_loss_dict[
+                    "mae_img_loss"
+                ] + lambda_f * recon_loss_dict["mae_fourier_loss"]
                 res.update(recon_loss_dict)
             else:
-
                 for k in ["mae_img_loss", "mae_fourier_loss", "mae_loss"]:
                     res[k] = torch.tensor(0.0)
 
@@ -938,8 +1174,18 @@ class MultiChannelViT(nn.Module):
         tokens_to_keep: Optional[Tensor] = None,
         bag_of_channels_mode: bool = False,
     ):
-        x = self.prepare_tokens(x, channel_ids_list, valid_channel_masks, tokens_to_keep, bag_of_channels_mode=bag_of_channels_mode)
-        patch_masks = self.generate_patch_masks(valid_channel_masks) if valid_channel_masks is not None else None
+        x = self.prepare_tokens(
+            x,
+            channel_ids_list,
+            valid_channel_masks,
+            tokens_to_keep,
+            bag_of_channels_mode=bag_of_channels_mode,
+        )
+        patch_masks = (
+            self.generate_patch_masks(valid_channel_masks)
+            if valid_channel_masks is not None
+            else None
+        )
 
         for i, blk in enumerate(self.blocks):
             if i < len(self.blocks) - 1:
@@ -957,8 +1203,18 @@ class MultiChannelViT(nn.Module):
         tokens_to_keep: Optional[Tensor] = None,
         bag_of_channels_mode: bool = False,
     ):
-        x = self.prepare_tokens(x, channel_ids_list, valid_channel_masks, tokens_to_keep, bag_of_channels_mode=bag_of_channels_mode)
-        patch_masks = self.generate_patch_masks(valid_channel_masks) if valid_channel_masks is not None else None
+        x = self.prepare_tokens(
+            x,
+            channel_ids_list,
+            valid_channel_masks,
+            tokens_to_keep,
+            bag_of_channels_mode=bag_of_channels_mode,
+        )
+        patch_masks = (
+            self.generate_patch_masks(valid_channel_masks)
+            if valid_channel_masks is not None
+            else None
+        )
 
         # we return the output tokens from the `n` last blocks
         output = []

@@ -10,8 +10,6 @@ import torch.nn.functional as F
 import torch.distributed as dist
 from torch.distributed import get_rank
 import torch.distributed.nn
-from torch.nn.parallel import DistributedDataParallel as DDP
-import torch.nn as nn
 
 
 def pairwise_distance_v2(proxies, x, squared=False):
@@ -21,7 +19,9 @@ def pairwise_distance_v2(proxies, x, squared=False):
         return torch.cdist(x, proxies, p=2)
 
 
-def compute_proxy_loss(proxies, img_emb, gt_imgs, scale: float | nn.Parameter) -> Tensor:
+def compute_proxy_loss(
+    proxies, img_emb, gt_imgs, scale: float | nn.Parameter
+) -> Tensor:
     """
     proxies: shape of (num_classes, dim)
     img_emb: shape of (num_imgs, dim)
@@ -53,10 +53,14 @@ class FourierLoss(nn.Module):
         output of this loss be managed by the model under question.
         """
         super().__init__()
-        self.loss = nn.L1Loss(reduction="none") if use_l1_loss else nn.MSELoss(reduction="none")
+        self.loss = (
+            nn.L1Loss(reduction="none") if use_l1_loss else nn.MSELoss(reduction="none")
+        )
         # self.num_modalities = num_multimodal_modalities
 
-    def forward(self, input: torch.Tensor, target: torch.Tensor, num_channels: int) -> torch.Tensor:
+    def forward(
+        self, input: torch.Tensor, target: torch.Tensor, num_channels: int
+    ) -> torch.Tensor:
         # input = reconstructed image, target = original image
         # flattened images from MAE are (B, H*W, C), so, here we convert to B x C x H x W (note we assume H == W)
         flattened_images = len(input.shape) == len(target.shape) == 3
@@ -72,7 +76,9 @@ class FourierLoss(nn.Module):
             H_W = h * w
 
         if len(input.shape) != len(target.shape) != 4:
-            raise ValueError(f"Invalid input shape: got {input.shape} and {target.shape}.")
+            raise ValueError(
+                f"Invalid input shape: got {input.shape} and {target.shape}."
+            )
 
         fft_reconstructed = torch.fft.fft2(input)
         fft_original = torch.fft.fft2(target)
@@ -80,7 +86,9 @@ class FourierLoss(nn.Module):
         magnitude_reconstructed = torch.abs(fft_reconstructed)
         magnitude_original = torch.abs(fft_original)
 
-        loss_tensor: torch.Tensor = self.loss(magnitude_reconstructed, magnitude_original)
+        loss_tensor: torch.Tensor = self.loss(
+            magnitude_reconstructed, magnitude_original
+        )
 
         # if (
         #     flattened_images and not self.num_bins
@@ -109,7 +117,9 @@ def concat_all_gather(tensor):
     Performs all_gather operation on the provided tensors.
     *** Warning ***: torch.distributed.all_gather has no gradient.
     """
-    tensors_gather = [torch.ones_like(tensor) for _ in range(torch.distributed.get_world_size())]
+    tensors_gather = [
+        torch.ones_like(tensor) for _ in range(torch.distributed.get_world_size())
+    ]
     torch.distributed.all_gather(tensors_gather, tensor, async_op=False)
 
     output = torch.cat(tensors_gather, dim=0)
@@ -144,8 +154,18 @@ class MultiPosConLoss(nn.Module):
         all_labels = concat_all_gather(labels)  # no gradient gather
 
         # compute the mask based on labels
-        mask = torch.eq(labels.view(-1, 1), all_labels.contiguous().view(1, -1)).float().to(device)
-        logits_mask = torch.scatter(torch.ones_like(mask), 1, torch.arange(mask.shape[0]).view(-1, 1).to(device) + local_batch_size * get_rank(), 0)
+        mask = (
+            torch.eq(labels.view(-1, 1), all_labels.contiguous().view(1, -1))
+            .float()
+            .to(device)
+        )
+        logits_mask = torch.scatter(
+            torch.ones_like(mask),
+            1,
+            torch.arange(mask.shape[0]).view(-1, 1).to(device)
+            + local_batch_size * get_rank(),
+            0,
+        )
 
         mask = mask * logits_mask
 
@@ -186,7 +206,9 @@ class SimCLRContrastiveLoss(nn.Module):
         feats = F.normalize(feats, dim=-1, p=2)
 
         local_batch = feats.shape[0] // 2
-        assert feats.shape[0] % 2 == 0, "feats should have even number of samples (pairs)."
+        assert feats.shape[0] % 2 == 0, (
+            "feats should have even number of samples (pairs)."
+        )
 
         # --------- Gather across all processes ---------
         all_feats = torch.cat(torch.distributed.nn.all_gather(feats), dim=0)
@@ -209,7 +231,9 @@ class SimCLRContrastiveLoss(nn.Module):
 
         # --------- Vectorized positive mask ---------
         idx = torch.arange(local_batch, device=device)
-        pos_idx = torch.cat([start + local_batch + idx, start + idx])  # positives for first view  # positives for second view
+        pos_idx = torch.cat(
+            [start + local_batch + idx, start + idx]
+        )  # positives for first view  # positives for second view
         pos_mask = torch.zeros_like(sim_matrix_local, dtype=torch.bool, device=device)
         pos_mask[torch.arange(2 * local_batch, device=device), pos_idx] = True
 

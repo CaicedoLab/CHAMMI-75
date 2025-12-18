@@ -8,9 +8,8 @@ import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
 import torch.distributed as dist
-from torch.distributed import is_initialized, get_world_size, get_rank
+from torch.distributed import get_rank
 import torch.distributed.nn
-from torch.nn.parallel import DistributedDataParallel as DDP
 
 
 def is_dist_avail_and_initialized():
@@ -34,7 +33,9 @@ def pairwise_distance_v2(proxies, x, squared=False):
         return torch.cdist(x, proxies, p=2)
 
 
-def compute_proxy_loss(proxies, img_emb, gt_imgs, scale: float | nn.Parameter) -> Tensor:
+def compute_proxy_loss(
+    proxies, img_emb, gt_imgs, scale: float | nn.Parameter
+) -> Tensor:
     """
     proxies: shape of (num_classes, dim)
     img_emb: shape of (num_imgs, dim)
@@ -69,7 +70,9 @@ def concat_all_gather(tensor):
     Performs all_gather operation on the provided tensors.
     *** Warning ***: torch.distributed.all_gather has no gradient.
     """
-    tensors_gather = [torch.ones_like(tensor) for _ in range(torch.distributed.get_world_size())]
+    tensors_gather = [
+        torch.ones_like(tensor) for _ in range(torch.distributed.get_world_size())
+    ]
     torch.distributed.all_gather(tensors_gather, tensor, async_op=False)
 
     output = torch.cat(tensors_gather, dim=0)
@@ -104,8 +107,18 @@ class MultiPosConLoss(nn.Module):
         all_labels = concat_all_gather(labels)  # no gradient gather
 
         # compute the mask based on labels
-        mask = torch.eq(labels.view(-1, 1), all_labels.contiguous().view(1, -1)).float().to(device)
-        logits_mask = torch.scatter(torch.ones_like(mask), 1, torch.arange(mask.shape[0]).view(-1, 1).to(device) + local_batch_size * get_rank(), 0)
+        mask = (
+            torch.eq(labels.view(-1, 1), all_labels.contiguous().view(1, -1))
+            .float()
+            .to(device)
+        )
+        logits_mask = torch.scatter(
+            torch.ones_like(mask),
+            1,
+            torch.arange(mask.shape[0]).view(-1, 1).to(device)
+            + local_batch_size * get_rank(),
+            0,
+        )
 
         mask = mask * logits_mask
 
@@ -146,7 +159,9 @@ class SimCLRContrastiveLoss(nn.Module):
         feats = F.normalize(feats, dim=-1, p=2)
 
         local_batch = feats.shape[0] // 2
-        assert feats.shape[0] % 2 == 0, "feats should have even number of samples (pairs)."
+        assert feats.shape[0] % 2 == 0, (
+            "feats should have even number of samples (pairs)."
+        )
 
         # --------- Gather across all processes ---------
         all_feats = torch.cat(torch.distributed.nn.all_gather(feats), dim=0)
@@ -169,7 +184,9 @@ class SimCLRContrastiveLoss(nn.Module):
 
         # --------- Vectorized positive mask ---------
         idx = torch.arange(local_batch, device=device)
-        pos_idx = torch.cat([start + local_batch + idx, start + idx])  # positives for first view  # positives for second view
+        pos_idx = torch.cat(
+            [start + local_batch + idx, start + idx]
+        )  # positives for first view  # positives for second view
         pos_mask = torch.zeros_like(sim_matrix_local, dtype=torch.bool, device=device)
         pos_mask[torch.arange(2 * local_batch, device=device), pos_idx] = True
 

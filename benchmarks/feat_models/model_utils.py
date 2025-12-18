@@ -1,8 +1,6 @@
 import math
 import warnings
 import torch
-from torch import Tensor
-from torch.nn import init
 
 
 def _no_grad_trunc_normal_(tensor, mean, std, a, b):
@@ -14,7 +12,8 @@ def _no_grad_trunc_normal_(tensor, mean, std, a, b):
 
     if (mean < a - 2 * std) or (mean > b + 2 * std):
         warnings.warn(
-            "mean is more than 2 std from [a, b] in nn.init.trunc_normal_. " "The distribution of values may be incorrect.",
+            "mean is more than 2 std from [a, b] in nn.init.trunc_normal_. "
+            "The distribution of values may be incorrect.",
             stacklevel=2,
         )
 

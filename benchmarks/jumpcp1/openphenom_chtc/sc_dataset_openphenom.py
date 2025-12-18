@@ -1,33 +1,32 @@
 import os
 import os.path
-from typing import Any, Callable, cast, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 import numpy as np
 import polars as pl
 import skimage
 
 from torchvision.transforms import ToTensor
 from torchvision.datasets import VisionDataset
-from torchvision.io import read_image
-from torch import stack, float32
+
 t = ToTensor()
 
 
 def make_dataset(
-        root: str,
-        extensions: Optional[Union[str, Tuple[str, ...]]] = None,
-        is_valid_file: Optional[Callable[[str], bool]] = None,
-        metadata_path: str = None
+    root: str,
+    extensions: Optional[Union[str, Tuple[str, ...]]] = None,
+    is_valid_file: Optional[Callable[[str], bool]] = None,
+    metadata_path: str = None,
 ):
     metadata = pl.read_csv(os.path.join(root, metadata_path))
-    #metadata = metadata.with_columns(pl.col("Metadata_broad_sample").cast(pl.Categorical).to_physical())
+    # metadata = metadata.with_columns(pl.col("Metadata_broad_sample").cast(pl.Categorical).to_physical())
     return metadata
 
 
-def fold_channels(image:np.ndarray, channel_width:int, mode="ignore"):
+def fold_channels(image: np.ndarray, channel_width: int, mode="ignore"):
     # Expected input image shape: (h, w * c)
     # Output image shape: (h, w, c)
     output = np.reshape(image, (image.shape[0], channel_width, -1), order="F")
-    #training = True
+    # training = True
     if mode == "ignore":
         # Keep all channels
         pass
@@ -49,7 +48,7 @@ def scikit_loader(path: str) -> np.ndarray:
 
 class SingleCellDataset(VisionDataset):
     """
-    JUMP data loader. Assumes that images are stored as combined .npy files. 
+    JUMP data loader. Assumes that images are stored as combined .npy files.
 
     Args:
         root (string): Root directory path.
@@ -71,6 +70,7 @@ class SingleCellDataset(VisionDataset):
         samples (list): List of (sample path, class_index) tuples
         targets (list): The class_index value for each image in the dataset
     """
+
     def __init__(
         self,
         root: str = None,
@@ -78,9 +78,11 @@ class SingleCellDataset(VisionDataset):
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
         is_valid_file: Optional[Callable[[str], bool]] = None,
-        metadata_path: str = None
+        metadata_path: str = None,
     ) -> None:
-        super().__init__(root=root, transform=transform, target_transform=target_transform)
+        super().__init__(
+            root=root, transform=transform, target_transform=target_transform
+        )
         samples = self.make_dataset(self.root, extensions, is_valid_file, metadata_path)
         self.root = root
         self.loader = scikit_loader
@@ -93,7 +95,7 @@ class SingleCellDataset(VisionDataset):
         directory: str,
         extensions: Optional[Tuple[str, ...]] = None,
         is_valid_file: Optional[Callable[[str], bool]] = None,
-        metadata_path = None
+        metadata_path=None,
     ) -> List[Tuple[str, int]]:
         """Generates a list of samples of a form (path_to_sample, class).
 
@@ -117,7 +119,12 @@ class SingleCellDataset(VisionDataset):
         Returns:
             List[Tuple[str, int]]: samples of a form (path_to_sample, class)
         """
-        return make_dataset(directory, extensions=extensions, is_valid_file=is_valid_file, metadata_path=metadata_path)
+        return make_dataset(
+            directory,
+            extensions=extensions,
+            is_valid_file=is_valid_file,
+            metadata_path=metadata_path,
+        )
 
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
         """
@@ -127,7 +134,7 @@ class SingleCellDataset(VisionDataset):
         Returns:
             tuple: (sample, target) where target is class_index of the target class.
         """
-        path, target = self.samples.item(row = index, column = "Image_Name"), 0
+        path, target = self.samples.item(row=index, column="Image_Name"), 0
         sample = self.loader(path)
 
         if self.transform is not None:
