@@ -22,6 +22,20 @@ from .optim import trunc_normal_
 from typing import Optional
 from torch import Tensor
 
+import sys
+from types import ModuleType
+
+# Create a flexible stub config module
+class _FlexibleModule(ModuleType):
+    """Flexible module that allows access to any attribute"""
+    def __getattr__(self, name):
+        return _FlexibleModule(name)
+    
+    def __call__(self, *args, **kwargs):
+        return self
+
+# Register before any torch.load() calls
+sys.modules['config'] = _FlexibleModule('config')
 
 class PatchEmbedPerChannel(nn.Module):
     def __init__(

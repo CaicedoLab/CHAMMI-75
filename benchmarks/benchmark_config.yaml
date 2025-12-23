@@ -1,43 +1,53 @@
 # Master Config file to change variables around
-MODEL_TYPE: huggingface_chammi75   # Model Types available - vit, mae, dinov2, dinov3, openphenom, subcell, chanvit_simclr in some cases
-MODEL_PATH: /scr/vidit/DINO_CHAMMI-75_LARGE_DATASET/checkpoint.pth
-MODEL_SIZE: small
-NUM_GPUS: 1
-MODEL_MODE: null
+MODEL_TYPE: vit   # (str) Key to load the correct model wrapper class, see models.py at the bottom "get_models" for implemented methods 
+MODEL_PATH: /path/to/checkpoint.pth # (str) Path to model checkpoint or directory, depending on what the model takes as input.
+MODEL_SIZE: small # (str) Additional model_size parameter given to constructors in "get_models"
+NUM_GPUS: 8 # (int) Number of GPUs to parallelize parallel enabled feature extraction benchmarks with
 
 # CHAMMI Benchmark
-CHAMMI: True  # Enable CHAMMI benchmark
-CHAMMI_IMAGES_PATH: /scr/data/CHAMMI-75/CHAMMI-75_test/CHAMMI
-CHAMMI_FEATURES_PATH: /scr/vidit/chammi_features
-CHAMMI_SCORE_PATH: /scr/vidit/CHAMMI_scores/huggingface_chammi75
-CHAMMI_BATCH_SIZE: 64
+CHAMMI: True  # (bool) Enable CHAMMI benchmark
+CHAMMI_IMAGES_PATH: /path/to/CHAMMI # (str) Path to CHAMMI dataset directory that contains the 'dataset' sub directory
+CHAMMI_FEATURES_PATH: /path/to/CHAMMI_output # (str) Output path for feature extraction artifacts. Created if it does not exist.
+CHAMMI_SCORE_PATH: /path/to/CHAMMI_output # (str) Output path for scoring files
+CHAMMI_BATCH_SIZE: 64 # (int) Feature extraction batch size
 
 # HPA Benchmark
-HPA: False  # Enable HPA benchmark
-HPA_IMAGES_PATH: /scr/data/75ds_test/mini-hpa
-HPA_FEATURES_PATH: /scr/vidit/mini-hpa-scores/DINO-Features
-HPA_BATCH_SIZE: 16
-HPA_NUM_WORKERS: 8
+HPA: True  # (bool) Enable HPA benchmark
+HPA_IMAGES_PATH: /path/to/mini-hpa # (str) Path to mini-hpa image directory that contains the metadata.csv file
+HPA_FEATURES_PATH: /path/to/hpa_output # (str) Output path for mini-HPA extracted features and score files
+HPA_BATCH_SIZE: 16 # (int) Feature extraction batch size per GPU
+HPA_NUM_WORKERS: 8 # (int) Number of parallel workers the feature extraction dataloader is set to use per GPU
 
 #JUMP-CP Benchmark
-JUMPCP: False  # Enable JUMP-CP1 benchmark
-JUMPCP_IMAGES_PATH: /scr/data/75ds_test/jumpcp1compounds
-JUMPCP_FEATURES_PATH: /scr/data/75ds_test/jumpcp1compounds
-JUMPCP_SCORE_PATH: /scr/data/75ds_test/jumpcp1compounds
-JUMPCP_BATCH_SIZE: 16
-JUMPCP_NUM_WORKERS: 8
+JUMPCP: True  # (bool) Enable JUMP-CP1 benchmark
+JUMPCP_IMAGES_PATH: /path/to/Jump-CP # (str) Dir to JUMPCP dataset containing these collections: BR00117010, BR00117011, BR00117012, BR00117013, BR00117024, BR00117025, BR00117026
+JUMPCP_FEATURES_PATH: /path/to/jump_output # (str) Dir to output JUMPCP features
+JUMPCP_SCORE_PATH: /path/to/jump_output # (str) Dir to output JUMPCP scoring files
+JUMPCP_BATCH_SIZE: 16 # (int) Feature extraction batch size per GPU
+JUMPCP_NUM_WORKERS: 8 # (int) Number of parallel workers the feature extraction dataloader is set to use per GPU
 
 #IDR-17 Benchmark
-IDR-17: False # Enable/disable IDR-17 benchmark
+IDR-17: True # (bool) Enable/disable IDR-17 benchmark
 # Paths and directories used for all rules
-IDR_DATA_FOLDER: /scr/data/idr0017
-IDR_FEATURES_PATH: /scr/vidit/idr17_features/idrcell
-IDR_NUM_WORKERS: 8
+IDR_DATA_FOLDER: /path/to/idr0017 # (str) Dir to provided IDR mini dataset directory
+IDR_FEATURES_PATH: /path/to/idr17_output # (str) Dir where IDR feature embeddings will be stored 
+IDR_BENCHMARK_SAVE_DIR: /path/to/idr17_output # Dir where output score files will be stored
+IDR_METADATA_PATH: /path/to/idr0017_meta.csv # (str) Path to IDR0017 metadata for scoring usage (Included in data folder)
+IDR_NUM_WORKERS: 8 # (int) Number of parallel workers the feature extraction dataloader is set to use per GPU
 
 # Neuron Features Benchmark
-NEURON_FEATURES: False  # Enable Neuron Features benchmark
-NEURON_IMAGES_PATH: /scr/data/CHAMMI-75_test/CELLPHIE
-NEURON_FEATURES_PATH: /scr/vidit/neural_features/DINO
-NEURON_SCORE_PATH: /scr/vidit/neural_features/DINO
-NEURON_BATCH_SIZE: 32
-NEURON_NUM_WORKERS: 10
+CellPHIE: True  # (bool) Enable Neuron Features benchmark
+CellPHIE_IMAGES_PATH: /path/to/neuron-features # (str) Path to directory containing CELLPHIE.pkl file
+CellPHIE_FEATURES_PATH: /path/to/neuron_output # (str) Dir where output feature embeddings will be saved
+CellPHIE_SCORE_PATH: /path/to/neuron_output # (str) Dir where output scoring files will be saved
+CellPHIE_EMBED_DIM: 384 # (int) per channel embedding dimension size for CellPHIE, used to slice for per channel PCA or project to if PCA_GLOBAL = True
+CellPHIE_PCA_GLOBAL: True # (bool) When set to True, uses a global PCA, when set to True assumes EMBED_DIM*14 embedding dimension and slices out per channel PCAs and concats them
+CellPHIE_BATCH_SIZE: 32 # (int) Feature extraction batch size per GPU
+CellPHIE_NUM_WORKERS: 10 # (int) Number of parallel workers the feature extraction dataloader is set to use per GPU
+
+# RBC-MC Benchmark
+RBC_MC: True  # (bool) Enable RBC-MC benchmark
+RBC_MC_IMAGES_PATH: /path/to/rbc-mc # (str) Path to RBC-MC direcotry containing "Canadian" and "Swiss" sub-directories
+RBC_MC_FEATURES_PATH: /path/to/rbc # (str) Output dir for feature embeddings
+RBC_MC_SCORE_PATH: /path/to/rbc # (str) Output dir for scoring files
+RBC_MC_BATCH_SIZE: 32 # (int) Feature extraction batch size per GPU

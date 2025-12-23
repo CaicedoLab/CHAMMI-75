@@ -1010,6 +1010,8 @@ class ChannelVIT:
                 "nucleus",
                 "protein",
             ]
+        elif dataset_name == "rbc-mc":
+            self.dataset_channels = ["bright-field"]
         else:
             raise ValueError(
                 "Dataset name supplied is not supported. This class only supports CHAMMIv1 benchmarking."
