@@ -27,7 +27,11 @@ python feature_extraction.py \
 
 - `--gpu`: GPU device ID to use for computation (e.g., `0`, `1`, `2`, etc.). Use a single GPU ID for single-GPU processing. Ensure the specified GPU is available on your system.
 
+- `--model_size`: Size of the model to use (e.g., `small`, `base`, `large`). This flag determines the specific variant of the model architecture.
+
 - `--batch_size`: Number of images to process per batch during feature extraction (typical values: 8, 16, 32, 64). Adjust based on available GPU memory—reduce if you encounter out-of-memory errors.
+
+- `--model_path`: Optional path to a custom pretrained model checkpoint. If not provided, the script will use default pretrained weights.
 
 ### Output
 The script generates feature files extracted from the model. These files are saved in `--feat_dir` and used by the benchmark evaluation script.

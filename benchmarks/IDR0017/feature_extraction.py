@@ -124,9 +124,6 @@ if __name__ == "__main__":
         help="CSV path. Output of segement in snakemake.",
     )
     parser.add_argument(
-        "-d", "--device", type=int, help="Cuda device for torch to set to, None is CPU"
-    )
-    parser.add_argument(
         "--model_path", type=str, help="Model Path written in this argument"
     )
     parser.add_argument(

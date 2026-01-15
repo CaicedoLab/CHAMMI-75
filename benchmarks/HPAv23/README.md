@@ -16,7 +16,6 @@ accelerate launch --multi_gpu --num_processes=8 accelerate_hpa_features.py \
   --image_folder {pointing to mini-hpa} \
   --batch_size {batch_size} \
   --num_workers {how many workers loaded} \
-  --config_path {used only for subcell} \
   --output_folder {output folder for features}
 ```
 
@@ -36,9 +35,6 @@ accelerate launch --multi_gpu --num_processes=8 accelerate_hpa_features.py \
 - `--batch_size`: Number of images to process per batch. Adjust based on available GPU memory (typical values: 32, 64, 128).
 - `--num_workers`: Number of worker processes for data loading. Increase for faster data pipeline, but monitor CPU/memory usage (typical values: 4, 8, 16).
 
-#### Optional Configuration Flags
-- `--config_path`: Path to configuration file containing subcell-specific settings. **Only required when performing sub-cellular analysis.** Leave empty or omit for standard feature extraction.
-
 #### Output Flag
 - `--output_folder`: Directory path where extracted features will be saved. Creates directory if it doesn't exist. Features will be stored as feature matrices or embedding files.
 
@@ -53,7 +49,7 @@ accelerate launch --multi_gpu --num_processes=8 accelerate_hpa_features.py \
 
 ### Commands
 
-#### Evaluation on all unique categories based on new SubCell paper categories:
+#### Evaluation on all unique categories based on SubCell paper categories:
 ```bash
 python train_classification.py \
   -f {saving_metrics_locations} \

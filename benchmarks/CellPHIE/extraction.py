@@ -112,9 +112,6 @@ def main():
     parser.add_argument(
         "--model_path", type=str, default="", help="Path to where the model is located"
     )
-    parser.add_argument(
-        "--model_size", type=str, choices=["small", "base"], default="small"
-    )
     args = parser.parse_args()
 
     accelerator = Accelerator()
@@ -144,7 +141,6 @@ def main():
         model_name=args.model,
         device=accelerator.device,
         model_path=args.model_path,
-        model_size=args.model_size,
     )
     model_instance.to(accelerator.device)
 
