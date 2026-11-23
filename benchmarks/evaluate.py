@@ -43,7 +43,7 @@ def main():
         benchmark_cmd = (
             f'python -c "from CHAMMI.benchmark import run_benchmark; '
             f"run_benchmark('{config['CHAMMI_IMAGES_PATH']}', '{config['CHAMMI_SCORE_PATH']}', "
-            f"'{config['CHAMMI_FEATURES_PATH']}', f'pretrained_{config['MODEL_TYPE']}_features.npy')\""
+            f"'{config['CHAMMI_FEATURES_PATH']}', 'pretrained_vit_features.npy')\""
         )
         run_command(benchmark_cmd, cwd=BENCHMARKS_DIR)
 
@@ -81,8 +81,10 @@ def main():
         run_command(neuron_cmd, cwd=neuron_dir)
 
         classifier_cmd = (
-            f"python classifier.py --embedding_path {config['CellPHIE_FEATURES_PATH']} --embed_dim {config['CellPHIE_EMBED_DIM']} --global_pca {config['CellPHIE_GLOBAL_PCA']}"
+            f"python classifier.py --embedding_path {config['CellPHIE_FEATURES_PATH']} --embed_dim {config['CellPHIE_EMBED_DIM']}"
         )
+        if config.get("CellPHIE_PCA_GLOBAL", False):
+            classifier_cmd += " --global_pca"
         run_command(classifier_cmd, cwd=neuron_dir)
 
     # IDR-17 Benchmark

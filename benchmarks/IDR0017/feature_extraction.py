@@ -50,6 +50,7 @@ def process_image_patches(model: Model, batch):
 
 
 def get_features(model: Model, args: dict, dataset: Dataset, out_folder: str) -> None:
+    os.makedirs(out_folder, exist_ok=True)
     dataloader = DataLoader(dataset, batch_size=1, num_workers=args.num_workers)
 
     current_plate = None
