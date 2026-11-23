@@ -417,6 +417,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    if args.output_folder:
+        os.makedirs(args.output_folder, exist_ok=True)
+
     with open(args.pkl_path, "rb") as f:
         embeddings = pickle.load(f)
 
