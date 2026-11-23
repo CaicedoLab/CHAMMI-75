@@ -64,7 +64,7 @@ def main():
         train_cmd = f"python train_classification.py -f {config['HPA_FEATURES_PATH']} -cc locations -uc challenge_cats"
         run_command(train_cmd, cwd=hpa_dir)
 
-        train_cmd = f"python train_classification.py -f {config['HPA_FEATURES_PATH']} -cc locations -uc unique_cats"
+        train_cmd = f"python train_classification.py -f {config['HPA_FEATURES_PATH']} -cc locations -uc all_unique_cats"
         run_command(train_cmd, cwd=hpa_dir)
 
     # Neuron Features
