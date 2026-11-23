@@ -39,6 +39,9 @@ def fetch_embeddings_from_metadata(
 class WhiteningNormalizer(object):
     def __init__(self, controls, reg_param=1e-5):
         # Whitening transform on population level data
+        # Fit in float64: in float32, round-off can push eigenvalues of a rank-deficient
+        # covariance (more features than controls) below -reg_param, which gives NaN
+        controls = np.asarray(controls, dtype=np.float64)
         self.mu = controls.mean(axis=0)
         self.whitening_transform(controls - self.mu, reg_param, rotate=True)
 
