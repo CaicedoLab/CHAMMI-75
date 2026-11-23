@@ -43,7 +43,7 @@ def main():
         benchmark_cmd = (
             f'python -c "from CHAMMI.benchmark import run_benchmark; '
             f"run_benchmark('{config['CHAMMI_IMAGES_PATH']}', '{config['CHAMMI_SCORE_PATH']}', "
-            f"'{config['CHAMMI_FEATURES_PATH']}', f'pretrained_{config['MODEL_TYPE']}_features.npy')\""
+            f"'{config['CHAMMI_FEATURES_PATH']}', 'pretrained_vit_features.npy')\""
         )
         run_command(benchmark_cmd, cwd=BENCHMARKS_DIR)
 
