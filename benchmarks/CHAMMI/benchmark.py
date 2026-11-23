@@ -58,7 +58,7 @@ def run_benchmark(
     for _, row in task_dict.iterrows():
         dataset = row.dataset
         classifier = row.classifier
-        leave_out = row.leave_out
+        leave_out = row.leave_out if pd.notna(row.leave_out) else None  # pandas >= 3 gives NaN for None
         leaveout_label = row.leaveout_label
 
         features_path = f"{feature_dir}/{dataset}/{feature_file}"
